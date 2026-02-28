@@ -1,0 +1,180 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Order;
+use App\Models\DailyMenu;
+use App\Models\ProviderDailyStatus;
+use Illuminate\Http\Request;
+use Carbon\Carbon;
+
+class OrderController extends Controller
+{
+    /**
+     * Store a new order from a diner.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'daily_menu_id' => 'required|exists:daily_menus,id',
+            'meal_type' => 'required|string', // Added
+            'preferences' => 'nullable|string|max:255',
+        ]);
+
+        $user = $request->user();
+        $today = Carbon::today()->toDateString();
+
+        // Security check: Is this menu open for this user's area?
+        $menu = DailyMenu::findOrFail($validated['daily_menu_id']);
+        $status = ProviderDailyStatus::where('provider_id', $menu->provider_id)
+                                     ->where('date', $today)
+                                     ->where('meal_type', $validated['meal_type']) // Specific check
+                                     ->where('status', 'open')
+                                     ->whereJsonContains('selected_area_ids', (int)$user->area_id)
+                                     ->first();
+
+        if (!$status) {
+            return back()->withErrors(['error' => 'Este menú no está disponible para tu área o ya ha sido cerrado.']);
+        }
+
+        // Check if already has an order for THIS SPECIFIC meal type today
+        $existingOrder = Order::where('user_id', $user->id)
+                              ->where('meal_type', $validated['meal_type']) // Check specifically for meal type
+                              ->whereHas('dailyMenu', function ($query) use ($today) {
+                                  $query->where('available_on', $today);
+                              })
+                              ->first();
+
+        if ($existingOrder) {
+            return back()->withErrors(['error' => "Ya has realizado un pedido de {$validated['meal_type']} para el día de hoy."]);
+        }
+
+        Order::create([
+            'user_id' => $user->id,
+            'daily_menu_id' => $validated['daily_menu_id'],
+            'meal_type' => $validated['meal_type'],
+            'preferences' => $validated['preferences'],
+            'status' => 'submitted_by_user',
+        ]);
+
+        return redirect()->route('dashboard')->with('success', '¡Tu pedido ha sido registrado con éxito!');
+    }
+
+    /**
+     * Update an existing order.
+     */
+    public function update(Request $request, Order $order)
+    {
+        $validated = $request->validate([
+            'daily_menu_id' => 'required|exists:daily_menus,id',
+            'meal_type' => 'required|string', // Added
+            'preferences' => 'nullable|string|max:255',
+        ]);
+
+        $user = $request->user();
+        if ($order->user_id !== $user->id) {
+            abort(403);
+        }
+
+        $today = Carbon::today()->toDateString();
+        
+        // Security check: Is this menu open for this user's area?
+        $menu = DailyMenu::findOrFail($validated['daily_menu_id']);
+        $status = ProviderDailyStatus::where('provider_id', $menu->provider_id)
+                                     ->where('date', $today)
+                                     ->where('meal_type', $validated['meal_type'])
+                                     ->where('status', 'open')
+                                     ->whereJsonContains('selected_area_ids', (int)$user->area_id)
+                                     ->first();
+
+        if (!$status) {
+            return back()->withErrors(['error' => 'No puedes editar tu pedido porque el menú para tu área está cerrado.']);
+        }
+
+        $order->update([
+            'daily_menu_id' => $validated['daily_menu_id'],
+            'meal_type' => $validated['meal_type'],
+            'preferences' => $validated['preferences'],
+            'status' => 'submitted_by_user', // Reset status so area manager must re-approve if they already did
+        ]);
+
+        return redirect()->route('dashboard')->with('success', '¡Tu pedido ha sido actualizado correctamente!');
+    }
+
+    /**
+     * Area Manager submits selected orders for their area.
+     */
+    public function submitAreaOrders(Request $request)
+    {
+        $request->validate([
+            'order_ids' => 'required|array',
+            'order_ids.*' => 'integer|exists:orders,id',
+            'meal_type' => 'required|string',
+        ]);
+
+        $user = $request->user();
+        if ($user->role !== 'area_manager') {
+            abort(403);
+        }
+
+        $updatedCount = Order::whereIn('id', $request->order_ids)
+            ->where('status', 'submitted_by_user')
+            ->update(['status' => 'submitted_by_manager']);
+
+        return redirect()->route('dashboard')->with('success', "Se han enviado $updatedCount pedidos de {$request->meal_type} a Adquisiciones.");
+    }
+
+    /**
+     * Save justifications/activities for a batch of orders.
+     */
+    public function saveJustifications(Request $request)
+    {
+        $request->validate([
+            'justifications' => 'required|array',
+            'justifications.*.id' => 'required|exists:orders,id',
+            'justifications.*.activity_performed' => 'nullable|string|max:500',
+        ]);
+
+        $user = $request->user();
+        if ($user->role !== 'area_manager') {
+            abort(403);
+        }
+
+        foreach ($request->justifications as $item) {
+            Order::where('id', $item['id'])->update([
+                'activity_performed' => $item['activity_performed']
+            ]);
+        }
+
+        return back()->with('success', 'Justificaciones guardadas correctamente.');
+    }
+
+    /**
+     * Update activity justification.
+     * Allowed for the owner of the order OR the Area Manager of that area.
+     */
+    public function updateOwnJustification(Request $request, Order $order)
+    {
+        $validated = $request->validate([
+            'activity_performed' => 'nullable|string|max:500',
+        ]);
+
+        $user = $request->user();
+        
+        // Permission check:
+        // 1. Is the owner?
+        // 2. Is the area manager of the area where the order belongs?
+        $isOwner = $order->user_id === $user->id;
+        $isManagerOfArea = ($user->role === 'area_manager' && $order->user->area_id === $user->area_id);
+
+        if (!$isOwner && !$isManagerOfArea) {
+            abort(403, 'No tienes permiso para editar esta justificación.');
+        }
+
+        $order->update([
+            'activity_performed' => $validated['activity_performed']
+        ]);
+
+        return back()->with('success', 'Actividad registrada correctamente.');
+    }
+}

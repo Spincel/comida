@@ -29,10 +29,53 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        $orderStatus = null;
+
+        if ($user && $user->area_id) {
+            $today = now()->toDateString();
+            
+            // 1. Get open sessions for user's area
+            $openSessions = \App\Models\ProviderDailyStatus::where('date', $today)
+                ->where('status', 'open')
+                ->whereJsonContains('selected_area_ids', (int)$user->area_id)
+                ->get();
+
+            if ($openSessions->isNotEmpty()) {
+                $userOrders = \App\Models\Order::where('user_id', $user->id)
+                    ->whereHas('dailyMenu', fn($q) => $q->where('available_on', $today))
+                    ->get();
+
+                // Logic to determine priority color
+                $statusColors = [];
+                foreach ($openSessions as $session) {
+                    $order = $userOrders->firstWhere('meal_type', $session->meal_type);
+                    
+                    if (!$order) {
+                        $statusColors[] = 'red'; // Missing order for an open session
+                    } elseif ($order->status === 'submitted_by_manager' || $order->status === 'delivered') {
+                        $statusColors[] = 'green'; // Fully processed
+                    } else {
+                        $statusColors[] = 'amber'; // Ordered but pending manager
+                    }
+                }
+
+                // Priority: Red > Amber > Green
+                if (in_array('red', $statusColors)) $orderStatus = 'red';
+                elseif (in_array('amber', $statusColors)) $orderStatus = 'amber';
+                else $orderStatus = 'green';
+            }
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
+                'orderStatus' => $orderStatus,
+            ],
+            'flash' => [
+                'success' => $request->session()->get('success'),
+                'error' => $request->session()->get('error'),
             ],
         ];
     }
