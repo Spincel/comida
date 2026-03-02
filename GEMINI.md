@@ -1,0 +1,100 @@
+# Comedor System - Progress Snapshot (Monday Prep)
+
+## Completed Features (Monday Update)
+- **Perfeccionamiento de Diseño y Funcionalidad (Wide):**
+    - Sincronización Total al 85%: Navegación superior, encabezado y cuerpo alineados perfectamente para una estética uniforme.
+    - Restauración de Adquisiciones: Reintegrado el acceso a reportes y envío por WhatsApp desde el catálogo de proveedores.
+    - Monitor Global Compacto: Optimización de las tarjetas de seguimiento para mejorar el control administrativo.
+- **Optimización de Escala y Densidad Visual (Final):**
+    - Reducción de proporciones: Ajuste de fuentes y paddings de niveles "gigantes" a escalas profesionales.
+    - Compactación de secciones: Las áreas de habilitación y menús ahora ocupan menos espacio vertical sin perder legibilidad.
+    - Layout Uniforme: Consolidación del ancho al 85% con alineación perfecta de cabecera y contenido.
+- **Optimización de Interfaz Híbrida (Monitor vs Área):**
+    - Monitor Global: Mantiene su diseño 30/70 con cronómetro de alto impacto y seguimiento en 3 columnas.
+    - Gestión de Área: Re-escalado a proporciones humanas (p-6, rounded-3xl, text-2xl) para evitar elementos gigantes.
+    - Menú de Platillos: Corregido grid interno para mostrar 2 columnas de platillos dentro de cada categoría, maximizando el espacio.
+    - Sincronización: Todo el sistema unificado al 85% de ancho con cabecera integrada.
+- **Restauración de Fidelidad Visual y Potenciación de Monitor:**
+    - Monitor Premium: Sesiones con cronómetros de gran formato y marcas de tiempo de inicio (Hora exacta).
+    - Grid de Monitor Triple: Seguimiento de áreas ampliado a 3 columnas para visualización masiva sin scroll.
+    - Recuperación de Diseño: Tarjetas de proveedores restauradas a su estilo "espectacular" original con sombras y acabados premium.
+    - Navegación Uniforme: Consolidación total al 85% del ancho de pantalla.
+- **Consolidación Estética del Dashboard (Fase Final):**
+    - Ajuste de ancho global al 85% para un balance visual óptimo.
+    - Fusión de cabecera: Se eliminó la tarjeta de bienvenida redundante para integrar Avatar, Nombre, Rol, Área y Fecha directamente en la barra superior.
+    - Explicación de Indicadores: El punto parpadeante representa el estado del pedido personal (Rojo: Pendiente, Ámbar: Esperando Gerente, Verde: Enviado).
+    - Optimización de Menús: Cuadrícula de platillos corregida para mostrarse en múltiples columnas según el ancho disponible.
+- **Refinamiento Estético y Funcional del Dashboard:**
+    - Layout Uniforme: Encabezado y contenido sincronizados al 98% del ancho de pantalla para una experiencia panorámica coherente.
+    - Visibilidad Dinámica de Pedidos: La sección "Control de Pedidos" se oculta automáticamente hasta que el primer comensal del equipo realiza una solicitud.
+    - Bloqueo de Flujo: Menú personal bloqueado dinámicamente si existen habilitaciones de equipo pendientes.
+- **Refinamiento del Dashboard de Gerentes:**
+    - Persistencia local de habilitaciones: El auto-refresco de 5s ya no borra las selecciones no guardadas.
+    - Bloqueo de flujo: El menú personal se oculta si hay habilitaciones de equipo pendientes de guardar.
+    - Rediseño de cuadrículas: Secciones de "Control de Pedidos" y "Selección de Menú" ahora utilizan el ancho completo del sitio (Full-width).
+    - Tarjetas interactivas: Se eliminaron checkboxes en habilitación de comensales para usar botones tipo toggle más grandes y táctiles.
+- **Rediseño del Modal de Activación de Sesiones:**
+    - Tamaño ampliado a `4xl` para visualización panorámica.
+    - Grid responsivo de hasta 6 columnas para manejar más de 20 áreas sin scroll excesivo.
+    - Sistema de "Tarjetas-Botón" (Toggle): Selección/deselección mediante clics directos con cambios de color (Verde/Gris).
+    - Buscador inteligente: Al seleccionar un área buscada, el filtro se limpia automáticamente para mostrar el contexto completo.
+    - Pre-selección total automática al abrir nuevas sesiones.
+    - Indicadores de conflicto integrados (punto naranja parpadeante).
+- **Gestión de Áreas Jerárquica (Organigrama Avanzado):**
+    - Estructura de niveles infinitos mediante `parent_id`.
+    - Navegación "Drill-down": Solo se ven Órganos Principales al inicio, expandibles con un clic.
+    - Atributo recursivo `full_path` para mostrar la ruta completa (ej: OFICIALÍA > TESORERÍA > CONTABILIDAD).
+    - Cálculo recursivo de empleados totales por rama (`total_branch_users`).
+    - Colores únicos por Órgano Principal basados en su posición.
+    - Buscador inteligente de áreas superiores dentro del modal con prevención de bucles infinitos.
+- **Gestión de Usuarios Avanzada:**
+    - Buscador universal optimizado para grandes volúmenes.
+    - Filtro de área convertido en buscador en tiempo real con rutas jerárquicas.
+    - Paginación integrada para mantener el rendimiento del servidor.
+    - Auto-generación de email, usuario y número de empleado en creación manual y masiva.
+- **Pre-Autorización de Comensales (Flujo de Filtro por Gerente):**
+    - Implementada tabla `session_authorizations` para control de acceso por sesión.
+    - El Gerente de Área ahora debe habilitar explícitamente a sus comensales para cada sesión abierta.
+    - Bloqueo de pedidos en `OrderController@store` si el usuario no está autorizado.
+    - Dashboard dinámico: Los comensales ven avisos cuando hay sesiones abiertas pero no han sido autorizados.
+    - Interfaz masiva de autorización para gerentes (Seleccionar todos / Deseleccionar).
+- **User Management Refactor:**
+    - Split names into `first_name`, `last_name`, `second_last_name`.
+    - Added `employee_number` and `avatar` fields.
+    - Implemented multi-field login (Email, Username, or Employee Number).
+    - Auto-username generation (e.g., `jsmith`).
+- **Administrative Catalogs:**
+    - **Areas:** Full CRUD with user count tracking.
+    - **Interface:** Branding management (3 logo types + theme colors) with real-time auto-save.
+    - **Roles:** Dynamic permission matrix for Admin, Acquisitions, Area Manager, and Diner.
+- **Data Utilities:**
+    - CSV Import for Users, Areas, and Providers.
+    - Database cleaning (Truncate) with safety guards.
+- **Acquisitions Improvements:**
+    - Grouped navigation menu.
+    - Send order via WhatsApp with pre-formatted lists.
+    - Multi-format export (PDF, Word, Excel) for all reports.
+    - AI Menu Scanning with duplicate detection and categorized item merging.
+
+## Technical Fixes
+- Added `storage:link` for logo visibility.
+- Enabled multi-role middleware (`role:admin|area_manager`).
+- Corrected MassAssignment exceptions on SystemSettings.
+- Fixed 403 Forbidden errors for Admin role on historical routes.
+- **Corregido Error 500 (Undefined constant):** Se estandarizaron las importaciones de controladores (`use App\Http\Controllers\...`) en `routes/web.php` usando nombres cortos.
+- **Corregido Error de Vue (Invalid prop `openSessions`):** Se aplicó `->values()` en las colecciones retornadas por `DashboardController` para asegurar que Inertia las renderice como arreglos de JSON secuenciales en lugar de objetos clave-valor.
+
+## Current State
+- **Bug to watch:** Verify if Logo persists correctly in all environments (Symlink created).
+- **Monday Goal:** Final validation of the interface catalog and UI polishing.
+- **Credentials:** `admin@example.com` / `password`.
+
+## Files Modified
+- `app/Http/Controllers/UserController.php`
+- `app/Http/Controllers/Admin/SystemSettingsController.php`
+- `app/Http/Controllers/Admin/ImportExportController.php`
+- `resources/js/Pages/Admin/Settings/Interface.vue`
+- `resources/js/Layouts/AuthenticatedLayout.vue`
+- `routes/web.php`
+- `app/Models/User.php`
+- `app/Models/SystemSetting.php`

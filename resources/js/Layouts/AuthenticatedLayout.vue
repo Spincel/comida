@@ -6,7 +6,21 @@ import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import { Link, usePage } from '@inertiajs/vue3';
-import { Bars3Icon, SunIcon, MoonIcon, ChevronDownIcon } from '@heroicons/vue/24/outline';
+import { 
+    Bars3Icon, 
+    SunIcon, 
+    MoonIcon, 
+    ChevronDownIcon,
+    UsersIcon,
+    BuildingOfficeIcon,
+    SwatchIcon,
+    TableCellsIcon,
+    ShieldCheckIcon,
+    ClipboardDocumentIcon,
+    BriefcaseIcon,
+    WrenchScrewdriverIcon,
+    BuildingStorefrontIcon
+} from '@heroicons/vue/24/outline';
 
 const showingNavigationDropdown = ref(false);
 const page = usePage();
@@ -62,7 +76,7 @@ onUnmounted(() => {
                 class="border-b border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800 transition-colors duration-300"
             >
                 <!-- Primary Navigation Menu -->
-                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="mx-auto max-w-[85%] px-4 sm:px-6 lg:px-8">
                     <div class="flex h-16 justify-between">
                         <div class="flex">
                             <!-- Logo -->
@@ -85,46 +99,70 @@ onUnmounted(() => {
                                     Dashboard
                                 </NavLink>
 
-                                <!-- Admin Links -->
-                                <template v-if="$page.props.auth.user.role === 'admin'">
-                                    <NavLink :href="route('users.index')" :active="route().current('users.*')">
-                                        Usuarios
-                                    </NavLink>
-                                    <NavLink :href="route('admin.history')" :active="route().current('admin.history')">
-                                        Historial
-                                    </NavLink>
-                                    <NavLink :href="route('admin.reports')" :active="route().current('admin.reports')">
-                                        Reportes
-                                    </NavLink>
-                                </template>
+                                <!-- Admin & Acquisitions Dropdown -->
+                                <div v-if="['admin', 'acquisitions_manager'].includes($page.props.auth.user.role)" class="hidden sm:flex sm:items-center sm:ms-6">
+                                    <Dropdown align="left" width="64">
+                                        <template #trigger>
+                                            <button type="button" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-indigo-700 dark:hover:text-indigo-400 focus:outline-none transition ease-in-out duration-150">
+                                                <BriefcaseIcon class="h-4 w-4 mr-2" />
+                                                Adquisiciones
+                                                <ChevronDownIcon class="ms-2 -me-0.5 h-4 w-4" />
+                                            </button>
+                                        </template>
+                                        <template #content>
+                                            <div class="block px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-b dark:border-gray-700">Gestión de Servicio</div>
+                                            <DropdownLink :href="route('providers.index')">
+                                                <div class="flex items-center"><BuildingStorefrontIcon class="h-4 w-4 mr-2" /> Proveedores/Catálogo</div>
+                                            </DropdownLink>
+                                            <DropdownLink :href="route('admin.history')">
+                                                <div class="flex items-center"><ClipboardDocumentIcon class="h-4 w-4 mr-2" /> Historial Global</div>
+                                            </DropdownLink>
+                                            <DropdownLink :href="route('admin.reports')">
+                                                <div class="flex items-center"><TableCellsIcon class="h-4 w-4 mr-2" /> Reportes Globales</div>
+                                            </DropdownLink>
+                                        </template>
+                                    </Dropdown>
+                                </div>
 
-                                <!-- Acquisitions Links -->
-                                <template v-if="$page.props.auth.user.role === 'acquisitions_manager'">
-                                    <NavLink :href="route('admin.history')" :active="route().current('admin.history')">
-                                        Historial
-                                    </NavLink>
-                                    <NavLink :href="route('admin.reports')" :active="route().current('admin.reports')">
-                                        Reportes
-                                    </NavLink>
-                                </template>
+                                <!-- Admin Specialized Tools -->
+                                <div v-if="$page.props.auth.user.role === 'admin'" class="hidden sm:flex sm:items-center sm:ms-6">
+                                    <Dropdown align="left" width="64">
+                                        <template #trigger>
+                                            <button type="button" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-indigo-700 dark:hover:text-indigo-400 focus:outline-none transition ease-in-out duration-150">
+                                                <WrenchScrewdriverIcon class="h-4 w-4 mr-2" />
+                                                Administración
+                                                <ChevronDownIcon class="ms-2 -me-0.5 h-4 w-4" />
+                                            </button>
+                                        </template>
+                                        <template #content>
+                                            <div class="block px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-b dark:border-gray-700">Configuración Base</div>
+                                            <DropdownLink :href="route('users.index')">
+                                                <div class="flex items-center"><UsersIcon class="h-4 w-4 mr-2" /> Usuarios</div>
+                                            </DropdownLink>
+                                            <DropdownLink :href="route('areas.index')">
+                                                <div class="flex items-center"><BuildingOfficeIcon class="h-4 w-4 mr-2" /> Áreas</div>
+                                            </DropdownLink>
+                                            <div class="block px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-t border-b dark:border-gray-700 mt-2">Sistema</div>
+                                            <DropdownLink :href="route('admin.settings.interface')">
+                                                <div class="flex items-center"><SwatchIcon class="h-4 w-4 mr-2" /> Interfaz y Logos</div>
+                                            </DropdownLink>
+                                            <DropdownLink :href="route('admin.settings.roles')">
+                                                <div class="flex items-center"><ShieldCheckIcon class="h-4 w-4 mr-2" /> Roles y Permisos</div>
+                                            </DropdownLink>
+                                            <DropdownLink :href="route('admin.utilities.data')">
+                                                <div class="flex items-center"><CloudArrowUpIcon class="h-4 w-4 mr-2" /> Mantenimiento de Datos</div>
+                                            </DropdownLink>
+                                        </template>
+                                    </Dropdown>
+                                </div>
 
-                                <!-- Manager Links -->
-                                <template v-if="$page.props.auth.user.role === 'area_manager'">
+                                <!-- Area Manager Context -->
+                                <template v-if="$page.props.auth.user.role === 'area_manager' || ($page.props.auth.user.role === 'admin' && $page.props.auth.user.area_id)">
                                     <NavLink :href="route('justification.index')" :active="route().current('justification.*')">
                                         Justificación
                                     </NavLink>
                                     <NavLink :href="route('area.history')" :active="route().current('area.history')">
                                         Historial
-                                    </NavLink>
-                                    <NavLink :href="route('area.reports')" :active="route().current('area.reports')">
-                                        Reportes
-                                    </NavLink>
-                                </template>
-
-                                <!-- Diner Links -->
-                                <template v-if="$page.props.auth.user.role === 'diner'">
-                                    <NavLink :href="route('justification.index')" :active="route().current('justification.*')">
-                                        Justificación
                                     </NavLink>
                                 </template>
                             </div>
@@ -229,43 +267,29 @@ onUnmounted(() => {
                             Dashboard
                         </ResponsiveNavLink>
 
+                        <!-- Mobile Acquisitions Group -->
+                        <template v-if="['admin', 'acquisitions_manager'].includes($page.props.auth.user.role)">
+                            <div class="px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b dark:border-gray-700">Adquisiciones</div>
+                            <ResponsiveNavLink :href="route('providers.index')" :active="route().current('providers.*')">Proveedores/Catálogo</ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('admin.history')" :active="route().current('admin.history')">Historial Global</ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('admin.reports')" :active="route().current('admin.reports')">Reportes Globales</ResponsiveNavLink>
+                        </template>
+
+                        <!-- Mobile Admin Tools -->
                         <template v-if="$page.props.auth.user.role === 'admin'">
-                            <ResponsiveNavLink :href="route('users.index')" :active="route().current('users.*')">
-                                Usuarios
-                            </ResponsiveNavLink>
-                            <ResponsiveNavLink :href="route('admin.history')" :active="route().current('admin.history')">
-                                Historial
-                            </ResponsiveNavLink>
-                            <ResponsiveNavLink :href="route('admin.reports')" :active="route().current('admin.reports')">
-                                Reportes
-                            </ResponsiveNavLink>
+                            <div class="px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b dark:border-gray-700 mt-2">Administración</div>
+                            <ResponsiveNavLink :href="route('users.index')" :active="route().current('users.*')">Usuarios</ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('areas.index')" :active="route().current('areas.*')">Áreas</ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('admin.settings.interface')" :active="route().current('admin.settings.interface')">Interfaz y Logos</ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('admin.settings.roles')" :active="route().current('admin.settings.roles')">Roles y Permisos</ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('admin.utilities.data')" :active="route().current('admin.utilities.data')">Mantenimiento de Datos</ResponsiveNavLink>
                         </template>
 
-                        <template v-if="$page.props.auth.user.role === 'acquisitions_manager'">
-                            <ResponsiveNavLink :href="route('admin.history')" :active="route().current('admin.history')">
-                                Historial
-                            </ResponsiveNavLink>
-                            <ResponsiveNavLink :href="route('admin.reports')" :active="route().current('admin.reports')">
-                                Reportes
-                            </ResponsiveNavLink>
-                        </template>
-
-                        <template v-if="$page.props.auth.user.role === 'area_manager'">
-                            <ResponsiveNavLink :href="route('justification.index')" :active="route().current('justification.*')">
-                                Justificación
-                            </ResponsiveNavLink>
-                            <ResponsiveNavLink :href="route('area.history')" :active="route().current('area.history')">
-                                Historial
-                            </ResponsiveNavLink>
-                            <ResponsiveNavLink :href="route('area.reports')" :active="route().current('area.reports')">
-                                Reportes
-                            </ResponsiveNavLink>
-                        </template>
-
-                        <template v-if="$page.props.auth.user.role === 'diner'">
-                            <ResponsiveNavLink :href="route('justification.index')" :active="route().current('justification.*')">
-                                Justificación
-                            </ResponsiveNavLink>
+                        <!-- Mobile Area Manager -->
+                        <template v-if="$page.props.auth.user.role === 'area_manager' || ($page.props.auth.user.role === 'admin' && $page.props.auth.user.area_id)">
+                            <div class="px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b dark:border-gray-700 mt-2">Mi Área</div>
+                            <ResponsiveNavLink :href="route('justification.index')" :active="route().current('justification.*')">Justificación</ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('area.history')" :active="route().current('area.history')">Historial de Área</ResponsiveNavLink>
                         </template>
                     </div>
 
@@ -335,7 +359,7 @@ onUnmounted(() => {
                 leave-to-class="transform opacity-0 -translate-y-2"
             >
                 <div v-if="visibleFlash"
-                     class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative shadow-sm">
+                     class="mx-auto max-w-[85%] px-4 sm:px-6 lg:px-8 mt-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative shadow-sm">
                     {{ visibleFlash }}
                 </div>
             </transition>
@@ -345,7 +369,7 @@ onUnmounted(() => {
                 class="bg-white shadow dark:bg-gray-800 transition-colors duration-300"
                 v-if="$slots.header"
             >
-                <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                <div class="mx-auto max-w-[85%] px-4 py-6 sm:px-6 lg:px-8">
                     <slot name="header" />
                 </div>
             </header>

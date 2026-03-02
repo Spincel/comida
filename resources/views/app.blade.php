@@ -10,6 +10,22 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
+        <!-- Dynamic Branding -->
+        @php
+            $settings = \App\Models\SystemSetting::all()->pluck('value', 'key');
+            $primaryLight = $settings['color_primary_light'] ?? '#4f46e5';
+            $primaryDark = $settings['color_primary_dark'] ?? '#818cf8';
+        @endphp
+        <style>
+            :root {
+                --brand-primary: {{ $primaryLight }};
+            }
+            .dark {
+                --brand-primary: {{ $primaryDark }};
+            }
+            /* Override Tailwind Indigo with Brand Primary if needed, but let's keep it subtle for now */
+        </style>
+
         <!-- Scripts -->
         <script>
             if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {

@@ -73,6 +73,9 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user,
                 'orderStatus' => $orderStatus,
             ],
+            'system' => [
+                'settings' => \App\Models\SystemSetting::all()->pluck('value', 'key'),
+            ],
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),

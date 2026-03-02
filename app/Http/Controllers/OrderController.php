@@ -37,6 +37,15 @@ class OrderController extends Controller
             return back()->withErrors(['error' => 'Este menú no está disponible para tu área o ya ha sido cerrado.']);
         }
 
+        // NEW: Check if user is authorized by Area Manager for this session
+        $isAuthorized = \App\Models\SessionAuthorization::where('provider_daily_status_id', $status->id)
+                                                        ->where('user_id', $user->id)
+                                                        ->exists();
+        
+        if (!$isAuthorized) {
+            return back()->withErrors(['error' => 'No estás autorizado por tu gerente para realizar pedidos en esta sesión.']);
+        }
+
         // Check if already has an order for THIS SPECIFIC meal type today
         $existingOrder = Order::where('user_id', $user->id)
                               ->where('meal_type', $validated['meal_type']) // Check specifically for meal type
@@ -102,6 +111,64 @@ class OrderController extends Controller
     }
 
     /**
+     * Area Manager authorizes specific diners for a session.
+     */
+    public function authorizeDiners(Request $request)
+    {
+        $validated = $request->validate([
+            'provider_daily_status_id' => 'required|exists:provider_daily_statuses,id',
+            'user_ids' => 'present|array',
+            'user_ids.*' => 'integer|exists:users,id',
+        ]);
+
+        $manager = $request->user();
+        // Allow any manager role with an area
+        if (!in_array($manager->role, ['area_manager', 'admin', 'acquisitions_manager']) || !$manager->area_id) {
+            abort(403, 'No tienes permisos para autorizar comensales o no tienes un área asignada.');
+        }
+
+        $session = ProviderDailyStatus::findOrFail($validated['provider_daily_status_id']);
+        
+        // Security: Ensure the session is open for the manager's area
+        $areas = is_array($session->selected_area_ids) ? $session->selected_area_ids : json_decode($session->selected_area_ids, true);
+        if (!in_array((int)$manager->area_id, array_map('intval', $areas ?: []))) {
+            abort(403, 'Esta sesión no está disponible para tu área.');
+        }
+
+        // Get only users belonging to the manager's area
+        $validUserIds = \App\Models\User::where('area_id', $manager->area_id)
+            ->whereIn('id', $validated['user_ids'])
+            ->pluck('id')
+            ->toArray();
+
+        // Use transaction for safety
+        \Illuminate\Support\Facades\DB::transaction(function () use ($session, $validUserIds, $manager) {
+            // Remove existing authorizations for this area's users in this session
+            \App\Models\SessionAuthorization::where('provider_daily_status_id', $session->id)
+                ->whereIn('user_id', \App\Models\User::where('area_id', $manager->area_id)->pluck('id'))
+                ->delete();
+
+            // Insert new authorizations
+            $authorizations = [];
+            foreach ($validUserIds as $userId) {
+                $authorizations[] = [
+                    'provider_daily_status_id' => $session->id,
+                    'user_id' => $userId,
+                    'authorized_by_user_id' => $manager->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+
+            if (!empty($authorizations)) {
+                \App\Models\SessionAuthorization::insert($authorizations);
+            }
+        });
+
+        return back()->with('success', 'Comensales autorizados correctamente.');
+    }
+
+    /**
      * Area Manager submits selected orders for their area.
      */
     public function submitAreaOrders(Request $request)
@@ -113,8 +180,8 @@ class OrderController extends Controller
         ]);
 
         $user = $request->user();
-        if ($user->role !== 'area_manager') {
-            abort(403);
+        if (!in_array($user->role, ['area_manager', 'admin', 'acquisitions_manager']) || !$user->area_id) {
+            abort(403, 'No tienes permisos para enviar pedidos de área.');
         }
 
         $updatedCount = Order::whereIn('id', $request->order_ids)

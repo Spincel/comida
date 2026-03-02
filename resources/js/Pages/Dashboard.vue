@@ -24,7 +24,9 @@ import {
     XMarkIcon, 
     CalendarDaysIcon, 
     ListBulletIcon,
-    ChatBubbleLeftRightIcon
+    ChatBubbleLeftRightIcon,
+    BuildingStorefrontIcon,
+    InformationCircleIcon
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
@@ -43,6 +45,7 @@ const props = defineProps({
     myOrdersToday: { type: Array, default: () => [] },
     availableMenus: Array,
     orderHistory: Array,
+    pendingAuthorizations: { type: Array, default: () => [] },
     // Area Manager Props
     teamOrders: Array,
     area: Object,
@@ -71,17 +74,25 @@ const activeSession = computed(() => {
 
 const activeDishSummary = computed(() => {
     if (!activeSession.value) return [];
-    const summary = props.dishSummaryToday?.find(s => s.meal_type === activeSession.value.meal_type);
+    // FIX: Filter by BOTH meal_type and provider_id to distinguish between different providers of the same meal type
+    const summary = props.dishSummaryToday?.find(s => 
+        s.meal_type === activeSession.value.meal_type && 
+        s.provider_id === activeSession.value.provider_id
+    );
     return summary?.dishes || [];
 });
 
 const activeTotalOrders = computed(() => {
     if (!activeSession.value) return 0;
-    const summary = props.dishSummaryToday?.find(s => s.meal_type === activeSession.value.meal_type);
+    // FIX: Filter by BOTH meal_type and provider_id
+    const summary = props.dishSummaryToday?.find(s => 
+        s.meal_type === activeSession.value.meal_type && 
+        s.provider_id === activeSession.value.provider_id
+    );
     return summary?.total || 0;
 });
 
-// --- Timer Logic for Active Menus ---
+// --- Timer Logic ---
 const activeTimers = ref({});
 
 const updateTimers = () => {
@@ -112,7 +123,7 @@ onMounted(() => {
             preserveScroll: true,
             only: ['providers', 'submittedAreasToday', 'dishSummaryToday', 'totalOrdersToday', 'openSessions', 'myOrdersToday', 'availableMenus', 'teamOrders', 'historicalSessions']
         });
-    }, 10000);
+    }, 5000);
 });
 
 onUnmounted(() => {
@@ -172,7 +183,7 @@ const openDeleteSessionModal = (session, provider) => {
     showDeleteSessionModal.value = true;
 };
 
-// --- Area Management in Monitoring ---
+// --- Area Management ---
 const removeAreaFromSession = (session, areaId) => {
     if (!confirm('¿Estás seguro de quitar esta área de la sesión activa?')) return;
     const currentAreas = Array.isArray(session.selected_area_ids) ? session.selected_area_ids : JSON.parse(session.selected_area_ids || '[]');
@@ -235,12 +246,10 @@ const mealTypeTagColors = {
 };
 
 const providerColors = [
-    { border: 'border-indigo-200 dark:border-indigo-900/50', text: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
-    { border: 'border-emerald-200 dark:border-emerald-900/50', text: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
-    { border: 'border-rose-200 dark:border-rose-900/50', text: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-900/20' },
-    { border: 'border-amber-200 dark:border-amber-900/50', text: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/20' },
-    { border: 'border-cyan-200 dark:border-cyan-900/50', text: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-50 dark:bg-cyan-900/20' },
-    { border: 'border-fuchsia-200 dark:border-fuchsia-900/50', text: 'text-fuchsia-600 dark:text-fuchsia-400', bg: 'bg-fuchsia-50 dark:bg-fuchsia-900/20' },
+    { border: 'border-indigo-500', text: 'text-indigo-600', bg: 'bg-indigo-50', icon: 'bg-indigo-600' },
+    { border: 'border-emerald-500', text: 'text-emerald-600', bg: 'bg-emerald-50', icon: 'bg-emerald-600' },
+    { border: 'border-rose-500', text: 'text-rose-600', bg: 'bg-rose-50', icon: 'bg-rose-600' },
+    { border: 'border-amber-500', text: 'text-amber-600', bg: 'bg-amber-50', icon: 'bg-amber-600' },
 ];
 
 const getProviderColor = (index) => providerColors[index % providerColors.length];
@@ -281,7 +290,7 @@ const confirmSubmitAreaOrders = () => {
         preserveScroll: true,
         onSuccess: () => {
             selectedOrderIds.value[mealType] = [];
-            showSubmitConfirmation.value = false;
+            showSubmitConfirmation = false;
         }
     });
 };
@@ -290,8 +299,99 @@ const submitSelectedOrders = (mealType) => openSubmitConfirmation(mealType);
 
 const selectAllPending = (mealType) => {
     if (!selectedOrderIds.value[mealType]) selectedOrderIds.value[mealType] = [];
-    const pendingOrders = props.teamOrders.map(m => m.orders.find(o => o.meal_type === mealType && o.status === 'submitted_by_user')).filter(Boolean);
-    selectedOrderIds.value[mealType] = pendingOrders.map(o => o.id);
+    const pendingOrderIds = props.teamOrders
+        .map(member => member.orders.find(o => o.meal_type === mealType && o.status === 'submitted_by_user'))
+        .filter(Boolean)
+        .map(o => o.id);
+    selectedOrderIds.value[mealType] = pendingOrderIds;
+};
+
+// --- Session Authorization Logic ---
+const authorizedUserIds = ref({}); 
+const processingAuthorizations = ref({}); 
+const authStatus = ref({}); 
+
+watch(() => props.teamOrders, (newTeam) => {
+    if (!newTeam) return;
+    const newAuths = {};
+    props.openSessions.forEach(session => {
+        if (authStatus.value[session.id] !== 'dirty') {
+            newAuths[session.id] = newTeam
+                .filter(m => m.authorized_sessions?.includes(session.id))
+                .map(m => m.id);
+        } else {
+            newAuths[session.id] = authorizedUserIds.value[session.id] || [];
+        }
+    });
+    authorizedUserIds.value = newAuths;
+}, { immediate: true, deep: true });
+
+const hasDirtyAuths = computed(() => {
+    return Object.values(authStatus.value).some(status => status === 'dirty');
+});
+
+const toggleUserAuthorization = (sessionId, userId) => {
+    if (!authorizedUserIds.value[sessionId]) authorizedUserIds.value[sessionId] = [];
+    const index = authorizedUserIds.value[sessionId].indexOf(userId);
+    if (index > -1) authorizedUserIds.value[sessionId].splice(index, 1);
+    else authorizedUserIds.value[sessionId].push(userId);
+    authStatus.value[sessionId] = 'dirty'; 
+};
+
+const saveAuthorizations = (sessionId) => {
+    processingAuthorizations.value[sessionId] = true;
+    router.post(route('orders.authorizeDiners'), {
+        provider_daily_status_id: sessionId,
+        user_ids: authorizedUserIds.value[sessionId] || []
+    }, { 
+        preserveScroll: true,
+        onSuccess: () => {
+            processingAuthorizations.value[sessionId] = false;
+            authStatus.value[sessionId] = 'saved';
+            setTimeout(() => { authStatus.value[sessionId] = null; }, 3000);
+        },
+        onError: () => {
+            processingAuthorizations.value[sessionId] = false;
+        }
+    });
+};
+
+const selectAllForAuth = (sessionId) => {
+    authorizedUserIds.value[sessionId] = props.teamOrders.map(m => m.id);
+    authStatus.value[sessionId] = 'dirty';
+};
+
+const deselectAllForAuth = (sessionId) => {
+    authorizedUserIds.value[sessionId] = [];
+    authStatus.value[sessionId] = 'dirty';
+};
+
+// --- Navigation ---
+const activeTab = ref('global'); 
+
+onMounted(() => {
+    if (user.role === 'area_manager' || user.role === 'diner') {
+        activeTab.value = 'my-area';
+    }
+});
+
+const hasPendingActionsInMyArea = computed(() => {
+    const sessionsForMyArea = props.openSessions?.filter(s => s.is_open_for_my_area) || [];
+    const hasPendingOrders = props.teamOrders?.some(member => member.orders?.some(o => o.status === 'submitted_by_user'));
+    const hasSessionsNeedingTeamAuth = sessionsForMyArea.some(s => (s.authorized_count || 0) <= 1);
+    return (sessionsForMyArea.length > 0 && hasSessionsNeedingTeamAuth) || hasPendingOrders;
+});
+
+const hasAnyTeamOrders = computed(() => {
+    // Check if any team member has at least one order regardless of status
+    return props.teamOrders?.some(member => member.orders && member.orders.length > 0);
+});
+
+// Format time
+const formatTime = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
 };
 </script>
 
@@ -301,147 +401,125 @@ const selectAllPending = (mealType) => {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex justify-between items-center">
-                <div class="flex items-center gap-3">
-                    <!-- Status Color Indicator -->
-                    <div v-if="$page.props.auth.orderStatus" 
-                         class="h-4 w-4 rounded-full shadow-sm animate-pulse border-2 border-white dark:border-gray-800"
-                         :class="{
-                             'bg-red-500 shadow-red-200': $page.props.auth.orderStatus === 'red',
-                             'bg-amber-500 shadow-amber-200': $page.props.auth.orderStatus === 'amber',
-                             'bg-green-500 shadow-green-200': $page.props.auth.orderStatus === 'green'
-                         }"
-                         :title="$page.props.auth.orderStatus === 'red' ? 'Tienes pedidos pendientes por elegir' : ($page.props.auth.orderStatus === 'amber' ? 'Pedido pendiente de autorización' : 'Pedido enviado correctamente')">
+                <!-- CABECERA UNIFICADA -->
+                <div class="flex items-center gap-4">
+                    <div class="relative group">
+                        <img :src="user.avatar_url" class="h-12 w-12 rounded-full border-2 border-indigo-500 shadow-md object-cover transition-transform group-hover:scale-105" />
+                        <div v-if="$page.props.auth.orderStatus" 
+                             class="absolute -top-1 -right-1 h-4 w-4 rounded-full border-2 border-white dark:border-gray-800 animate-pulse"
+                             :class="{
+                                 'bg-red-500': $page.props.auth.orderStatus === 'red',
+                                 'bg-amber-500': $page.props.auth.orderStatus === 'amber',
+                                 'bg-green-500': $page.props.auth.orderStatus === 'green'
+                             }">
+                        </div>
                     </div>
-                    <h2 class="font-black text-2xl text-gray-800 dark:text-gray-100 leading-tight uppercase tracking-tight">
-                        {{ user.name }}
-                    </h2>
+                    <div>
+                        <div class="flex items-center gap-3">
+                            <h2 class="font-black text-xl text-gray-800 dark:text-gray-100 uppercase tracking-tight leading-none">
+                                {{ user.name }}
+                            </h2>
+                            <span class="text-[7px] font-black text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 px-1.5 py-0.5 rounded border border-indigo-100 uppercase tracking-widest">{{ roleName }}</span>
+                        </div>
+                        <div class="flex items-center gap-3 mt-1">
+                            <span v-if="user.area_id" class="text-[8px] font-black text-gray-400 uppercase tracking-widest flex items-center">
+                                <BuildingOfficeIcon class="h-2.5 w-2.5 mr-1" /> {{ user.area?.name }}
+                            </span>
+                            <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest flex items-center border-l border-gray-200 dark:border-gray-700 pl-2">
+                                <CalendarDaysIcon class="h-2.5 w-2.5 mr-1" /> {{ new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' }) }}
+                            </span>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-[10px] font-black text-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 px-3 py-1 rounded-lg border border-indigo-100 dark:border-indigo-800 uppercase tracking-widest">
-                        {{ roleName }}
-                    </span>
-                    <span v-if="user.area_id" class="text-[10px] font-black text-gray-500 bg-gray-50 dark:bg-gray-900/30 px-3 py-1 rounded-lg border border-gray-100 dark:border-gray-800 uppercase tracking-widest">
-                        {{ user.area?.name }}
-                    </span>
+                
+                <!-- TAB SWITCHER -->
+                <div v-if="user.area_id && (user.role === 'acquisitions_manager' || user.role === 'admin')" class="flex bg-gray-100 dark:bg-gray-900 p-1 rounded-xl border border-gray-200 dark:border-gray-800">
+                    <button @click="activeTab = 'global'" 
+                            class="px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2"
+                            :class="activeTab === 'global' ? 'bg-white dark:bg-gray-800 text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'">
+                        <BuildingStorefrontIcon class="h-3.5 w-3.5" /> Monitor
+                    </button>
+                    <button @click="activeTab = 'my-area'" 
+                            class="px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 relative"
+                            :class="[
+                                activeTab === 'my-area' ? 'bg-white dark:bg-gray-800 text-emerald-600 shadow-sm' : 'text-gray-500 hover:text-gray-700',
+                                activeTab !== 'my-area' && hasPendingActionsInMyArea ? 'animate-pulse bg-emerald-50 dark:bg-emerald-900/10' : ''
+                            ]">
+                        <UserGroupIcon class="h-3.5 w-3.5" /> Mi Área
+                        <span v-if="hasPendingActionsInMyArea && activeTab !== 'my-area'" class="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 shadow-sm"></span>
+                        </span>
+                    </button>
                 </div>
             </div>
         </template>
 
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
+        <div class="py-10">
+            <div class="max-w-[85%] mx-auto sm:px-6 lg:px-8 space-y-10">
                 
-                <!-- BIENVENIDA -->
-                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-3xl border border-gray-100 dark:border-gray-700">
-                    <div class="p-8 text-gray-900 dark:text-gray-100 flex items-center justify-between">
-                        <div class="flex items-center space-x-6">
-                            <div class="relative">
-                                <img :src="user.avatar_url" class="h-20 w-20 rounded-full border-4 border-indigo-50 dark:border-indigo-900/50 shadow-xl" alt="" />
-                                <div class="absolute -bottom-1 -right-1 bg-green-500 h-5 w-5 rounded-full border-4 border-white dark:border-gray-800"></div>
-                            </div>
-                            <div>
-                                <h3 class="text-3xl font-black tracking-tight">¡Hola de nuevo, {{ user.name.split(' ')[0] }}!</h3>
-                                <p class="text-gray-500 dark:text-gray-400 font-medium mt-1">Hoy es {{ new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }) }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- MONITOREO EN TIEMPO REAL (SOLO ADQUISICIONES) -->
-                <div v-if="user.role === 'acquisitions_manager' && openSessions.length > 0" class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-3xl border-l-8 border-indigo-500">
-                    <div class="p-8">
-                        <h4 class="text-lg font-black flex items-center mb-6 uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                            <span class="relative flex h-3 w-3 mr-3">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                            </span>
-                            Monitor de Recepción
+                <!-- TAB GLOBAL -->
+                <div v-if="activeTab === 'global'" class="space-y-10">
+                    <div v-if="(user.role === 'acquisitions_manager' || user.role === 'admin') && openSessions.length > 0" class="bg-white dark:bg-gray-800 rounded-[2.5rem] border-l-8 border-indigo-500 shadow-xl p-8">
+                        <h4 class="text-sm font-black flex items-center mb-10 uppercase tracking-[0.3em] text-indigo-600">
+                            <span class="relative flex h-4 w-4 mr-4"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span><span class="relative inline-flex rounded-full h-4 w-4 bg-green-500 shadow-sm"></span></span>
+                            Gestión de Alimentos en Vivo
                         </h4>
-
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            <div class="space-y-4">
-                                <h5 class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-widest text-[10px]">Sesiones Abiertas (Clic para ver):</h5>
-                                <div v-for="session in openSessions" :key="session.id" 
-                                     @click="selectedSessionId = session.id"
-                                     class="p-5 bg-white dark:bg-gray-900 border-2 rounded-2xl flex flex-col space-y-4 transition-all cursor-pointer group"
-                                     :class="selectedSessionId === session.id 
-                                        ? 'border-indigo-500 shadow-xl ring-1 ring-indigo-500 bg-indigo-50/10' 
-                                        : 'border-gray-100 dark:border-gray-800 hover:border-indigo-200 shadow-sm'">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                            <!-- Columna 30%: Sesiones -->
+                            <div class="lg:col-span-4 space-y-4">
+                                <div v-for="session in openSessions" :key="session.id" @click="selectedSessionId = session.id" 
+                                     class="p-6 bg-white dark:bg-gray-900 border-2 rounded-[2.5rem] flex flex-col space-y-4 cursor-pointer transition-all relative" 
+                                     :class="selectedSessionId === session.id ? 'border-indigo-500 shadow-2xl bg-indigo-50/5' : 'border-gray-100 hover:border-indigo-300 opacity-80'">
                                     
-                                    <div class="flex justify-between items-center">
+                                    <div class="flex justify-between items-start">
                                         <div>
-                                            <p class="font-black text-xl uppercase tracking-tighter"
-                                               :class="[
-                                                   selectedSessionId === session.id ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-800 dark:text-white',
-                                                   !selectedSessionId ? (mealTypeColors[session.meal_type] ? 'text-indigo-600' : '') : ''
-                                               ]">
-                                                {{ session.meal_type }}
-                                            </p>
-                                            <div class="flex items-center mt-1 space-x-2">
-                                                <span class="text-[10px] font-black px-2 py-0.5 rounded border uppercase tracking-widest"
-                                                      :class="mealTypeTagColors[session.meal_type] || 'bg-gray-100 text-gray-600'">
-                                                    {{ session.meal_type }}
-                                                </span>
-                                                <span class="text-xs font-bold text-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded">{{ activeTimers[session.id] || '00:00:00' }}</span>
+                                            <p class="font-black text-2xl uppercase tracking-tighter leading-none" :class="selectedSessionId === session.id ? 'text-indigo-600' : 'text-gray-800'">{{ session.meal_type }}</p>
+                                            <div class="flex items-center mt-3 gap-2">
+                                                <span class="text-[9px] font-black px-3 py-1 rounded-lg border uppercase tracking-widest" :class="mealTypeTagColors[session.meal_type]">{{ session.meal_type }}</span>
+                                                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest flex items-center bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded-lg"><ClockIcon class="h-3 w-3 mr-1" /> {{ formatTime(session.activated_at) }}</span>
                                             </div>
                                         </div>
-                                        <div class="h-10 w-10 rounded-2xl flex items-center justify-center transition-all shadow-lg"
-                                             :class="selectedSessionId === session.id ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-400'">
-                                            <ChevronRightIcon v-if="selectedSessionId !== session.id" class="h-5 w-5" />
-                                            <CheckBadgeIcon v-else class="h-6 w-6" />
+                                        <div class="h-10 w-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 transition-all" :class="selectedSessionId === session.id ? 'bg-indigo-600 text-white shadow-lg' : ''">
+                                            <ChevronRightIcon class="h-5 w-5" />
                                         </div>
                                     </div>
-                                    <button @click.stop="openDeactivateMenuModal(session, session.provider)" 
-                                            class="w-full py-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all border border-red-200 dark:border-red-800">
-                                        Finalizar {{ session.meal_type }}
-                                    </button>
+
+                                    <div>
+                                        <p class="text-4xl font-black tabular-nums tracking-tighter" :class="selectedSessionId === session.id ? 'text-indigo-600' : 'text-gray-400'">
+                                            {{ activeTimers[session.id] || '00:00:00' }}
+                                        </p>
+                                        <p class="text-[8px] font-black text-gray-400 uppercase tracking-[0.3em] mt-1">Tiempo de Servicio</p>
+                                    </div>
+
+                                    <button @click.stop="openDeactivateMenuModal(session, session.provider)" class="w-full py-3 bg-red-50 text-red-600 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all shadow-sm border border-red-100">Finalizar Servicio</button>
                                 </div>
                             </div>
 
-                            <div v-if="activeSession" class="bg-indigo-600 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-indigo-200 dark:shadow-none flex flex-col transition-all duration-500">
-                                <div class="flex justify-between items-start mb-8">
-                                    <div>
-                                        <h5 class="text-xs font-black uppercase tracking-[0.3em] opacity-80 text-indigo-100">Consolidado Confirmado</h5>
-                                        <p class="text-3xl font-black uppercase tracking-tighter mt-1">{{ activeSession.meal_type }}</p>
-                                    </div>
-                                    <div class="flex items-center space-x-2 bg-white/20 px-3 py-1 rounded-full border border-white/30">
-                                        <div class="h-2 w-2 rounded-full bg-green-400 animate-pulse"></div>
-                                        <span class="text-[10px] font-black uppercase tracking-widest">{{ activeSession.provider?.name }}</span>
-                                    </div>
+                            <!-- Columna 70%: Detalle Global -->
+                            <div v-if="activeSession" class="lg:col-span-8 bg-indigo-600 rounded-[3rem] p-10 text-white shadow-2xl flex flex-col transition-all">
+                                <div class="flex justify-between items-start mb-10">
+                                    <div><h5 class="text-[10px] font-black uppercase tracking-[0.4em] opacity-70 mb-2">Monitor Consolidado</h5><p class="text-4xl font-black uppercase tracking-tighter leading-none">{{ activeSession.meal_type }}</p></div>
+                                    <div class="bg-white/20 px-6 py-3 rounded-2xl border border-white/30 text-[11px] font-black uppercase tracking-[0.2em] backdrop-blur-xl">{{ activeSession.provider?.name }}</div>
                                 </div>
 
-                                <div class="grid grid-cols-2 gap-8 items-center mb-8 bg-black/10 rounded-[2rem] p-6 border border-white/5">
-                                    <div class="text-left border-r border-white/10 pr-4">
-                                        <p class="text-[60px] font-black leading-none tracking-tighter">{{ activeTotalOrders }}</p>
-                                        <p class="text-[10px] font-bold uppercase tracking-[0.2em] opacity-70 mt-2">Platillos Listos</p>
-                                    </div>
-                                    <div class="space-y-2 overflow-y-auto max-h-32 pr-2 custom-scrollbar">
-                                        <div v-for="dish in activeDishSummary" :key="dish.name" class="flex justify-between items-center text-[10px] border-b border-white/5 pb-1 last:border-0">
-                                            <span class="font-medium opacity-80 truncate mr-2">{{ dish.name }}</span>
-                                            <span class="font-black bg-white text-indigo-600 h-5 min-w-[1.2rem] px-1.5 flex items-center justify-center rounded-lg shadow-sm">{{ dish.count }}</span>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-10 items-center mb-10 bg-black/10 rounded-[2.5rem] p-10 border border-white/10">
+                                    <div class="text-left border-r border-white/10 pr-8 col-span-1"><p class="text-[80px] font-black leading-none tracking-tighter">{{ activeTotalOrders }}</p><p class="text-[11px] font-black uppercase tracking-[0.4em] opacity-60 mt-4">Platillos Listos</p></div>
+                                    <div class="space-y-3 overflow-y-auto max-h-48 pr-4 custom-scrollbar col-span-2">
+                                        <div class="grid grid-cols-2 gap-x-8">
+                                            <div v-for="dish in activeDishSummary" :key="dish.name" class="flex justify-between items-center text-xs border-b border-white/10 pb-2.5 mb-2.5 last:border-0"><span class="font-bold truncate mr-4">{{ dish.name }}</span><span class="font-black bg-white text-indigo-600 h-7 min-w-[2rem] px-2 flex items-center justify-center rounded-xl shadow-xl">{{ dish.count }}</span></div>
                                         </div>
-                                        <p v-if="activeDishSummary.length === 0" class="text-[10px] italic opacity-50 text-center py-4 tracking-widest uppercase">Esperando confirmaciones...</p>
                                     </div>
                                 </div>
 
                                 <div class="flex-1">
-                                    <div class="flex justify-between items-center mb-4">
-                                        <p class="text-[10px] font-black uppercase tracking-widest opacity-60">Seguimiento de Áreas:</p>
-                                        <button @click="addAreaToSession(activeSession)" class="text-[8px] font-black uppercase bg-white/20 hover:bg-white/30 px-2 py-1 rounded border border-white/10 transition-all flex items-center">
-                                            <PlusIcon class="h-3 w-3 mr-1" stroke-width="3" /> Gestionar Áreas
-                                        </button>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-3 overflow-y-auto max-h-48 pr-2 custom-scrollbar">
-                                        <div v-for="areaStatus in activeSession.areas_status" :key="activeSession.id + '-' + areaStatus.id"
-                                             class="flex items-center justify-between p-3 bg-white/10 rounded-2xl border border-white/5 transition-all group/area">
-                                            <span class="text-[10px] font-black uppercase tracking-tight truncate mr-2">{{ areaStatus.name }}</span>
-                                            <div class="flex items-center shrink-0">
-                                                <button v-if="!areaStatus.is_submitted" 
-                                                        @click.stop="removeAreaFromSession(activeSession, areaStatus.id)"
-                                                        class="opacity-0 group-hover/area:opacity-100 p-1 hover:text-red-300 transition-all mr-1" title="Quitar área de esta sesión">
-                                                    <XMarkIcon class="h-3 w-3" />
-                                                </button>
-                                                <CheckBadgeIcon v-if="areaStatus.is_submitted" class="h-4 w-4 text-green-300" />
-                                                <ClockIcon v-else class="h-4 w-4 text-white/30 animate-pulse" />
+                                    <div class="flex justify-between items-center mb-6"><p class="text-[11px] font-black uppercase tracking-[0.4em] opacity-60">Seguimiento de Dependencias:</p><button @click="addAreaToSession(activeSession)" class="text-[10px] font-black uppercase bg-white/20 hover:bg-white/30 px-6 py-2.5 rounded-2xl border border-white/30 transition-all shadow-sm">Gestionar Áreas</button></div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 overflow-y-auto max-h-72 pr-3 custom-scrollbar">
+                                        <div v-for="areaStatus in activeSession.areas_status" :key="areaStatus.id" class="flex items-center justify-between p-4 bg-white/10 rounded-[1.5rem] border border-white/10 group/area transition-all hover:bg-white/20">
+                                            <div class="flex-1 min-w-0 mr-3"><span class="text-[11px] font-black uppercase truncate block tracking-tight">{{ areaStatus.name }}</span><span class="text-[9px] font-bold opacity-60 tracking-widest block mt-2">{{ areaStatus.submitted_count }} / {{ areaStatus.order_count }} enviadas</span></div>
+                                            <div class="flex items-center shrink-0 pl-2">
+                                                <button v-if="!areaStatus.is_submitted && !areaStatus.is_pending" @click.stop="removeAreaFromSession(activeSession, areaStatus.id)" class="opacity-0 group-hover/area:opacity-100 p-1.5 hover:text-red-300 transition-all mr-1"><XMarkIcon class="h-4 w-4" /></button>
+                                                <CheckBadgeIcon v-if="areaStatus.is_submitted" class="h-6 w-6 text-green-300 drop-shadow-lg" /><div v-else-if="areaStatus.is_pending" class="h-6 w-6 rounded-full border-2 border-amber-300 flex items-center justify-center animate-pulse"><div class="h-1.5 w-1.5 bg-amber-300 rounded-full shadow-sm"></div></div><ClockIcon v-else class="h-6 w-6 text-white/20" />
                                             </div>
                                         </div>
                                     </div>
@@ -449,356 +527,119 @@ const selectAllPending = (mealType) => {
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- MÓDULO ADQUISICIONES -->
-                <div v-if="user.role === 'acquisitions_manager'" class="space-y-6">
-                    <div class="flex items-center justify-between mb-2 px-2">
-                        <h4 class="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight">Proveedores y Sesiones</h4>
-                        <Link :href="route('providers.create')" class="text-xs font-bold text-indigo-600 hover:text-indigo-700 uppercase tracking-widest">+ Nuevo Proveedor</Link>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div v-for="(provider, index) in providers" :key="provider.id" 
-                             class="bg-white dark:bg-gray-800 rounded-[2rem] p-8 border-2 shadow-xl shadow-gray-100 dark:shadow-none transition-all hover:scale-[1.02] flex flex-col"
-                             :class="getProviderColor(index).border">
-                            
-                            <div class="flex justify-between items-center mb-1">
-                                <p class="text-[9px] font-black text-indigo-500 uppercase tracking-[0.2em]">
-                                    {{ new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }) }}
-                                </p>
-                                <span class="h-1.5 w-1.5 rounded-full bg-indigo-400"></span>
-                            </div>
-
-                            <div class="flex justify-between items-start mb-2">
-                                <h4 class="font-black text-2xl text-gray-900 dark:text-white leading-tight" :class="getProviderColor(index).text">{{ provider.name }}</h4>
-                                <button @click="openActivateMenuModal(provider)" class="p-3 rounded-2xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-none shrink-0 ml-2">
-                                    <PlusIcon class="h-6 w-6" stroke-width="3" />
-                                </button>
-                            </div>
-
-                            <!-- Información discreta del proveedor -->
-                            <div class="mb-6 space-y-1">
-                                <p v-if="provider.address" class="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase truncate flex items-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                    {{ provider.address }}
-                                </p>
-                                <div class="flex flex-wrap gap-x-3 gap-y-1">
-                                    <p v-if="provider.contact_phone" class="text-[10px] text-gray-400 dark:text-gray-500 font-bold flex items-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                        </svg>
-                                        {{ provider.contact_phone }}
-                                    </p>
-                                    <p v-if="provider.contact_email" class="text-[10px] text-gray-400 dark:text-gray-500 font-bold flex items-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                        </svg>
-                                        {{ provider.contact_email }}
-                                    </p>
-                                </div>
-                            </div>
-                            
-                            <div class="space-y-4 mb-2 flex-1">
-                                <div v-for="status in provider.dailyStatuses" :key="status.id" class="relative group/session">
-                                    <div v-if="status.status === 'open'" class="p-1">
-                                        <div class="flex gap-2">
-                                            <button @click="openDeactivateMenuModal(status, provider)" 
-                                                    class="flex-1 flex flex-col items-center justify-center p-6 text-white rounded-2xl hover:opacity-90 transition-all shadow-xl dark:shadow-none group"
-                                                    :class="mealTypeColors[status.meal_type] || 'bg-red-600'">
-                                                <span class="font-black text-lg uppercase leading-none">Cerrar {{ status.meal_type }}</span>
-                                                <span class="text-[10px] font-bold opacity-70 uppercase tracking-widest mt-2">Finalizar recepción</span>
-                                            </button>
-                                            <div class="flex flex-col gap-2">
-                                                <button @click="openDeleteSessionModal(status, provider)" 
-                                                        class="p-3 bg-gray-100 dark:bg-gray-700 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-xl border border-gray-200 dark:border-gray-600 transition-all"
-                                                        title="Eliminar sesión">
-                                                    <TrashIcon class="h-5 w-5" />
-                                                </button>
-                                                <Link :href="route('admin.orders.send', { provider: provider.id, date: new Date().toISOString().split('T')[0], meal_type: status.meal_type })"
-                                                      class="p-3 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl border border-indigo-100 dark:border-indigo-800 hover:bg-indigo-600 hover:text-white transition-all"
-                                                      title="Enviar Pedido (WhatsApp)">
-                                                    <ChatBubbleLeftRightIcon class="h-5 w-5" />
-                                                </Link>
-                                            </div>
-                                        </div>
+                    <!-- Catálogo de Proveedores Premium -->
+                    <div v-if="user.role === 'acquisitions_manager' || user.role === 'admin'" class="space-y-8">
+                        <div class="flex items-center justify-between px-4 border-b dark:border-gray-700 pb-6"><h4 class="text-2xl font-black text-gray-800 dark:text-white uppercase tracking-tight">Proveedores y Sesiones</h4><Link :href="route('providers.create')" class="bg-indigo-600 text-white px-8 py-3 rounded-2xl text-xs font-black uppercase tracking-widest shadow-2xl hover:bg-indigo-700 transition-all">+ Nuevo</Link></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
+                            <div v-for="(provider, index) in providers" :key="provider.id" class="bg-white dark:bg-gray-800 rounded-[3rem] p-10 border-2 shadow-2xl flex flex-col transition-all hover:scale-[1.03]" :class="getProviderColor(index).border">
+                                <div class="flex justify-between items-start mb-8"><h4 class="font-black text-3xl text-gray-900 dark:text-white leading-tight tracking-tighter" :class="getProviderColor(index).text">{{ provider.name }}</h4><button @click="openActivateMenuModal(provider)" class="p-4 rounded-[1.5rem] bg-indigo-600 text-white shadow-2xl hover:scale-110 transition-all border-4 border-white dark:border-gray-800"><PlusIcon class="h-8 w-8" stroke-width="3" /></button></div>
+                                <div class="space-y-5 flex-1">
+                                    <div v-for="status in provider.dailyStatuses" :key="status.id">
+                                        <div v-if="status.status === 'open'" class="flex gap-3"><button @click="openDeactivateMenuModal(status, provider)" class="flex-1 p-6 text-white rounded-[2rem] font-black text-sm uppercase shadow-xl hover:opacity-90 transition-all" :class="mealTypeColors[status.meal_type]">Cerrar {{ status.meal_type }}</button><div class="flex flex-col gap-3"><button @click="openDeleteSessionModal(status, provider)" class="p-4 bg-gray-100 dark:bg-gray-700 rounded-2xl hover:text-red-600 transition-all shadow-sm"><TrashIcon class="h-6 w-6" /></button><Link :href="route('admin.orders.send', { provider: provider.id, date: new Date().toISOString().split('T')[0], meal_type: status.meal_type })" class="p-4 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 rounded-2xl hover:bg-indigo-600 hover:text-white transition-all"><ChatBubbleLeftRightIcon class="h-6 w-6" /></Link></div></div>
+                                        <div v-else class="flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-900/50 border rounded-[2.5rem] shadow-inner"><div><span class="text-xs font-black uppercase px-4 py-1.5 rounded-xl border bg-white dark:bg-gray-800 shadow-sm" :class="mealTypeTagColors[status.meal_type]">{{ status.meal_type }}</span><span class="text-[10px] text-green-500 font-black uppercase flex items-center mt-4"><CheckBadgeIcon class="h-4 w-4 mr-2" /> Finalizado</span></div><div class="flex gap-3"><button @click="openEditSessionModal(status, provider)" class="p-2 text-green-600 hover:scale-125 transition-all"><ClockIcon class="h-6 w-6" /></button><Link :href="route('admin.orders.send', { provider: provider.id, date: new Date().toISOString().split('T')[0], meal_type: status.meal_type })" class="p-2 text-indigo-600 hover:scale-125 transition-all"><ChatBubbleLeftRightIcon class="h-6 w-6" /></Link><button @click="openDeleteSessionModal(status, provider)" class="p-2 text-gray-400 hover:text-red-600 transition-all"><TrashIcon class="h-6 w-6" /></button></div></div>
                                     </div>
-                                    <div v-else class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 rounded-2xl">
-                                        <div>
-                                            <span class="text-xs font-black uppercase block mb-0.5 px-2 py-0.5 rounded border inline-block" 
-                                                  :class="mealTypeTagColors[status.meal_type] || 'text-gray-400 border-gray-200'">{{ status.meal_type }}</span>
-                                            <span class="text-[10px] text-green-500 font-bold uppercase tracking-widest flex items-center mt-1">
-                                                <CheckBadgeIcon class="h-3 w-3 mr-1" /> Finalizado
-                                            </span>
-                                        </div>
-                                        <div class="flex gap-2">
-                                            <button @click="openEditSessionModal(status, provider)" class="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-xl transition-colors" title="Reabrir">
-                                                <ClockIcon class="h-5 w-5" />
-                                            </button>
-                                            <Link :href="route('admin.orders.summary', { provider: provider.id, date: new Date().toISOString().split('T')[0], meal_type: status.meal_type })" 
-                                                  class="p-2 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-xl transition-colors" title="Reporte">
-                                                <ClipboardDocumentListIcon class="h-5 w-5" />
-                                            </Link>
-                                            <Link :href="route('admin.orders.send', { provider: provider.id, date: new Date().toISOString().split('T')[0], meal_type: status.meal_type })"
-                                                  class="p-2 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-xl transition-colors" title="Enviar de nuevo">
-                                                <ChatBubbleLeftRightIcon class="h-5 w-5" />
-                                            </Link>
-                                            <button @click="openDeleteSessionModal(status, provider)" 
-                                                    class="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-xl transition-colors"
-                                                    title="Eliminar permanentemente">
-                                                <TrashIcon class="h-5 w-5" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div v-if="provider.dailyStatuses.length === 0" class="p-8 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl text-center">
-                                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Sin sesiones hoy</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- MÓDULO FILTRO (AREA MANAGER) -->
-                <div v-if="(user.role === 'area_manager' || teamOrders?.length > 0) && activeMealTypes?.length > 0" class="space-y-6">
-                    <h4 class="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight px-2">Control de Pedidos del Área</h4>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div v-for="mType in activeMealTypes" :key="mType" 
-                             class="bg-white dark:bg-gray-800 rounded-3xl border-2 border-gray-100 dark:border-gray-700 overflow-hidden shadow-lg">
-                            <div class="bg-indigo-600 p-6 text-white flex justify-between items-center">
-                                <div>
-                                    <h5 class="text-2xl font-black uppercase tracking-tighter">{{ mType }}</h5>
-                                    <p class="text-[10px] font-bold opacity-80 tracking-widest uppercase">Seguimiento en tiempo real</p>
-                                </div>
-                                <div class="h-12 w-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/20">
-                                    <UserGroupIcon class="h-6 w-6" />
-                                </div>
-                            </div>
+                <!-- TAB MY AREA -->
+                <div v-if="activeTab === 'my-area'" class="space-y-10">
+                    <!-- AVISO -->
+                    <div v-if="pendingAuthorizations?.length > 0" class="bg-emerald-50 dark:bg-emerald-900/10 border-2 border-emerald-200 dark:border-emerald-800 rounded-3xl p-8 shadow-lg shadow-emerald-50/50">
+                        <div class="flex items-center space-x-6">
+                            <div class="bg-white dark:bg-emerald-900/30 p-4 rounded-2xl border border-emerald-200 dark:border-emerald-800 shadow-sm"><ClockIcon class="h-10 w-10 text-emerald-600 animate-pulse" /></div>
+                            <div><h5 class="text-xl font-black text-emerald-800 dark:text-emerald-400 uppercase tracking-tight leading-none">Servicio Iniciado</h5><p class="text-[10px] font-bold text-emerald-600 dark:text-emerald-500 uppercase mt-2 tracking-widest">Habilita a tu equipo en el panel de abajo para desbloquear el menú.</p></div>
+                        </div>
+                    </div>
 
+                    <!-- AUTORIZACIÓN (FULL WIDTH) -->
+                    <div v-if="(user.role === 'area_manager' || (user.area_id && (user.role === 'admin' || user.role === 'acquisitions_manager'))) && openSessions.length > 0" class="space-y-6">
+                        <h4 class="text-lg font-black text-gray-800 dark:text-white uppercase tracking-tight px-2">Habilitar Comensales para Hoy</h4>
+                        <div v-for="session in openSessions" :key="'auth-' + session.id" class="bg-white dark:bg-gray-800 rounded-3xl border-2 border-indigo-100 dark:border-indigo-900/50 overflow-hidden shadow-xl">
+                            <div class="px-8 py-5 text-white flex justify-between items-center" :class="mealTypeColors[session.meal_type] || 'bg-indigo-600'">
+                                <div class="flex items-center gap-4"><div class="h-12 w-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/20"><UserIcon class="h-6 w-6" /></div><div><h5 class="text-xl font-black uppercase tracking-tighter leading-none">{{ session.meal_type }}</h5><p class="text-[8px] font-bold opacity-80 uppercase mt-1">Gestión de acceso: {{ session.provider?.name }}</p></div></div>
+                                <div class="flex gap-2"><button @click="selectAllForAuth(session.id)" class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all">Todos</button><button @click="deselectAllForAuth(session.id)" class="px-4 py-2 bg-black/10 hover:bg-black/20 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all">Ninguno</button></div>
+                            </div>
                             <div class="p-6">
-                                <div class="flex justify-between items-center mb-6">
-                                    <button @click="selectAllPending(mType)" class="text-[10px] font-black uppercase text-indigo-600 hover:text-indigo-700">Seleccionar todos los pendientes</button>
-                                    <span class="text-[10px] font-black text-gray-400 uppercase">{{ teamOrders.length }} Colaboradores</span>
-                                </div>
-
-                                <div class="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                                    <div v-for="member in teamOrders" :key="member.id" 
-                                         class="flex items-center p-4 rounded-2xl border-2 transition-all"
-                                         :class="member.orders.some(o => o.meal_type === mType) 
-                                            ? 'border-green-100 bg-green-50/30 dark:border-green-900/30 dark:bg-green-900/10' 
-                                            : 'border-red-50 bg-red-50/30 dark:border-red-900/20 dark:bg-red-900/10'">
-                                        
-                                        <div class="mr-4">
-                                            <div v-if="member.orders.find(o => o.meal_type === mType && o.status === 'submitted_by_user')" class="flex items-center">
-                                                <Checkbox 
-                                                    :checked="selectedOrderIds[mType]?.includes(member.orders.find(o => o.meal_type === mType).id)"
-                                                    @change="toggleOrderSelection(mType, member.orders.find(o => o.meal_type === mType).id)"
-                                                />
-                                            </div>
-                                            <div v-else class="w-5 flex justify-center">
-                                                <CheckBadgeIcon v-if="member.orders.some(o => o.meal_type === mType && o.status === 'submitted_by_manager')" class="h-5 w-5 text-green-500" />
-                                                <div v-else class="h-5 w-5 rounded-full border-2 border-red-200 dark:border-red-900"></div>
-                                            </div>
-                                        </div>
-
-                                        <img :src="member.avatar_url" class="h-10 w-10 rounded-full border-2 border-white shadow-sm mr-3" alt="" />
-                                        
-                                        <div class="flex-1 min-w-0">
-                                            <p class="text-sm font-black truncate" :class="member.orders.some(o => o.meal_type === mType) ? 'text-gray-800 dark:text-gray-200' : 'text-red-600 dark:text-red-400'">
-                                                {{ member.name }}
-                                                <span v-if="member.id === user.id" class="ml-1 text-[8px] bg-indigo-100 text-indigo-600 px-1 rounded">TÚ</span>
-                                            </p>
-                                            <p v-if="member.orders.find(o => o.meal_type === mType)" class="text-[10px] font-bold text-gray-500 truncate">
-                                                {{ member.orders.find(o => o.meal_type === mType).platillo }}
-                                            </p>
-                                            <p v-else class="text-[10px] font-black uppercase text-red-400 tracking-tighter">Sin pedido aún</p>
-                                        </div>
+                                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 mb-6">
+                                    <div v-for="member in teamOrders" :key="'auth-member-' + session.id + '-' + member.id" @click="toggleUserAuthorization(session.id, member.id)" class="flex items-center p-3 rounded-2xl border-2 transition-all cursor-pointer relative min-h-[4rem] shadow-sm hover:scale-[1.02]" :class="authorizedUserIds[session.id]?.includes(member.id) ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-500 text-emerald-700' : 'bg-gray-50 dark:bg-gray-900/50 border-transparent text-gray-400 opacity-60'">
+                                        <img :src="member.avatar_url" class="h-8 w-8 rounded-full border border-white dark:border-gray-700 mr-2.5 object-cover shadow-sm" /><div class="flex-1 min-w-0"><p class="text-[9px] font-black uppercase leading-tight truncate">{{ member.name }}</p></div>
+                                        <div v-if="authorizedUserIds[session.id]?.includes(member.id)" class="absolute -top-1.5 -right-1.5 bg-emerald-500 text-white rounded-full p-0.5 shadow-md"><CheckBadgeIcon class="h-3 w-3" /></div>
                                     </div>
                                 </div>
+                                <div class="flex justify-center"><button @click="saveAuthorizations(session.id)" :disabled="processingAuthorizations[session.id]" class="px-10 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-lg flex items-center justify-center gap-3" :class="[authStatus[session.id] === 'saved' ? 'bg-green-500 text-white shadow-green-100' : authStatus[session.id] === 'dirty' ? 'bg-amber-500 text-white animate-pulse' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100']"><template v-if="processingAuthorizations[session.id]">Guardando...</template><template v-else-if="authStatus[session.id] === 'saved'"><CheckBadgeIcon class="h-4 w-4" />¡Guardado!</template><template v-else><CheckBadgeIcon class="h-4 w-4" /> {{ authStatus[session.id] === 'dirty' ? 'Guardar Cambios' : 'Actualizar Habilitados' }}</template></button></div>
+                            </div>
+                        </div>
+                    </div>
 
-                                <div class="mt-8">
-                                    <button 
-                                        @click="submitSelectedOrders(mType)"
-                                        :disabled="!selectedOrderIds[mType]?.length"
-                                        class="w-full py-4 rounded-2xl font-black uppercase tracking-widest text-sm transition-all shadow-xl"
-                                        :class="selectedOrderIds[mType]?.length 
-                                            ? 'bg-green-600 text-white hover:bg-green-700 shadow-green-100 dark:shadow-none' 
-                                            : 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200 dark:bg-gray-700 dark:border-gray-600'"
-                                    >
-                                        Enviar {{ selectedOrderIds[mType]?.length || 0 }} Pedidos
-                                    </button>
+                    <!-- CONTROL PEDIDOS (DYNAMIC VISIBILITY) -->
+                    <div v-if="hasAnyTeamOrders" class="space-y-6">
+                        <div class="flex items-center gap-2 px-2"><ClipboardDocumentListIcon class="h-5 w-5 text-indigo-500" /><h4 class="text-lg font-black text-gray-800 dark:text-white uppercase tracking-tight">Pedidos del Equipo Pendientes</h4></div>
+                        <div v-for="mType in ['Desayuno', 'Comida', 'Cena', 'Extra']" :key="mType">
+                            <div v-if="teamOrders.some(m => m.orders.some(o => o.meal_type === mType))" class="bg-white dark:bg-gray-800 rounded-3xl border-2 border-gray-50 dark:border-gray-700 overflow-hidden shadow-xl mb-6">
+                                <div class="bg-gray-900 px-8 py-5 text-white flex justify-between items-center border-b border-white/5"><div><h5 class="text-xl font-black uppercase tracking-tight">{{ mType }}</h5><p class="text-[8px] font-bold opacity-50 uppercase tracking-widest mt-1">Estatus de solicitudes de tu dependencia</p></div><div class="bg-white/10 px-4 py-1.5 rounded-xl border border-white/10 text-[9px] font-black uppercase">{{ teamOrders.filter(m => m.orders.some(o => o.meal_type === mType)).length }} Pedidos</div></div>
+                                <div class="p-6">
+                                    <div class="flex justify-between items-center mb-6"><button @click="selectAllPending(mType)" class="text-[9px] font-black uppercase text-indigo-600 hover:text-indigo-700 bg-indigo-50 dark:bg-indigo-900/30 px-4 py-2 rounded-xl transition-all shadow-sm">✓ Firmar todos los pendientes</button></div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 max-h-[400px] overflow-y-auto pr-3 custom-scrollbar">
+                                        <div v-for="member in teamOrders" :key="member.id" class="flex items-center p-4 rounded-2xl border-2 transition-all shadow-sm" :class="member.orders.some(o => o.meal_type === mType) ? 'border-green-100 bg-green-50/10 dark:bg-green-900/10' : 'border-gray-50 bg-gray-50/10 opacity-40 grayscale'">
+                                            <div class="mr-3"><div v-if="member.orders.find(o => o.meal_type === mType && o.status === 'submitted_by_user')" class="flex items-center"><Checkbox :checked="selectedOrderIds[mType]?.includes(member.orders.find(o => o.meal_type === mType).id)" @change="toggleOrderSelection(mType, member.orders.find(o => o.meal_type === mType).id)" class="h-5 w-5" /></div><div v-else class="w-5 flex justify-center"><CheckBadgeIcon v-if="member.orders.some(o => o.meal_type === mType && o.status === 'submitted_by_manager')" class="h-5 w-5 text-green-500" /><div v-else class="h-5 w-5 rounded-full border-2 border-red-100"></div></div></div>
+                                            <img :src="member.avatar_url" class="h-10 w-10 rounded-full border border-white mr-3 object-cover shadow-sm" /><div class="flex-1 min-w-0"><p class="text-[10px] font-black truncate uppercase tracking-tight" :class="member.orders.some(o => o.meal_type === mType) ? 'text-gray-800 dark:text-gray-200' : 'text-gray-400'">{{ member.name }}</p><p v-if="member.orders.find(o => o.meal_type === mType)" class="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 truncate italic mt-1 leading-none">"{{ member.orders.find(o => o.meal_type === mType).platillo }}"</p></div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-8 flex justify-center"><button @click="submitSelectedOrders(mType)" :disabled="!selectedOrderIds[mType]?.length" class="px-16 py-4 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] transition-all shadow-xl shadow-green-100 disabled:opacity-30">Enviar {{ selectedOrderIds[mType]?.length || 0 }} a Cocina</button></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MI COMEDOR (GRID WIDE) -->
+                    <div v-if="user.role === 'diner' || user.role === 'area_manager' || (user.role === 'acquisitions_manager' && user.area_id)" class="space-y-8 pt-8 border-t-2 border-gray-100 dark:border-gray-800">
+                        <div class="flex justify-between items-center px-2">
+                            <h4 class="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight">Mi Comedor Personal</h4>
+                            <div v-if="hasDirtyAuths" class="px-6 py-2.5 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-2xl text-[9px] font-black uppercase tracking-widest border-2 border-amber-200 dark:border-amber-800 animate-pulse flex items-center gap-3 shadow-sm">
+                                <InformationCircleIcon class="h-4 w-4" /> Habilita a tu equipo primero para desbloquear tu menú
+                            </div>
+                        </div>
+                        <div v-if="!hasDirtyAuths" class="w-full space-y-8">
+                            <div v-if="myOrdersToday?.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                <div v-for="order in myOrdersToday" :key="order.id" class="bg-white dark:bg-gray-800 border-2 rounded-[2rem] p-6 shadow-lg transition-all" :class="isSessionOpenForMe(order.meal_type) ? 'border-green-400 animate-glow-green' : 'border-red-100 opacity-90'">
+                                    <div class="flex justify-between items-start mb-6"><div class="flex items-center space-x-4"><div class="h-12 w-12 rounded-2xl flex items-center justify-center text-white shadow-lg" :class="isSessionOpenForMe(order.meal_type) ? (mealTypeColors[order.meal_type] || 'bg-indigo-600') : 'bg-red-400'"><CheckBadgeIcon v-if="isSessionOpenForMe(order.meal_type)" class="h-7 w-7" /><ClockIcon v-else class="h-7 w-7" /></div><div><div class="flex items-center gap-2 mb-1"><span class="text-[9px] font-black px-3 py-1 rounded-lg border uppercase shadow-sm tracking-widest" :class="mealTypeTagColors[order.meal_type]">{{ order.meal_type }}</span></div><span class="text-[9px] font-black uppercase tracking-widest" :class="isSessionOpenForMe(order.meal_type) ? 'text-green-500' : 'text-red-500'">{{ isSessionOpenForMe(order.meal_type) ? 'Servicio Abierto' : 'Bloqueado' }}</span></div></div><button v-if="isSessionOpenForMe(order.meal_type)" @click="openEditOrderModal(order)" class="p-2.5 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-xl transition-all shadow-sm border border-gray-50 dark:border-gray-700"><PencilSquareIcon class="h-6 w-6" /></button></div>
+                                    <div class="mb-6"><p class="text-lg font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-tight leading-tight">{{ order.daily_menu.name }}</p><p v-if="order.preferences" class="text-[10px] text-gray-500 dark:text-gray-400 mt-3 italic font-medium leading-relaxed bg-gray-50 dark:bg-gray-900/50 p-3 rounded-xl border-l-2 border-indigo-500">"{{ order.preferences }}"</p></div>
+                                    <div class="flex items-center text-[10px] font-black uppercase tracking-widest" :class="order.status === 'submitted_by_manager' ? 'text-green-600' : 'text-orange-500'"><div class="h-2 w-2 rounded-full mr-3" :class="order.status === 'submitted_by_manager' ? 'bg-green-500 shadow-sm shadow-green-200' : 'bg-orange-500 animate-pulse shadow-sm shadow-orange-200'"></div>{{ order.status === 'submitted_by_manager' ? 'Enviado a Cocina' : 'Esperando Firma de Área' }}</div>
+                                </div>
+                            </div>
+                            <div v-for="(menus, mType) in groupedAvailableMenus" :key="mType" class="rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden flex flex-col min-h-[300px] transition-all" :class="mealTypeColors[mType] || 'bg-gray-600'">
+                                <div class="relative z-10 mb-8"><h4 class="text-3xl font-black uppercase tracking-tighter leading-none">{{ mType }}</h4><p class="text-[9px] font-bold opacity-70 uppercase tracking-[0.3em] mt-3">Platillos disponibles hoy:</p></div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 relative z-10 flex-1">
+                                    <div v-for="menu in menus" :key="menu.id" @click="openPlaceOrderModal(menu)" class="p-6 backdrop-blur-xl border rounded-[2rem] cursor-pointer group flex justify-between items-center transition-all hover:scale-[1.02] hover:bg-white/20 hover:border-white shadow-md" :class="mealTypeCardColors[mType] || 'bg-white/10 border-white/20'"><div class="flex-1 min-w-0 mr-6"><h5 class="text-[13px] font-black truncate uppercase tracking-tight">{{ menu.name }}</h5><p class="text-[9px] opacity-80 italic line-clamp-1 mt-1 font-medium">{{ menu.description || 'Consulta ingredientes.' }}</p></div><div class="h-9 w-9 bg-white rounded-xl flex items-center justify-center text-indigo-600 shadow-xl group-hover:scale-110 transition-all border border-white/50"><PlusIcon class="h-5 w-5" stroke-width="3" /></div></div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- MÓDULO COMENSAL UNIFICADO -->
-                <div v-if="user.role === 'diner' || user.role === 'area_manager' || (user.role === 'acquisitions_manager' && user.area_id)" class="space-y-6">
-                    <h4 class="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight px-2">Mi Comedor</h4>
-                    
-                    <!-- MIS PEDIDOS DE HOY -->
-                    <div v-if="myOrdersToday?.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div v-for="order in myOrdersToday" :key="order.id" 
-                             class="bg-white dark:bg-gray-800 border-2 rounded-3xl p-6 shadow-lg transition-all duration-500"
-                             :class="isSessionOpenForMe(order.meal_type) 
-                                ? 'border-green-400 dark:border-green-500 shadow-green-100 dark:shadow-none animate-glow-green' 
-                                : 'border-red-200 dark:border-red-900 shadow-red-50 dark:shadow-none opacity-90'">
-                            
-                            <div class="flex justify-between items-start mb-4">
-                                <div class="flex items-center space-x-3">
-                                    <div class="h-10 w-10 rounded-2xl flex items-center justify-center text-white shadow-sm transition-colors duration-500"
-                                         :class="isSessionOpenForMe(order.meal_type) ? (mealTypeColors[order.meal_type] || 'bg-indigo-600') : 'bg-red-400'">
-                                        <CheckBadgeIcon v-if="isSessionOpenForMe(order.meal_type)" class="h-6 w-6" />
-                                        <ClockIcon v-else class="h-6 w-6" />
-                                    </div>
-                                    <div>
-                                        <div class="flex items-center gap-2 mb-1">
-                                            <span class="text-[10px] font-black px-2 py-0.5 rounded border uppercase tracking-widest"
-                                                  :class="mealTypeTagColors[order.meal_type] || 'bg-gray-100 text-gray-600'">
-                                                {{ order.meal_type }}
-                                            </span>
-                                        </div>
-                                        <span class="text-[10px] font-bold uppercase tracking-widest"
-                                              :class="isSessionOpenForMe(order.meal_type) ? 'text-green-500' : 'text-red-500'">
-                                            {{ isSessionOpenForMe(order.meal_type) ? 'Sesión Abierta' : 'Pedido Bloqueado' }}
-                                        </span>
-                                    </div>
-                                </div>
-                                <button v-if="isSessionOpenForMe(order.meal_type)" 
-                                        @click="openEditOrderModal(order)" 
-                                        class="p-2 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-xl transition-all hover:scale-110 active:scale-95"
-                                        title="Editar pedido">
-                                    <PencilSquareIcon class="h-6 w-6" />
-                                </button>
-                            </div>
-                            <div class="mb-4">
-                                <p class="text-sm font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-tighter">{{ order.daily_menu.name }}</p>
-                                <p v-if="order.preferences" class="text-xs text-gray-500 mt-1 italic">"{{ order.preferences }}"</p>
-                            </div>
-                            <div class="flex items-center text-[10px] font-black uppercase tracking-widest" 
-                                 :class="order.status === 'submitted_by_manager' ? 'text-green-600' : 'text-orange-500'">
-                                <div class="h-2 w-2 rounded-full mr-2" 
-                                     :class="order.status === 'submitted_by_manager' ? 'bg-green-500' : 'bg-orange-500 animate-pulse'"></div>
-                                {{ order.status === 'submitted_by_manager' ? 'Enviado a Cocina' : 'Esperando Filtro de Área' }}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- SELECCIÓN DE MENÚ -->
-                    <div v-if="Object.keys(groupedAvailableMenus).length > 0" class="space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                            <div v-for="(menus, mType) in groupedAvailableMenus" :key="mType" 
-                                 class="rounded-[2.5rem] p-6 text-white shadow-2xl relative overflow-hidden flex flex-col"
-                                 :class="mealTypeColors[mType] || 'bg-gray-600'">
-                                
-                                <div class="absolute top-0 right-0 p-8 opacity-10 scale-125">
-                                    <ClockIcon class="h-24 w-24" />
-                                </div>
-
-                                <div class="relative z-10 mb-6">
-                                    <h4 class="text-2xl font-black uppercase tracking-tighter">{{ mType }}</h4>
-                                    <p class="text-[10px] font-bold opacity-70 uppercase tracking-widest">Opciones disponibles</p>
-                                </div>
-
-                                <div class="space-y-3 relative z-10 flex-1">
-                                    <div v-for="menu in menus" :key="menu.id" 
-                                         class="p-4 backdrop-blur-md border rounded-2xl transition-all cursor-pointer group flex justify-between items-center"
-                                         :class="mealTypeCardColors[mType] || 'bg-white/10 border-white/20'"
-                                         @click="openPlaceOrderModal(menu)">
-                                        <div class="flex-1 min-w-0 mr-3">
-                                            <h5 class="text-sm font-black truncate">{{ menu.name }}</h5>
-                                            <p class="text-[10px] opacity-70 italic line-clamp-1">{{ menu.description }}</p>
-                                        </div>
-                                        <div class="h-8 w-8 bg-white rounded-full flex items-center justify-center text-indigo-600 shadow-lg shrink-0 group-hover:scale-110 transition-all">
-                                            <PlusIcon class="h-5 w-5" stroke-width="3" />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- HISTORIAL RECIENTE INTEGRADO -->
-                    <div v-if="orderHistory?.length > 0" class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-3xl p-8 border border-gray-100 dark:border-gray-700">
-                        <div class="flex justify-between items-center mb-6">
-                            <h4 class="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Mis últimos pedidos</h4>
-                            <Link :href="route('justification.index')" class="text-[9px] font-black text-indigo-600 uppercase tracking-widest hover:underline">Ver todo el historial</Link>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                            <div v-for="h in orderHistory" :key="h.id" class="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-700">
-                                <span class="text-[8px] font-black uppercase text-indigo-500 block mb-1">{{ h.meal_type }}</span>
-                                <p class="font-bold text-xs text-gray-800 dark:text-gray-200 truncate">{{ h.daily_menu.name }}</p>
-                                <p class="text-[8px] text-gray-400 mt-1 font-bold">{{ new Date(h.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </div>
-        
+
         <!-- MODALS -->
         <template v-if="user.role === 'acquisitions_manager' || user.role === 'admin'">
-            <ActivateMenuModal 
-                :show="showActivateMenuModal" 
-                :provider="selectedProviderForActivation" 
-                :areas="areas" 
-                :allSessions="allSessionsToday"
-                :initialMode="activateModalMode"
-                :initialSession="sessionToEdit"
-                @close="showActivateMenuModal = false" 
-            />
+            <ActivateMenuModal :show="showActivateMenuModal" :provider="selectedProviderForActivation" :areas="areas" :allSessions="allSessionsToday" :initialMode="activateModalMode" :initialSession="sessionToEdit" @close="showActivateMenuModal = false" />
             <DeactivateMenuConfirmationModal :show="showDeactivateMenuModal" :provider="sessionToDeactivate" :todayOrdersByArea="[]" @close="showDeactivateMenuModal = false" @confirm="confirmDeactivation" />
-            <DeleteSessionModal 
-                :show="showDeleteSessionModal"
-                :session="sessionToDelete"
-                @close="showDeleteSessionModal = false"
-            />
+            <DeleteSessionModal :show="showDeleteSessionModal" :session="sessionToDelete" @close="showDeleteSessionModal = false" />
         </template>
-
-        <template v-if="user.role === 'area_manager'">
-            <SubmitOrdersConfirmationModal 
-                :show="showSubmitConfirmation"
-                :mealType="pendingSubmissionMealType"
-                :count="selectedOrderIds[pendingSubmissionMealType]?.length || 0"
-                @close="showSubmitConfirmation = false"
-                @confirm="confirmSubmitAreaOrders"
-            />
+        <template v-if="user.role === 'area_manager' || user.role === 'acquisitions_manager' || user.role === 'admin'">
+            <SubmitOrdersConfirmationModal :show="showSubmitConfirmation" :mealType="pendingSubmissionMealType" :count="selectedOrderIds[pendingSubmissionMealType]?.length || 0" @close="showSubmitConfirmation = false" @confirm="confirmSubmitAreaOrders" />
         </template>
-
-        <PlaceOrderModal 
-            :show="showPlaceOrderModal" 
-            :menu="selectedMenuForOrder" 
-            :existingOrder="editingOrder" 
-            :availableOptions="menusForSelection"
-            @close="showPlaceOrderModal = false" 
-        />
-
+        <PlaceOrderModal :show="showPlaceOrderModal" :menu="selectedMenuForOrder" :existingOrder="editingOrder" :availableOptions="menusForSelection" @close="showPlaceOrderModal = false" />
     </AuthenticatedLayout>
 </template>
 
 <style>
-.custom-scrollbar::-webkit-scrollbar {
-    width: 4px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(99, 102, 241, 0.2);
-    border-radius: 10px;
-}
-
-@keyframes glow-green {
-    0%, 100% { border-color: rgb(74, 222, 128); box-shadow: 0 0 5px rgba(74, 222, 128, 0.2); }
-    50% { border-color: rgb(34, 197, 94); box-shadow: 0 0 20px rgba(34, 197, 94, 0.4); }
-}
-
-.animate-glow-green {
-    animation: glow-green 2s infinite;
-}
+.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.1); border-radius: 10px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.2); }
+@keyframes glow-green { 0%, 100% { border-color: rgb(74, 222, 128); box-shadow: 0 0 10px rgba(74, 222, 128, 0.2); } 50% { border-color: rgb(34, 197, 94); box-shadow: 0 0 30px rgba(34, 197, 94, 0.4); } }
+.animate-glow-green { animation: glow-green 2s infinite; }
 </style>

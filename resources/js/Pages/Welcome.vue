@@ -13,7 +13,7 @@ defineProps({
 });
 
 const page = usePage();
-const companyName = computed(() => page.props.settings?.company_name || 'H. Congreso del Estado de Nayarit');
+const companyName = computed(() => page.props.settings?.company_name || 'SiCoA');
 </script>
 
 <template>
@@ -32,7 +32,7 @@ const companyName = computed(() => page.props.settings?.company_name || 'H. Cong
                         {{ companyName }}
                     </h1>
                     <p class="text-slate-500 dark:text-slate-400 text-sm mb-8 font-medium">
-                        Sistema Digital de Pases de Salida
+                        Sistema Control de Alimentos 
                     </p>
 
                     <div class="space-y-4">
@@ -41,7 +41,7 @@ const companyName = computed(() => page.props.settings?.company_name || 'H. Cong
                                 :href="route('dashboard')"
                                 class="flex items-center justify-center w-full px-6 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl transition-all shadow-lg shadow-indigo-200 dark:shadow-none"
                             >
-                                Entrar al Panel de Control
+                                Entrar a Gestión
                             </Link>
                         </template>
 

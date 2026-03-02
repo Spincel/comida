@@ -18,28 +18,46 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
+        'name', // Keep for backward compatibility where needed directly, but prefer first_name + last_name
+        'first_name',
+        'last_name',
+        'second_last_name',
+        'employee_number',
+        'username',
         'email',
         'avatar',
         'password',
-        'area_id', // Added
-        'role',    // Added
+        'area_id',
+        'role',
     ];
+
+    /**
+     * Get the user's full name.
+     */
+    public function getNameAttribute($value)
+    {
+        if ($this->first_name) {
+            $parts = array_filter([$this->first_name, $this->last_name, $this->second_last_name]);
+            return implode(' ', $parts);
+        }
+        return $value; // Fallback to old 'name' column if not split
+    }
 
     /**
      * Get the user's avatar URL.
      */
     public function getAvatarUrlAttribute()
     {
+        $displayName = $this->name ?? 'User';
         return $this->avatar 
             ? asset('storage/' . $this->avatar) 
-            : 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&color=7F9CF5&background=EBF4FF';
+            : 'https://ui-avatars.com/api/?name=' . urlencode($displayName) . '&color=7F9CF5&background=EBF4FF';
     }
 
     /**
      * The accessors to append to the model's array form.
      */
-    protected $appends = ['avatar_url'];
+    protected $appends = ['name', 'avatar_url'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -78,5 +96,13 @@ class User extends Authenticatable
     public function orders()
     {
         return $this->hasMany(Order::class);
+    }
+
+    /**
+     * Get the session authorizations for the user.
+     */
+    public function sessionAuthorizations()
+    {
+        return $this->hasMany(SessionAuthorization::class);
     }
 }

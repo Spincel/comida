@@ -30,4 +30,20 @@ class ProviderDailyStatus extends Model
     {
         return $this->belongsTo(Provider::class);
     }
+
+    /**
+     * Get the authorizations for the session.
+     */
+    public function authorizations()
+    {
+        return $this->hasMany(SessionAuthorization::class, 'provider_daily_status_id');
+    }
+
+    /**
+     * Get the authorized users for the session.
+     */
+    public function authorizedUsers()
+    {
+        return $this->belongsToMany(User::class, 'session_authorizations', 'provider_daily_status_id', 'user_id');
+    }
 }
