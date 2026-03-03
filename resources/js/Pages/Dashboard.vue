@@ -519,19 +519,28 @@ const formatTime = (dateString) => {
                                 </div>
 
                                 <div class="flex-1">
-                                    <div class="flex justify-between items-center mb-4"><p class="text-[10px] font-black uppercase tracking-[0.4em] opacity-60">Seguimiento de Dependencias:</p><button @click="addAreaToSession(activeSession)" class="text-[9px] font-black uppercase bg-white/20 hover:bg-white/30 px-5 py-2 rounded-xl border border-white/30 transition-all shadow-sm">Gestionar Áreas</button></div>
+                                    <div class="flex justify-between items-center mb-4">
+                                        <p class="text-[10px] font-black uppercase tracking-[0.4em] opacity-60">Seguimiento de Dependencias:</p>
+                                        <button @click="addAreaToSession(activeSession)" class="text-[9px] font-black uppercase bg-amber-400 hover:bg-amber-500 text-amber-950 px-5 py-2 rounded-xl border-b-4 border-amber-600 transition-all shadow-lg active:border-b-0 active:translate-y-1">
+                                            Gestionar Áreas
+                                        </button>
+                                    </div>
                                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5 gap-3 overflow-y-auto max-h-72 pr-3 custom-scrollbar">
                                         <div v-for="areaStatus in activeSession.areas_status" :key="areaStatus.id" 
-                                             class="flex items-center justify-between p-3 bg-white/10 rounded-2xl border border-white/10 group/area transition-all hover:bg-white/20 hover:scale-[1.02] hover:shadow-lg active:scale-95 cursor-pointer">
+                                             class="flex items-center justify-between p-3 bg-white/10 rounded-2xl border border-white/10 group/area transition-all hover:bg-white/20 hover:scale-[1.02] hover:shadow-lg active:scale-95 cursor-pointer"
+                                             @click="!areaStatus.is_submitted && !areaStatus.is_pending ? removeAreaFromSession(activeSession, areaStatus.id) : null">
                                             <div class="flex-1 min-w-0 mr-2">
                                                 <span class="text-[9px] font-black uppercase truncate block tracking-tight leading-none">{{ areaStatus.name }}</span>
                                                 <span class="text-[8px] font-bold opacity-60 tracking-widest block mt-1.5 leading-none">{{ areaStatus.submitted_count }} / {{ areaStatus.order_count }} enviadas</span>
                                             </div>
                                             <div class="flex items-center shrink-0">
-                                                <button v-if="!areaStatus.is_submitted && !areaStatus.is_pending" @click.stop="removeAreaFromSession(activeSession, areaStatus.id)" class="opacity-0 group-hover/area:opacity-100 p-1 hover:text-red-300 transition-all mr-1"><XMarkIcon class="h-3 w-3" /></button>
                                                 <CheckBadgeIcon v-if="areaStatus.is_submitted" class="h-5 w-5 text-green-300 drop-shadow-lg" />
-                                                <div v-else-if="areaStatus.is_pending" class="h-5 w-5 rounded-full border-2 border-amber-300 flex items-center justify-center animate-pulse"><div class="h-1 w-1 bg-amber-300 rounded-full shadow-sm"></div></div>
-                                                <ClockIcon v-else class="h-5 w-5 text-white/20" />
+                                                <div v-else-if="areaStatus.is_pending" class="h-5 w-5 rounded-full border-2 border-amber-300 flex items-center justify-center animate-pulse">
+                                                    <div class="h-1 w-1 bg-amber-300 rounded-full shadow-sm"></div>
+                                                </div>
+                                                <div v-else class="text-white/40 group-hover/area:text-red-300 transition-colors">
+                                                    <TrashIcon class="h-5 w-5" />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
