@@ -84,6 +84,7 @@
 - **Corregido Error 500 (Undefined constant):** Se estandarizaron las importaciones de controladores (`use App\Http\Controllers\...`) en `routes/web.php` usando nombres cortos.
 - **Corregido Error de Vue (Invalid prop `openSessions`):** Se aplicó `->values()` en las colecciones retornadas por `DashboardController` para asegurar que Inertia las renderice como arreglos de JSON secuenciales en lugar de objetos clave-valor.
 - **Autorización Automática de Gerentes:** Se ajustó `DashboardController` y `OrderController` para que los Gerentes y Administradores estén autorizados implícitamente en las sesiones de su área, corrigiendo la desaparición del menú tras habilitar comensales.
+- **Robustez en Catálogo de Platillos:** Se implementó un casteo estricto a enteros (`(int)`) en las comparaciones de IDs de sesión y autorizaciones en `DashboardController` para asegurar que el catálogo de platillos sea visible para todos los usuarios autorizados (especialmente Comensales regulares).
 - **Visibilidad Dinámica de Navegación:** Se implementó el flag `isAnySessionOpen` en el middleware de Inertia para ocultar el enlace de "Justificación" cuando no hay sesiones activas, y se añadió el enlace de "Resumen Diario" solicitado.
 
 ## Current State

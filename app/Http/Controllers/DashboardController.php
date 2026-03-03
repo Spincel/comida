@@ -196,30 +196,35 @@ class DashboardController extends Controller
                 $userAuthorizations = \App\Models\SessionAuthorization::where('user_id', $user->id)
                     ->whereIn('provider_daily_status_id', $openStatuses->pluck('id'))
                     ->pluck('provider_daily_status_id')
+                    ->map(fn($id) => (int)$id)
                     ->toArray();
 
                 $availableSessionsForArea = $openStatuses->filter(function($session) use ($user, $userAuthorizations) {
                     $areas = is_array($session->selected_area_ids) ? $session->selected_area_ids : json_decode($session->selected_area_ids, true);
                     $isAreaSelected = in_array((int)$user->area_id, array_map('intval', $areas ?: []));
                     
-                    // NEW: Check authorization
-                    return $isAreaSelected && in_array($session->id, $userAuthorizations);
+                    // NEW: Admins and Acquisitions are always authorized for sessions open to their area
+                    return $isAreaSelected;
                 })->values();
 
                 $props['pendingAuthorizations'] = $openStatuses->filter(function($session) use ($user, $userAuthorizations) {
                     $areas = is_array($session->selected_area_ids) ? $session->selected_area_ids : json_decode($session->selected_area_ids, true);
                     $isAreaSelected = in_array((int)$user->area_id, array_map('intval', $areas ?: []));
-                    return $isAreaSelected && !in_array($session->id, $userAuthorizations);
+                    // Check if not authorized yet (for UI notification only)
+                    return $isAreaSelected && !in_array((int)$session->id, $userAuthorizations);
                 })->values();
 
                 $availableMenus = [];
                 foreach ($availableSessionsForArea as $session) {
-                    $menus = DailyMenu::where('provider_id', $session->provider_id)->where('available_on', $today)->where('status', 'published')->with('provider')->get();
+                    $menus = DailyMenu::where('provider_id', $session->provider_id)
+                        ->where('available_on', $today)
+                        ->where('status', 'published')
+                        ->with('provider')
+                        ->get();
                     foreach ($menus as $menu) {
-                        $m = clone $menu;
-                        $m->meal_type = $session->meal_type;
-                        $m->already_ordered = $props['myOrdersToday']->where('meal_type', $session->meal_type)->count() > 0;
-                        $availableMenus[] = $m;
+                        $menu->meal_type = $session->meal_type;
+                        $menu->already_ordered = $props['myOrdersToday']->where('meal_type', $session->meal_type)->count() > 0;
+                        $availableMenus[] = $menu;
                     }
                 }
                 $props['availableMenus'] = $availableMenus;
@@ -284,12 +289,15 @@ class DashboardController extends Controller
 
             $availableMenus = [];
             foreach ($availableSessionsForArea as $session) {
-                $menus = DailyMenu::where('provider_id', $session->provider_id)->where('available_on', $today)->where('status', 'published')->with('provider')->get();
+                $menus = DailyMenu::where('provider_id', $session->provider_id)
+                    ->where('available_on', $today)
+                    ->where('status', 'published')
+                    ->with('provider')
+                    ->get();
                 foreach ($menus as $menu) {
-                    $m = clone $menu;
-                    $m->meal_type = $session->meal_type;
-                    $m->already_ordered = $myOrdersToday->where('meal_type', $session->meal_type)->count() > 0;
-                    $availableMenus[] = $m;
+                    $menu->meal_type = $session->meal_type;
+                    $menu->already_ordered = $myOrdersToday->where('meal_type', $session->meal_type)->count() > 0;
+                    $availableMenus[] = $menu;
                 }
             }
             $props['availableMenus'] = $availableMenus;
@@ -304,6 +312,7 @@ class DashboardController extends Controller
             $userAuthorizations = \App\Models\SessionAuthorization::where('user_id', $user->id)
                 ->whereIn('provider_daily_status_id', $openStatuses->pluck('id'))
                 ->pluck('provider_daily_status_id')
+                ->map(fn($id) => (int)$id)
                 ->toArray();
 
             $availableSessions = $openStatuses->filter(function($session) use ($user, $userAuthorizations) {
@@ -311,23 +320,26 @@ class DashboardController extends Controller
                 $isAreaSelected = in_array((int)$user->area_id, array_map('intval', $areas ?: []));
                 
                 // NEW: Must also be authorized by Area Manager
-                return $isAreaSelected && in_array($session->id, $userAuthorizations);
+                return $isAreaSelected && in_array((int)$session->id, $userAuthorizations);
             })->values();
 
             $props['pendingAuthorizations'] = $openStatuses->filter(function($session) use ($user, $userAuthorizations) {
                 $areas = is_array($session->selected_area_ids) ? $session->selected_area_ids : json_decode($session->selected_area_ids, true);
                 $isAreaSelected = in_array((int)$user->area_id, array_map('intval', $areas ?: []));
-                return $isAreaSelected && !in_array($session->id, $userAuthorizations);
+                return $isAreaSelected && !in_array((int)$session->id, $userAuthorizations);
             })->values();
 
             $availableMenus = [];
             foreach ($availableSessions as $session) {
-                $menus = DailyMenu::where('provider_id', $session->provider_id)->where('available_on', $today)->where('status', 'published')->with('provider')->get();
+                $menus = DailyMenu::where('provider_id', $session->provider_id)
+                    ->where('available_on', $today)
+                    ->where('status', 'published')
+                    ->with('provider')
+                    ->get();
                 foreach ($menus as $menu) {
-                    $m = clone $menu;
-                    $m->meal_type = $session->meal_type;
-                    $m->already_ordered = $myOrdersToday->where('meal_type', $session->meal_type)->count() > 0;
-                    $availableMenus[] = $m;
+                    $menu->meal_type = $session->meal_type;
+                    $menu->already_ordered = $myOrdersToday->where('meal_type', $session->meal_type)->count() > 0;
+                    $availableMenus[] = $menu;
                 }
             }
             $props['availableMenus'] = $availableMenus;
