@@ -15,7 +15,8 @@ import {
     ClipboardDocumentListIcon,
     UserGroupIcon,
     ViewColumnsIcon,
-    UserIcon
+    UserIcon,
+    ChatBubbleBottomCenterTextIcon
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
@@ -24,6 +25,53 @@ const props = defineProps({
     mealType: String,
     ordersSummary: Array, 
 });
+
+// --- WhatsApp Sharing Logic ---
+const sendToWhatsApp = (areaSummary = null) => {
+    let message = `*RESUMEN DE PEDIDOS - ${props.mealType.toUpperCase()}*\n`;
+    message += `*Proveedor:* ${props.provider.name}\n`;
+    message += `*Fecha:* ${props.date}\n`;
+    message += `----------------------------\n\n`;
+
+    if (areaSummary) {
+        // Single Area Report
+        message += `*ÁREA:* ${areaSummary.area_name.toUpperCase()}\n`;
+        areaSummary.platillos.forEach(p => {
+            message += `• ${p.total_count}x ${p.platillo_name}\n`;
+            if (p.observations?.length > 0) {
+                p.observations.forEach(obs => message += `  - _${obs}_\n`);
+            }
+        });
+        message += `\n*Total Área:* ${areaSummary.total_area_orders} pedidos`;
+    } else {
+        // Global Report
+        const globalPlatillos = {};
+        props.ordersSummary.forEach(area => {
+            area.platillos.forEach(p => {
+                if (!globalPlatillos[p.platillo_name]) globalPlatillos[p.platillo_name] = 0;
+                globalPlatillos[p.platillo_name] += p.total_count;
+            });
+        });
+
+        message += `*RESUMEN GLOBAL POR PLATILLO:*\n`;
+        Object.entries(globalPlatillos).forEach(([name, count]) => {
+            message += `• ${count}x ${name}\n`;
+        });
+        
+        message += `\n----------------------------\n`;
+        message += `*DETALLE POR ÁREA:*\n`;
+        props.ordersSummary.forEach(area => {
+            message += `\n*${area.area_name}:* ${area.total_area_orders}\n`;
+            area.platillos.forEach(p => {
+                message += `  - ${p.total_count}x ${p.platillo_name}\n`;
+            });
+        });
+        message += `\n*TOTAL GENERAL:* ${totalGrandOrders.value} pedidos`;
+    }
+
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
+};
 
 const formattedDate = computed(() => {
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -150,6 +198,11 @@ const mealTypeTagColors = {
                     <PrimaryButton @click="openGlobalExport" class="!rounded-2xl !py-3 !px-6 !text-[10px] bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-100 dark:shadow-none uppercase font-black tracking-[0.1em] flex-1 xl:flex-none justify-center">
                         <PrinterIcon class="h-4 w-4 mr-2" /> Exportar Todo
                     </PrimaryButton>
+
+                    <button @click="sendToWhatsApp()" 
+                            class="p-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl shadow-lg shadow-emerald-100 dark:shadow-none transition-all flex items-center justify-center gap-2 text-[10px] font-black uppercase px-6">
+                        <ChatBubbleBottomCenterTextIcon class="h-4 w-4" /> WhatsApp Global
+                    </button>
                 </div>
             </div>
         </template>
@@ -290,12 +343,17 @@ const mealTypeTagColors = {
                         </div>
 
                         <!-- Footer de la Tarjeta con botón de impresión por área -->
-                        <div class="mt-auto p-6 bg-gray-50 dark:bg-gray-900/30 border-t dark:border-gray-700">
+                        <div class="mt-auto p-6 bg-gray-50 dark:bg-gray-900/30 border-t dark:border-gray-700 flex flex-col gap-3">
                             <button 
                                 @click="openAreaExport(areaSummary.area_id)"
                                 class="w-full py-3 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-gray-600 dark:text-gray-300 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all flex items-center justify-center shadow-sm"
                             >
                                 <DocumentArrowDownIcon class="h-4 w-4 mr-2" /> Exportar área {{ areaSummary.area_name }}
+                            </button>
+
+                            <button @click="sendToWhatsApp(areaSummary)" 
+                                    class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center shadow-md shadow-emerald-100 dark:shadow-none">
+                                <ChatBubbleBottomCenterTextIcon class="h-4 w-4 mr-2" /> WhatsApp Área
                             </button>
                         </div>
                     </div>
