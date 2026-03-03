@@ -19,7 +19,8 @@ import {
     ClipboardDocumentIcon,
     BriefcaseIcon,
     WrenchScrewdriverIcon,
-    BuildingStorefrontIcon
+    BuildingStorefrontIcon,
+    CloudArrowUpIcon
 } from '@heroicons/vue/24/outline';
 
 const showingNavigationDropdown = ref(false);

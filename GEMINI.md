@@ -87,6 +87,8 @@
 - **Robustez en Catálogo de Platillos:** Se implementó un casteo estricto a enteros (`(int)`) en las comparaciones de IDs de sesión y autorizaciones en `DashboardController` para asegurar que el catálogo de platillos sea visible para todos los usuarios autorizados (especialmente Comensales regulares).
 - **Visibilidad Dinámica de Navegación:** Se implementó el flag `isAnySessionOpen` en el middleware de Inertia para ocultar el enlace de "Justificación" cuando no hay sesiones activas, y se añadió el enlace de "Resumen Diario" solicitado.
 - **Validación de Activación:** Se añadió una restricción en `DashboardController@activateMenu` que impide abrir una sesión de servicio si el proveedor no tiene platillos marcados como **"Publicados"** para esa fecha, mostrando un mensaje de error claro en el modal.
+- **Corrección de Pantalla en Blanco (Reportes):** Se aplicó `->values()` después de las operaciones de ordenamiento en `showOrderSummary` para asegurar que el frontend reciba un arreglo JSON y no un objeto, evitando fallos en la función `.reduce()`.
+- **Resolución de Iconos Faltantes:** Se importaron los componentes de Heroicons faltantes (`UserIcon`, `CloudArrowUpIcon`, etc.) en `Summary.vue` y `AuthenticatedLayout.vue` para eliminar las advertencias de consola y errores de renderizado.
 - **Cierre de Modal de Envío:** Se corrigió una asignación de `ref` faltante (`.value = false`) en `Dashboard.vue`, permitiendo que el modal de confirmación por deslizamiento se cierre automáticamente después de enviar los pedidos a cocina correctamente.
 
 ## Current State

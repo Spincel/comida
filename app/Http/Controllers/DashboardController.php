@@ -728,7 +728,7 @@ class DashboardController extends Controller
                 'activity_performed' => $order->activity_performed,
             ]),
             'total_area_orders' => $areaOrders->count(),
-        ])->values()->sortBy('area_name');
+        ])->values()->sortBy('area_name')->values();
 
         return Inertia::render('Admin/Orders/Summary', [
             'provider' => $provider,

@@ -14,7 +14,8 @@ import {
     DocumentArrowDownIcon,
     ClipboardDocumentListIcon,
     UserGroupIcon,
-    ViewColumnsIcon
+    ViewColumnsIcon,
+    UserIcon
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
