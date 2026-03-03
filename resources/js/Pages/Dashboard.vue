@@ -26,7 +26,8 @@ import {
     ChatBubbleLeftRightIcon,
     BuildingStorefrontIcon,
     InformationCircleIcon,
-    ClipboardDocumentCheckIcon
+    ClipboardDocumentCheckIcon,
+    DocumentIcon
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
@@ -533,16 +534,80 @@ const formatTime = (dateString) => {
                         </div>
                     </div>
                     <!-- Catálogo de Proveedores Premium -->
-                    <div v-if="user.role === 'acquisitions_manager' || user.role === 'admin'" class="space-y-8">
-                        <div class="flex items-center justify-between px-4 border-b dark:border-gray-700 pb-6"><h4 class="text-2xl font-black text-gray-800 dark:text-white uppercase tracking-tight">Proveedores y Sesiones</h4><Link :href="route('providers.create')" class="bg-indigo-600 text-white px-8 py-3 rounded-2xl text-xs font-black uppercase tracking-widest shadow-2xl hover:bg-indigo-700 transition-all">+ Nuevo</Link></div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
-                            <div v-for="(provider, index) in providers" :key="provider.id" class="bg-white dark:bg-gray-800 rounded-[3rem] p-10 border-2 shadow-2xl flex flex-col transition-all hover:scale-[1.03]" :class="getProviderColor(index).border">
-                                <div class="flex justify-between items-start mb-8"><h4 class="font-black text-3xl text-gray-900 dark:text-white leading-tight tracking-tighter" :class="getProviderColor(index).text">{{ provider.name }}</h4><button @click="openActivateMenuModal(provider)" class="p-4 rounded-[1.5rem] bg-indigo-600 text-white shadow-2xl hover:scale-110 transition-all border-4 border-white dark:border-gray-800"><PlusIcon class="h-8 w-8" stroke-width="3" /></button></div>
-                                <div class="space-y-5 flex-1">
-                                    <div v-for="status in provider.dailyStatuses" :key="status.id">
-                                        <div v-if="status.status === 'open'" class="flex gap-3"><button @click="openDeactivateMenuModal(status, provider)" class="flex-1 p-6 text-white rounded-[2rem] font-black text-sm uppercase shadow-xl hover:opacity-90 transition-all" :class="mealTypeColors[status.meal_type]">Cerrar {{ status.meal_type }}</button><div class="flex flex-col gap-3"><button @click="openDeleteSessionModal(status, provider)" class="p-4 bg-gray-100 dark:bg-gray-700 rounded-2xl hover:text-red-600 transition-all shadow-sm"><TrashIcon class="h-6 w-6" /></button><Link :href="route('admin.orders.send', { provider: provider.id, date: new Date().toISOString().split('T')[0], meal_type: status.meal_type })" class="p-4 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 rounded-2xl hover:bg-indigo-600 hover:text-white transition-all"><ChatBubbleLeftRightIcon class="h-6 w-6" /></Link></div></div>
-                                        <div v-else class="flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-900/50 border rounded-[2.5rem] shadow-inner"><div><span class="text-xs font-black uppercase px-4 py-1.5 rounded-xl border bg-white dark:bg-gray-800 shadow-sm" :class="mealTypeTagColors[status.meal_type]">{{ status.meal_type }}</span><span class="text-[10px] text-green-500 font-black uppercase flex items-center mt-4"><CheckBadgeIcon class="h-4 w-4 mr-2" /> Finalizado</span></div><div class="flex gap-3"><button @click="openEditSessionModal(status, provider)" class="p-2 text-green-600 hover:scale-125 transition-all"><ClockIcon class="h-6 w-6" /></button><Link :href="route('admin.orders.send', { provider: provider.id, date: new Date().toISOString().split('T')[0], meal_type: status.meal_type })" class="p-2 text-indigo-600 hover:scale-125 transition-all"><ChatBubbleLeftRightIcon class="h-6 w-6" /></Link><button @click="openDeleteSessionModal(status, provider)" class="p-2 text-gray-400 hover:text-red-600 transition-all"><TrashIcon class="h-6 w-6" /></button></div></div>
+                    <div v-if="user.role === 'acquisitions_manager' || user.role === 'admin'" class="space-y-10">
+                        <div class="flex items-center justify-between px-4 border-b dark:border-gray-700 pb-6">
+                            <h4 class="text-2xl font-black text-gray-800 dark:text-white uppercase tracking-tight">Proveedores y Sesiones</h4>
+                            <Link :href="route('providers.create')" class="bg-indigo-600 text-white px-8 py-3 rounded-2xl text-xs font-black uppercase tracking-widest shadow-2xl hover:bg-indigo-700 transition-all">+ Nuevo Proveedor</Link>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                            <div v-for="(provider, index) in providers" :key="provider.id" class="flex flex-col gap-4 group">
+                                <!-- Tarjeta Botón de Proveedor -->
+                                <div @click="openActivateMenuModal(provider)" 
+                                     class="bg-white dark:bg-gray-800 rounded-[2.5rem] p-8 border-2 shadow-xl flex flex-col cursor-pointer transition-all hover:scale-[1.03] active:scale-95 relative overflow-hidden"
+                                     :class="getProviderColor(index).border">
+                                    
+                                    <div class="absolute -right-4 -top-4 h-24 w-24 opacity-5 rounded-full blur-2xl" :class="getProviderColor(index).icon"></div>
+                                    
+                                    <div class="flex flex-col items-center text-center space-y-4 relative z-10">
+                                        <div class="h-16 w-16 rounded-3xl flex items-center justify-center text-white shadow-xl" :class="getProviderColor(index).icon">
+                                            <BuildingStorefrontIcon class="h-8 w-8" />
+                                        </div>
+                                        <div>
+                                            <h4 class="font-black text-2xl text-gray-900 dark:text-white leading-tight tracking-tighter uppercase mb-1">{{ provider.name }}</h4>
+                                            <p class="text-[8px] font-black text-indigo-500 uppercase tracking-[0.2em]">Click para Nueva Sesión</p>
+                                        </div>
                                     </div>
+                                </div>
+
+                                <!-- Sección de Sesiones Debajo -->
+                                <div v-if="provider.dailyStatuses?.length > 0" class="space-y-3 px-2">
+                                    <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest px-4">Sesiones de Hoy:</p>
+                                    <div v-for="status in provider.dailyStatuses" :key="status.id" 
+                                         class="bg-white dark:bg-gray-800/50 rounded-3xl p-5 border shadow-md flex flex-col gap-4 border-gray-100 dark:border-gray-700">
+                                        
+                                        <div class="flex justify-between items-center">
+                                            <div class="flex items-center gap-3">
+                                                <span class="text-[9px] font-black uppercase px-3 py-1 rounded-lg border bg-gray-50 dark:bg-gray-900 shadow-sm" :class="mealTypeTagColors[status.meal_type]">{{ status.meal_type }}</span>
+                                                <span v-if="status.status === 'open'" class="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+                                                <span v-else class="text-[8px] font-black text-gray-400 uppercase tracking-widest flex items-center"><CheckBadgeIcon class="h-3 w-3 mr-1 text-green-500" /> Finalizado</span>
+                                            </div>
+                                            <div class="flex gap-1.5">
+                                                <!-- Reporte WhatsApp -->
+                                                <Link :href="route('admin.orders.send', { provider: provider.id, date: new Date().toISOString().split('T')[0], meal_type: status.meal_type })" 
+                                                      class="p-2 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-xl transition-all" title="Ver y Enviar Reporte">
+                                                    <ChatBubbleLeftRightIcon class="h-5 w-5" />
+                                                </Link>
+                                                <!-- Reporte PDF -->
+                                                <a :href="route('admin.orders.summary.pdf', { provider: provider.id, date: new Date().toISOString().split('T')[0], meal_type: status.meal_type })" 
+                                                   target="_blank"
+                                                   class="p-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-xl transition-all" title="Descargar PDF">
+                                                    <DocumentIcon class="h-5 w-5" />
+                                                </a>
+                                                <!-- Borrar -->
+                                                <button @click="openDeleteSessionModal(status, provider)" 
+                                                        class="p-2 text-gray-400 hover:text-red-600 rounded-xl transition-all" title="Eliminar Sesión">
+                                                    <TrashIcon class="h-5 w-5" />
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div v-if="status.status === 'open'">
+                                            <button @click="openDeactivateMenuModal(status, provider)" 
+                                                    class="w-full py-2.5 bg-red-50 text-red-600 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all shadow-sm border border-red-100">
+                                                Cerrar {{ status.meal_type }}
+                                            </button>
+                                        </div>
+                                        <div v-else>
+                                            <button @click="openEditSessionModal(status, provider)" 
+                                                    class="w-full py-2.5 bg-indigo-50 text-indigo-600 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-sm border border-indigo-100 flex items-center justify-center gap-2">
+                                                <ClockIcon class="h-3.5 w-3.5" /> Reabrir / Gestionar Áreas
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div v-else class="px-6 py-4 text-center">
+                                    <p class="text-[9px] font-bold text-gray-300 uppercase tracking-widest italic">Sin sesiones activas</p>
                                 </div>
                             </div>
                         </div>

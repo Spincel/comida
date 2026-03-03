@@ -199,7 +199,9 @@
                         @foreach($summary['individual_orders'] as $order)
                             <tr>
                                 <td>
-                                    <img src="{{ $order['avatar_url'] }}" class="avatar" alt="">
+                                    @if($order['avatar_url'])
+                                        <img src="{{ $order['avatar_url'] }}" class="avatar" alt="">
+                                    @endif
                                     <strong>{{ $order['user_name'] }}</strong>
                                     <br><small style="color: #999; font-size: 7pt;">{{ $order['area_name'] }}</small>
                                 </td>

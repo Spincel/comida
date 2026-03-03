@@ -82,6 +82,17 @@
     - Gráficas interactivas (CSS/SVG): Distribución de alimentos por tipo y actividad semanal.
     - Insight de impacto: Porcentaje de participación de los compañeros del área.
 
+- **Rediseño del Monitor de Adquisiciones:**
+    - Se eliminó el botón flotante "+" de las tarjetas de proveedores.
+    - Las tarjetas ahora funcionan íntegramente como botones de activación/acción.
+    - El resumen de sesiones (abiertas/cerradas) y sus controles (Borrar, Reporte, Reabrir) se movieron a una sección independiente debajo de cada proveedor para una visualización más limpia.
+- **Estabilización de IA (Menu Scanning):**
+    - Se aumentaron los tiempos de espera (timeouts) a 60s en el cliente y 120s en el servidor para evitar bloqueos con archivos grandes.
+    - Se mejoró el manejo de errores en el frontend para evitar que la interfaz se quede "trabada" al 90%.
+- **Reparación de Reportes (PDF/Word/Excel):**
+    - Se optimizó `generatePdfReport` para utilizar rutas de archivos locales (`public_path`) en lugar de URLs externas, evitando fallos de resolución en dompdf.
+    - Se añadió un bloque `try-catch` global en el controlador de reportes para capturar y notificar errores específicos de generación.
+
 ## Technical Fixes
 - Added `storage:link` for logo visibility.
 - Enabled multi-role middleware (`role:admin|area_manager`).

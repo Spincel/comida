@@ -911,67 +911,95 @@ class DashboardController extends Controller
 
     public function generatePdfReport(Provider $provider, string $date, Request $request)
     {
-        $mealType = $request->query('meal_type', 'Comida');
-        $areaId = $request->query('area_id');
-        $sortBy = $request->query('sort', 'area'); 
-        $viewMode = $request->query('view_mode', 'detailed'); 
-        $format = $request->query('format', 'pdf'); // New: pdf, excel, word
+        try {
+            $mealType = $request->query('meal_type', 'Comida');
+            $areaId = $request->query('area_id');
+            $sortBy = $request->query('sort', 'area'); 
+            $viewMode = $request->query('view_mode', 'detailed'); 
+            $format = $request->query('format', 'pdf');
 
-        $query = Order::where('meal_type', $mealType)
-            ->whereHas('dailyMenu', fn($q) => $q->where('provider_id', $provider->id)->where('available_on', $date))
-            ->with(['user.area', 'dailyMenu']);
+            $query = Order::where('meal_type', $mealType)
+                ->whereHas('dailyMenu', fn($q) => $q->where('provider_id', $provider->id)->where('available_on', $date))
+                ->with(['user.area', 'dailyMenu']);
 
-        if ($areaId) $query->whereHas('user', fn($q) => $q->where('area_id', $areaId));
-        $orders = $query->get();
+            if ($areaId) $query->whereHas('user', fn($q) => $q->where('area_id', $areaId));
+            $orders = $query->get();
 
-        if ($sortBy === 'platillo') {
-            $summary = $orders->groupBy('dailyMenu.name')->map(fn($pOrders, $pName) => [
-                'group_name' => $pName,
-                'total_count' => $pOrders->count(),
-                'platillos' => [['platillo_name' => $pName, 'total_count' => $pOrders->count(), 'observations' => $pOrders->pluck('preferences')->filter()->values()]],
-                'individual_orders' => $pOrders->sortBy('user.name')->map(fn($o) => ['user_name' => $o->user->name, 'avatar_url' => $o->user->avatar_url, 'area_name' => $o->user->area->name, 'platillo_name' => $o->dailyMenu->name, 'preferences' => $o->preferences, 'activity_performed' => $o->activity_performed]),
-            ])->sortKeys();
-        } elseif ($sortBy === 'name') {
-            $summary = collect(['Listado General' => [
-                'group_name' => 'Listado Alfabético General',
-                'total_count' => $orders->count(),
-                'platillos' => $orders->groupBy('dailyMenu.name')->map(fn($pOrders, $pName) => ['platillo_name' => $pName, 'total_count' => $pOrders->count(), 'observations' => $pOrders->pluck('preferences')->filter()->values()])->values()->sortBy('platillo_name')->values(),
-                'individual_orders' => $orders->sortBy('user.name')->map(fn($o) => ['user_name' => $o->user->name, 'avatar_url' => $o->user->avatar_url, 'area_name' => $o->user->area->name, 'platillo_name' => $o->dailyMenu->name, 'preferences' => $o->preferences, 'activity_performed' => $o->activity_performed]),
-            ]]);
-        } else {
-            $summary = $orders->groupBy('user.area.name')->map(fn($aOrders, $aName) => [
-                'group_name' => $aName,
-                'total_count' => $aOrders->count(),
-                'platillos' => $aOrders->groupBy('dailyMenu.name')->map(fn($pOrders, $pName) => ['platillo_name' => $pName, 'total_count' => $pOrders->count(), 'observations' => $pOrders->pluck('preferences')->filter()->values()])->values()->sortBy('platillo_name')->values(),
-                'individual_orders' => $aOrders->sortBy('user.name')->map(fn($o) => ['user_name' => $o->user->name, 'avatar_url' => $o->user->avatar_url, 'area_name' => $o->user->area->name, 'platillo_name' => $o->dailyMenu->name, 'preferences' => $o->preferences, 'activity_performed' => $o->activity_performed]),
-            ])->sortKeys();
+            if ($sortBy === 'platillo') {
+                $summary = $orders->groupBy('dailyMenu.name')->map(fn($pOrders, $pName) => [
+                    'group_name' => $pName,
+                    'total_count' => $pOrders->count(),
+                    'platillos' => [['platillo_name' => $pName, 'total_count' => $pOrders->count(), 'observations' => $pOrders->pluck('preferences')->filter()->values()]],
+                    'individual_orders' => $pOrders->sortBy('user.name')->map(fn($o) => [
+                        'user_name' => $o->user->name, 
+                        'avatar_url' => $o->user->avatar ? public_path('storage/' . $o->user->avatar) : null,
+                        'area_name' => $o->user->area->name, 
+                        'platillo_name' => $o->dailyMenu->name, 
+                        'preferences' => $o->preferences, 
+                        'activity_performed' => $o->activity_performed
+                    ]),
+                ])->sortKeys();
+            } elseif ($sortBy === 'name') {
+                $summary = collect(['Listado General' => [
+                    'group_name' => 'Listado Alfabético General',
+                    'total_count' => $orders->count(),
+                    'platillos' => $orders->groupBy('dailyMenu.name')->map(fn($pOrders, $pName) => ['platillo_name' => $pName, 'total_count' => $pOrders->count(), 'observations' => $pOrders->pluck('preferences')->filter()->values()])->values()->sortBy('platillo_name')->values(),
+                    'individual_orders' => $orders->sortBy('user.name')->map(fn($o) => [
+                        'user_name' => $o->user->name, 
+                        'avatar_url' => $o->user->avatar ? public_path('storage/' . $o->user->avatar) : null,
+                        'area_name' => $o->user->area->name, 
+                        'platillo_name' => $o->dailyMenu->name, 
+                        'preferences' => $o->preferences, 
+                        'activity_performed' => $o->activity_performed
+                    ]),
+                ]]);
+            } else {
+                $summary = $orders->groupBy('user.area.name')->map(fn($aOrders, $aName) => [
+                    'group_name' => $aName,
+                    'total_count' => $aOrders->count(),
+                    'platillos' => $aOrders->groupBy('dailyMenu.name')->map(fn($pOrders, $pName) => ['platillo_name' => $pName, 'total_count' => $pOrders->count(), 'observations' => $pOrders->pluck('preferences')->filter()->values()])->values()->sortBy('platillo_name')->values(),
+                    'individual_orders' => $aOrders->sortBy('user.name')->map(fn($o) => [
+                        'user_name' => $o->user->name, 
+                        'avatar_url' => $o->user->avatar ? public_path('storage/' . $o->user->avatar) : null,
+                        'area_name' => $o->user->area->name, 
+                        'platillo_name' => $o->dailyMenu->name, 
+                        'preferences' => $o->preferences, 
+                        'activity_performed' => $o->activity_performed
+                    ]),
+                ])->sortKeys();
+            }
+
+            $data = [
+                'provider' => $provider, 
+                'date' => $date, 
+                'mealType' => $mealType, 
+                'ordersSummary' => $summary->values(), 
+                'sortBy' => $sortBy, 
+                'viewMode' => $viewMode, 
+                'isSingleArea' => !empty($areaId),
+                'isPdf' => ($format === 'pdf')
+            ];
+
+            $filename = "reporte_{$mealType}_{$provider->name}_$date";
+
+            if ($format === 'excel') {
+                return $this->exportToExcel($data, $filename);
+            }
+
+            if ($format === 'word') {
+                return response()->view('reports.orders_summary', $data)
+                    ->header('Content-Type', 'application/msword')
+                    ->header('Content-Disposition', "attachment; filename={$filename}.doc");
+            }
+
+            // Default: PDF
+            $pdf = Pdf::loadView('reports.orders_summary', $data);
+            return $pdf->stream("{$filename}.pdf");
+        } catch (\Exception $e) {
+            Log::error("Error generating report: " . $e->getMessage());
+            return "Error al generar el reporte: " . $e->getMessage();
         }
-
-        $data = [
-            'provider' => $provider, 
-            'date' => $date, 
-            'mealType' => $mealType, 
-            'ordersSummary' => $summary->values(), 
-            'sortBy' => $sortBy, 
-            'viewMode' => $viewMode, 
-            'isSingleArea' => !empty($areaId)
-        ];
-
-        $filename = "reporte_{$mealType}_{$provider->name}_$date";
-
-        if ($format === 'excel') {
-            return $this->exportToExcel($data, $filename);
-        }
-
-        if ($format === 'word') {
-            return response()->view('reports.orders_summary', $data)
-                ->header('Content-Type', 'application/msword')
-                ->header('Content-Disposition', "attachment; filename={$filename}.doc");
-        }
-
-        // Default: PDF
-        $pdf = Pdf::loadView('reports.orders_summary', $data);
-        return $pdf->stream("{$filename}.pdf");
+    }
     }
 
     private function exportToExcel($data, $filename)

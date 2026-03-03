@@ -227,13 +227,19 @@ class DailyMenuController extends Controller
         $mimeType = $uploadedFile->getMimeType();
         $fileContentBase64 = base64_encode(File::get($uploadedFile->getRealPath()));
 
+        // Increase execution time for AI processing
+        set_time_limit(120);
+
         $geminiApiKey = env('GEMINI_API_KEY');
         if (!$geminiApiKey) {
             Log::error('GEMINI_API_KEY not set in .env');
             return response()->json(['error' => 'La clave API de Gemini no está configurada.'], 500);
         }
 
-        $client = new Client();
+        $client = new Client([
+            'timeout' => 60.0, // 60 seconds timeout
+            'connect_timeout' => 10.0
+        ]);
         // Use gemini-flash-latest as it is available and has active quota
         $geminiEndpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={$geminiApiKey}";
 

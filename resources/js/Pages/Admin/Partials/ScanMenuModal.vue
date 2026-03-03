@@ -119,32 +119,42 @@ const scanMenu = async () => {
         const formData = new FormData();
         formData.append('file', form.file);
 
+        // Set a manual timeout for axios just in case (60s)
         const response = await axios.post(route('daily-menus.scan', props.provider.id), formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
+            timeout: 60000 
         });
 
         // Add "is_duplicate" and "selected" flags to each item
-        scannedMenuItems.value = response.data.menu_items.map(item => {
-            const duplicate = existingMenuItems.value.find(ex => 
-                ex.name.toLowerCase().trim() === item.name.toLowerCase().trim()
-            );
-            return {
-                ...item,
-                is_duplicate: !!duplicate,
-                selected: !duplicate, // Default select only non-duplicates
-                editing: false
-            };
-        });
+        if (response.data.menu_items) {
+            scannedMenuItems.value = response.data.menu_items.map(item => {
+                const duplicate = existingMenuItems.value.find(ex => 
+                    ex.name.toLowerCase().trim() === item.name.toLowerCase().trim()
+                );
+                return {
+                    ...item,
+                    is_duplicate: !!duplicate,
+                    selected: !duplicate, 
+                    editing: false
+                };
+            });
 
-        scanProgress.value = 100;
-        setTimeout(() => {
-            step.value = 'review';
-            if (progressInterval.value) clearInterval(progressInterval.value);
-        }, 500);
+            scanProgress.value = 100;
+            setTimeout(() => {
+                step.value = 'review';
+                if (progressInterval.value) clearInterval(progressInterval.value);
+            }, 500);
+        } else {
+            throw new Error('La respuesta de la IA no contiene elementos de menú.');
+        }
 
     } catch (error) {
         console.error('Error scanning menu:', error);
-        scanError.value = error.response?.data?.error || 'Error al analizar el menú. Intenta con una imagen más clara.';
+        if (error.code === 'ECONNABORTED') {
+            scanError.value = 'El servidor está tardando demasiado en procesar la imagen. Intenta con un archivo más pequeño o una imagen más clara.';
+        } else {
+            scanError.value = error.response?.data?.error || error.message || 'Error al analizar el menú. Intenta con una imagen más clara.';
+        }
         step.value = 'upload';
         if (progressInterval.value) clearInterval(progressInterval.value);
     }
