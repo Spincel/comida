@@ -38,7 +38,9 @@ class OrderController extends Controller
         }
 
         // NEW: Check if user is authorized by Area Manager for this session
-        $isAuthorized = \App\Models\SessionAuthorization::where('provider_daily_status_id', $status->id)
+        // Managers and Admins are implicitly authorized if session is open for their area
+        $isManager = in_array($user->role, ['admin', 'acquisitions_manager', 'area_manager']);
+        $isAuthorized = $isManager || \App\Models\SessionAuthorization::where('provider_daily_status_id', $status->id)
                                                         ->where('user_id', $user->id)
                                                         ->exists();
         

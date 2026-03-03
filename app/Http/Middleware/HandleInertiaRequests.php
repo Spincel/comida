@@ -72,6 +72,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $user,
                 'orderStatus' => $orderStatus,
+                'isAnySessionOpen' => isset($openSessions) ? $openSessions->isNotEmpty() : false,
             ],
             'system' => [
                 'settings' => \App\Models\SystemSetting::all()->pluck('value', 'key'),

@@ -83,6 +83,8 @@
 - Fixed 403 Forbidden errors for Admin role on historical routes.
 - **Corregido Error 500 (Undefined constant):** Se estandarizaron las importaciones de controladores (`use App\Http\Controllers\...`) en `routes/web.php` usando nombres cortos.
 - **Corregido Error de Vue (Invalid prop `openSessions`):** Se aplicó `->values()` en las colecciones retornadas por `DashboardController` para asegurar que Inertia las renderice como arreglos de JSON secuenciales en lugar de objetos clave-valor.
+- **Autorización Automática de Gerentes:** Se ajustó `DashboardController` y `OrderController` para que los Gerentes y Administradores estén autorizados implícitamente en las sesiones de su área, corrigiendo la desaparición del menú tras habilitar comensales.
+- **Visibilidad Dinámica de Navegación:** Se implementó el flag `isAnySessionOpen` en el middleware de Inertia para ocultar el enlace de "Justificación" cuando no hay sesiones activas, y se añadió el enlace de "Resumen Diario" solicitado.
 
 ## Current State
 - **Bug to watch:** Verify if Logo persists correctly in all environments (Symlink created).

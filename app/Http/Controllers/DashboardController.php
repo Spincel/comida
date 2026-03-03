@@ -278,6 +278,7 @@ class DashboardController extends Controller
             
             $availableSessionsForArea = $openStatuses->filter(function($session) use ($user) {
                 $areas = is_array($session->selected_area_ids) ? $session->selected_area_ids : json_decode($session->selected_area_ids, true);
+                // Managers are always authorized for sessions open for their area
                 return in_array((int)$user->area_id, array_map('intval', $areas ?: []));
             })->values();
 

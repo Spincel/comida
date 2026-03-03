@@ -158,11 +158,14 @@ onUnmounted(() => {
 
                                 <!-- Area Manager Context -->
                                 <template v-if="$page.props.auth.user.role === 'area_manager' || ($page.props.auth.user.role === 'admin' && $page.props.auth.user.area_id)">
-                                    <NavLink :href="route('justification.index')" :active="route().current('justification.*')">
+                                    <NavLink v-if="$page.props.auth.isAnySessionOpen" :href="route('justification.index')" :active="route().current('justification.*')">
                                         Justificación
                                     </NavLink>
                                     <NavLink :href="route('area.history')" :active="route().current('area.history')">
                                         Historial
+                                    </NavLink>
+                                    <NavLink :href="route('dashboard')" class="text-indigo-600 font-black">
+                                        Resumen Diario
                                     </NavLink>
                                 </template>
                             </div>
@@ -285,11 +288,13 @@ onUnmounted(() => {
                             <ResponsiveNavLink :href="route('admin.utilities.data')" :active="route().current('admin.utilities.data')">Mantenimiento de Datos</ResponsiveNavLink>
                         </template>
 
-                        <!-- Mobile Area Manager -->
+                                <!-- Mobile Area Manager -->
                         <template v-if="$page.props.auth.user.role === 'area_manager' || ($page.props.auth.user.role === 'admin' && $page.props.auth.user.area_id)">
                             <div class="px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b dark:border-gray-700 mt-2">Mi Área</div>
-                            <ResponsiveNavLink :href="route('justification.index')" :active="route().current('justification.*')">Justificación</ResponsiveNavLink>
+                            <ResponsiveNavLink v-if="$page.props.auth.isAnySessionOpen" :href="route('justification.index')" :active="route().current('justification.*')">Justificación</ResponsiveNavLink>
                             <ResponsiveNavLink :href="route('area.history')" :active="route().current('area.history')">Historial de Área</ResponsiveNavLink>
+                            <!-- Goodbye simulation link -->
+                            <ResponsiveNavLink :href="route('dashboard')" class="text-indigo-600 font-bold">Resumen Diario (Demo)</ResponsiveNavLink>
                         </template>
                     </div>
 
