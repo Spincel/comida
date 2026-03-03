@@ -1,13 +1,12 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import ActivateMenuModal from '@/Pages/Admin/Partials/ActivateMenuModal.vue';
 import DeactivateMenuConfirmationModal from '@/Pages/Admin/Partials/DeactivateMenuConfirmationModal.vue';
 import SubmitOrdersConfirmationModal from '@/Pages/Admin/Partials/SubmitOrdersConfirmationModal.vue';
-import JustificationModal from '@/Pages/Admin/Partials/JustificationModal.vue';
 import DeleteSessionModal from '@/Pages/Admin/Partials/DeleteSessionModal.vue';
 import PlaceOrderModal from '@/Pages/Admin/Partials/PlaceOrderModal.vue';
 import Checkbox from '@/Components/Checkbox.vue';
@@ -26,7 +25,8 @@ import {
     ListBulletIcon,
     ChatBubbleLeftRightIcon,
     BuildingStorefrontIcon,
-    InformationCircleIcon
+    InformationCircleIcon,
+    ClipboardDocumentCheckIcon
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
@@ -39,6 +39,7 @@ const props = defineProps({
     dishSummaryToday: { type: Array, default: () => [] },
     totalOrdersToday: { type: Number, default: 0 },
     openSessions: { type: Array, default: () => [] },
+    closedTodaySessions: { type: Array, default: () => [] },
     allOpenSessionsToday: { type: Array, default: () => [] },
     allSessionsToday: { type: Array, default: () => [] },
     // Diner Props
@@ -218,6 +219,10 @@ const openEditOrderModal = (order) => {
 
 const isSessionOpenForMe = (mealType) => {
     return props.openSessions?.some(s => s.meal_type === mealType && s.selected_area_ids?.includes(parseInt(user.area_id)));
+};
+
+const isSessionClosedToday = (mealType) => {
+    return props.closedTodaySessions?.some(s => s.meal_type === mealType && s.selected_area_ids?.includes(parseInt(user.area_id)));
 };
 
 const groupedAvailableMenus = computed(() => {
@@ -607,6 +612,7 @@ const formatTime = (dateString) => {
                                 <div v-for="order in myOrdersToday" :key="order.id" class="bg-white dark:bg-gray-800 border-2 rounded-[2rem] p-6 shadow-lg transition-all" :class="isSessionOpenForMe(order.meal_type) ? 'border-green-400 animate-glow-green' : 'border-red-100 opacity-90'">
                                     <div class="flex justify-between items-start mb-6"><div class="flex items-center space-x-4"><div class="h-12 w-12 rounded-2xl flex items-center justify-center text-white shadow-lg" :class="isSessionOpenForMe(order.meal_type) ? (mealTypeColors[order.meal_type] || 'bg-indigo-600') : 'bg-red-400'"><CheckBadgeIcon v-if="isSessionOpenForMe(order.meal_type)" class="h-7 w-7" /><ClockIcon v-else class="h-7 w-7" /></div><div><div class="flex items-center gap-2 mb-1"><span class="text-[9px] font-black px-3 py-1 rounded-lg border uppercase shadow-sm tracking-widest" :class="mealTypeTagColors[order.meal_type]">{{ order.meal_type }}</span></div><span class="text-[9px] font-black uppercase tracking-widest" :class="isSessionOpenForMe(order.meal_type) ? 'text-green-500' : 'text-red-500'">{{ isSessionOpenForMe(order.meal_type) ? 'Servicio Abierto' : 'Bloqueado' }}</span></div></div><button v-if="isSessionOpenForMe(order.meal_type)" @click="openEditOrderModal(order)" class="p-2.5 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-xl transition-all shadow-sm border border-gray-50 dark:border-gray-700"><PencilSquareIcon class="h-6 w-6" /></button></div>
                                     <div class="mb-6"><p class="text-lg font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-tight leading-tight">{{ order.daily_menu.name }}</p><p v-if="order.preferences" class="text-[10px] text-gray-500 dark:text-gray-400 mt-3 italic font-medium leading-relaxed bg-gray-50 dark:bg-gray-900/50 p-3 rounded-xl border-l-2 border-indigo-500">"{{ order.preferences }}"</p></div>
+
                                     <div class="flex items-center text-[10px] font-black uppercase tracking-widest" :class="order.status === 'submitted_by_manager' ? 'text-green-600' : 'text-orange-500'"><div class="h-2 w-2 rounded-full mr-3" :class="order.status === 'submitted_by_manager' ? 'bg-green-500 shadow-sm shadow-green-200' : 'bg-orange-500 animate-pulse shadow-sm shadow-orange-200'"></div>{{ order.status === 'submitted_by_manager' ? 'Enviado a Cocina' : 'Esperando Firma de Área' }}</div>
                                 </div>
                             </div>

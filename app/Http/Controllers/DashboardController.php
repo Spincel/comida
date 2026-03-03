@@ -23,6 +23,7 @@ class DashboardController extends Controller
 
         // Shared data: ALL sessions for today
         $allSessionsToday = ProviderDailyStatus::where('date', $today)->with('provider')->get();
+        $props['closedTodaySessions'] = $allSessionsToday->where('status', 'closed')->values();
         
         // Get authorizartions for the user's area (if applicable)
         $allAreaAuthorizations = collect();
@@ -412,6 +413,78 @@ class DashboardController extends Controller
         }
 
         return Inertia::render('Admin/Orders/JustificationPage', $props);
+    }
+
+    public function showDailySummary(Request $request)
+    {
+        $user = $request->user();
+        $today = Carbon::today()->toDateString();
+        $startOfMonth = Carbon::now()->startOfMonth()->toDateString();
+        
+        // --- Personal Stats ---
+        $monthlyOrdersCount = Order::where('user_id', $user->id)
+            ->whereHas('dailyMenu', fn($q) => $q->where('available_on', '>=', $startOfMonth))
+            ->count();
+
+        $favoriteDish = Order::where('user_id', $user->id)
+            ->join('daily_menus', 'orders.daily_menu_id', '=', 'daily_menus.id')
+            ->select('daily_menus.name', DB::raw('count(*) as total'))
+            ->groupBy('daily_menus.name')
+            ->orderByDesc('total')
+            ->first();
+
+        $justifiedOrders = Order::where('user_id', $user->id)
+            ->whereNotNull('activity_performed')
+            ->where('activity_performed', '!=', '')
+            ->count();
+        $totalOrdersAllTime = Order::where('user_id', $user->id)->count();
+        $justificationRate = $totalOrdersAllTime > 0 ? round(($justifiedOrders / $totalOrdersAllTime) * 100) : 0;
+
+        // --- Area Stats ---
+        $areaParticipation = 0;
+        if ($user->area_id) {
+            $areaUsersCount = \App\Models\User::where('area_id', $user->area_id)->count();
+            $areaOrdersToday = Order::whereHas('user', fn($q) => $q->where('area_id', $user->area_id))
+                ->whereHas('dailyMenu', fn($q) => $q->where('available_on', $today))
+                ->distinct('user_id')
+                ->count();
+            $areaParticipation = $areaUsersCount > 0 ? round(($areaOrdersToday / $areaUsersCount) * 100) : 0;
+        }
+
+        // --- Global Stats ---
+        $mealDistribution = Order::whereHas('dailyMenu', fn($q) => $q->where('available_on', $today))
+            ->select('meal_type', DB::raw('count(*) as total'))
+            ->groupBy('meal_type')
+            ->get()
+            ->pluck('total', 'meal_type');
+
+        // --- Activity Last 7 Days ---
+        $last7Days = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = Carbon::today()->subDays($i)->toDateString();
+            $count = Order::whereHas('dailyMenu', fn($q) => $q->where('available_on', $date))->count();
+            $last7Days[] = [
+                'day' => Carbon::today()->subDays($i)->isoFormat('ddd'),
+                'count' => $count
+            ];
+        }
+
+        return Inertia::render('DailySummary', [
+            'stats' => [
+                'personal' => [
+                    'monthly_count' => $monthlyOrdersCount,
+                    'favorite_dish' => $favoriteDish ? $favoriteDish->name : 'N/A',
+                    'justification_rate' => $justificationRate,
+                ],
+                'area' => [
+                    'participation_rate' => $areaParticipation,
+                ],
+                'system' => [
+                    'meal_distribution' => $mealDistribution,
+                    'weekly_activity' => $last7Days,
+                ]
+            ]
+        ]);
     }
 
     public function showAreaHistory(Request $request)

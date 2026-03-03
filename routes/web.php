@@ -91,6 +91,7 @@ Route::middleware(['auth'])->group(function () {
     
     Route::get('area/history', [DashboardController::class, 'showAreaHistory'])->name('area.history')->middleware('role:area_manager|admin');
     Route::get('area/reports', [DashboardController::class, 'showAreaReports'])->name('area.reports')->middleware('role:area_manager|admin');
+    Route::get('daily-summary', [DashboardController::class, 'showDailySummary'])->name('daily.summary');
 
     Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
     Route::put('orders/{order}', [OrderController::class, 'update'])->name('orders.update');

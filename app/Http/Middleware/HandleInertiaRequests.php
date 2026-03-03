@@ -41,6 +41,12 @@ class HandleInertiaRequests extends Middleware
                 ->whereJsonContains('selected_area_ids', (int)$user->area_id)
                 ->get();
 
+            // NEW: Get closed sessions for today to allow justification
+            $closedSessionsToday = \App\Models\ProviderDailyStatus::where('date', $today)
+                ->where('status', 'closed')
+                ->whereJsonContains('selected_area_ids', (int)$user->area_id)
+                ->exists();
+
             if ($openSessions->isNotEmpty()) {
                 $userOrders = \App\Models\Order::where('user_id', $user->id)
                     ->whereHas('dailyMenu', fn($q) => $q->where('available_on', $today))
@@ -73,6 +79,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user,
                 'orderStatus' => $orderStatus,
                 'isAnySessionOpen' => isset($openSessions) ? $openSessions->isNotEmpty() : false,
+                'isAnySessionClosedToday' => $closedSessionsToday ?? false,
             ],
             'system' => [
                 'settings' => \App\Models\SystemSetting::all()->pluck('value', 'key'),

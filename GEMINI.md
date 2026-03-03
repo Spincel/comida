@@ -75,6 +75,11 @@
     - Send order via WhatsApp with pre-formatted lists.
     - Multi-format export (PDF, Word, Excel) for all reports.
     - AI Menu Scanning with duplicate detection and categorized item merging.
+- **Nueva Página de Estadísticas (Resumen Diario):**
+    - Analíticas personalizadas por usuario: Pedidos mensuales y "Platillo Estrella".
+    - Indicador visual de Tasa de Justificación.
+    - Gráficas interactivas (CSS/SVG): Distribución de alimentos por tipo y actividad semanal.
+    - Insight de impacto: Porcentaje de participación de los compañeros del área.
 
 ## Technical Fixes
 - Added `storage:link` for logo visibility.
