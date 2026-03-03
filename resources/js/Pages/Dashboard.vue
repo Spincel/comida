@@ -527,11 +527,20 @@ const formatTime = (dateString) => {
                                     </div>
                                     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5 gap-3 overflow-y-auto max-h-72 pr-3 custom-scrollbar">
                                         <div v-for="areaStatus in activeSession.areas_status" :key="areaStatus.id" 
-                                             class="flex items-center justify-between p-3 bg-white/10 rounded-2xl border border-white/10 group/area transition-all hover:bg-white/20 hover:scale-[1.02] hover:shadow-lg active:scale-95 cursor-pointer"
+                                             class="flex items-center justify-between p-3 rounded-2xl border transition-all hover:scale-[1.02] hover:shadow-lg active:scale-95 cursor-pointer group/area"
+                                             :class="areaStatus.is_submitted 
+                                                ? 'bg-emerald-500/40 border-emerald-400/50 shadow-lg shadow-emerald-900/20' 
+                                                : 'bg-white/10 border-white/10 hover:bg-white/20'"
                                              @click="!areaStatus.is_submitted && !areaStatus.is_pending ? removeAreaFromSession(activeSession, areaStatus.id) : null">
                                             <div class="flex-1 min-w-0 mr-2">
-                                                <span class="text-[9px] font-black uppercase truncate block tracking-tight leading-none">{{ areaStatus.name }}</span>
-                                                <span class="text-[8px] font-bold opacity-60 tracking-widest block mt-1.5 leading-none">{{ areaStatus.submitted_count }} / {{ areaStatus.order_count }} enviadas</span>
+                                                <span class="text-[9px] font-black uppercase truncate block tracking-tight leading-none"
+                                                      :class="areaStatus.is_submitted ? 'text-white' : 'text-white/90'">
+                                                    {{ areaStatus.name }}
+                                                </span>
+                                                <span class="text-[8px] font-bold tracking-widest block mt-1.5 leading-none"
+                                                      :class="areaStatus.is_submitted ? 'text-emerald-100' : 'opacity-60 text-white'">
+                                                    {{ areaStatus.submitted_count }} / {{ areaStatus.order_count }} enviadas
+                                                </span>
                                             </div>
                                             <div class="flex items-center shrink-0">
                                                 <CheckBadgeIcon v-if="areaStatus.is_submitted" class="h-5 w-5 text-green-300 drop-shadow-lg" />
