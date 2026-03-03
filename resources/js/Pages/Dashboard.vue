@@ -503,29 +503,35 @@ const formatTime = (dateString) => {
                             </div>
 
                             <!-- Columna 70%: Detalle Global -->
-                            <div v-if="activeSession" class="lg:col-span-8 bg-indigo-600 rounded-[3rem] p-10 text-white shadow-2xl flex flex-col transition-all">
-                                <div class="flex justify-between items-start mb-10">
-                                    <div><h5 class="text-[10px] font-black uppercase tracking-[0.4em] opacity-70 mb-2">Monitor Consolidado</h5><p class="text-4xl font-black uppercase tracking-tighter leading-none">{{ activeSession.meal_type }}</p></div>
-                                    <div class="bg-white/20 px-6 py-3 rounded-2xl border border-white/30 text-[11px] font-black uppercase tracking-[0.2em] backdrop-blur-xl">{{ activeSession.provider?.name }}</div>
+                            <div v-if="activeSession" class="lg:col-span-8 bg-indigo-600 rounded-[3rem] p-8 text-white shadow-2xl flex flex-col transition-all">
+                                <div class="flex justify-between items-start mb-6">
+                                    <div><h5 class="text-[10px] font-black uppercase tracking-[0.4em] opacity-70 mb-1">Monitor Consolidado</h5><p class="text-3xl font-black uppercase tracking-tighter leading-none">{{ activeSession.meal_type }}</p></div>
+                                    <div class="bg-white/20 px-5 py-2 rounded-xl border border-white/30 text-[10px] font-black uppercase tracking-[0.2em] backdrop-blur-xl">{{ activeSession.provider?.name }}</div>
                                 </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-10 items-center mb-10 bg-black/10 rounded-[2.5rem] p-10 border border-white/10">
-                                    <div class="text-left border-r border-white/10 pr-8 col-span-1"><p class="text-[80px] font-black leading-none tracking-tighter">{{ activeTotalOrders }}</p><p class="text-[11px] font-black uppercase tracking-[0.4em] opacity-60 mt-4">Platillos Listos</p></div>
-                                    <div class="space-y-3 overflow-y-auto max-h-48 pr-4 custom-scrollbar col-span-2">
-                                        <div class="grid grid-cols-2 gap-x-8">
-                                            <div v-for="dish in activeDishSummary" :key="dish.name" class="flex justify-between items-center text-xs border-b border-white/10 pb-2.5 mb-2.5 last:border-0"><span class="font-bold truncate mr-4">{{ dish.name }}</span><span class="font-black bg-white text-indigo-600 h-7 min-w-[2rem] px-2 flex items-center justify-center rounded-xl shadow-xl">{{ dish.count }}</span></div>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center mb-6 bg-black/10 rounded-[2.5rem] p-8 border border-white/10">
+                                    <div class="text-left border-r border-white/10 pr-6 col-span-1"><p class="text-[70px] font-black leading-none tracking-tighter">{{ activeTotalOrders }}</p><p class="text-[10px] font-black uppercase tracking-[0.4em] opacity-60 mt-3 leading-none">Platillos Listos</p></div>
+                                    <div class="space-y-3 overflow-y-auto max-h-40 pr-4 custom-scrollbar col-span-2">
+                                        <div class="grid grid-cols-2 gap-x-6">
+                                            <div v-for="dish in activeDishSummary" :key="dish.name" class="flex justify-between items-center text-[11px] border-b border-white/10 pb-2 mb-2 last:border-0"><span class="font-bold truncate mr-3">{{ dish.name }}</span><span class="font-black bg-white text-indigo-600 h-6 min-w-[1.8rem] px-1.5 flex items-center justify-center rounded-lg shadow-lg">{{ dish.count }}</span></div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="flex-1">
-                                    <div class="flex justify-between items-center mb-6"><p class="text-[11px] font-black uppercase tracking-[0.4em] opacity-60">Seguimiento de Dependencias:</p><button @click="addAreaToSession(activeSession)" class="text-[10px] font-black uppercase bg-white/20 hover:bg-white/30 px-6 py-2.5 rounded-2xl border border-white/30 transition-all shadow-sm">Gestionar Áreas</button></div>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 overflow-y-auto max-h-72 pr-3 custom-scrollbar">
-                                        <div v-for="areaStatus in activeSession.areas_status" :key="areaStatus.id" class="flex items-center justify-between p-4 bg-white/10 rounded-[1.5rem] border border-white/10 group/area transition-all hover:bg-white/20">
-                                            <div class="flex-1 min-w-0 mr-3"><span class="text-[11px] font-black uppercase truncate block tracking-tight">{{ areaStatus.name }}</span><span class="text-[9px] font-bold opacity-60 tracking-widest block mt-2">{{ areaStatus.submitted_count }} / {{ areaStatus.order_count }} enviadas</span></div>
-                                            <div class="flex items-center shrink-0 pl-2">
-                                                <button v-if="!areaStatus.is_submitted && !areaStatus.is_pending" @click.stop="removeAreaFromSession(activeSession, areaStatus.id)" class="opacity-0 group-hover/area:opacity-100 p-1.5 hover:text-red-300 transition-all mr-1"><XMarkIcon class="h-4 w-4" /></button>
-                                                <CheckBadgeIcon v-if="areaStatus.is_submitted" class="h-6 w-6 text-green-300 drop-shadow-lg" /><div v-else-if="areaStatus.is_pending" class="h-6 w-6 rounded-full border-2 border-amber-300 flex items-center justify-center animate-pulse"><div class="h-1.5 w-1.5 bg-amber-300 rounded-full shadow-sm"></div></div><ClockIcon v-else class="h-6 w-6 text-white/20" />
+                                    <div class="flex justify-between items-center mb-4"><p class="text-[10px] font-black uppercase tracking-[0.4em] opacity-60">Seguimiento de Dependencias:</p><button @click="addAreaToSession(activeSession)" class="text-[9px] font-black uppercase bg-white/20 hover:bg-white/30 px-5 py-2 rounded-xl border border-white/30 transition-all shadow-sm">Gestionar Áreas</button></div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5 gap-3 overflow-y-auto max-h-72 pr-3 custom-scrollbar">
+                                        <div v-for="areaStatus in activeSession.areas_status" :key="areaStatus.id" 
+                                             class="flex items-center justify-between p-3 bg-white/10 rounded-2xl border border-white/10 group/area transition-all hover:bg-white/20 hover:scale-[1.02] hover:shadow-lg active:scale-95 cursor-pointer">
+                                            <div class="flex-1 min-w-0 mr-2">
+                                                <span class="text-[9px] font-black uppercase truncate block tracking-tight leading-none">{{ areaStatus.name }}</span>
+                                                <span class="text-[8px] font-bold opacity-60 tracking-widest block mt-1.5 leading-none">{{ areaStatus.submitted_count }} / {{ areaStatus.order_count }} enviadas</span>
+                                            </div>
+                                            <div class="flex items-center shrink-0">
+                                                <button v-if="!areaStatus.is_submitted && !areaStatus.is_pending" @click.stop="removeAreaFromSession(activeSession, areaStatus.id)" class="opacity-0 group-hover/area:opacity-100 p-1 hover:text-red-300 transition-all mr-1"><XMarkIcon class="h-3 w-3" /></button>
+                                                <CheckBadgeIcon v-if="areaStatus.is_submitted" class="h-5 w-5 text-green-300 drop-shadow-lg" />
+                                                <div v-else-if="areaStatus.is_pending" class="h-5 w-5 rounded-full border-2 border-amber-300 flex items-center justify-center animate-pulse"><div class="h-1 w-1 bg-amber-300 rounded-full shadow-sm"></div></div>
+                                                <ClockIcon v-else class="h-5 w-5 text-white/20" />
                                             </div>
                                         </div>
                                     </div>
