@@ -290,7 +290,7 @@ const confirmSubmitAreaOrders = () => {
         preserveScroll: true,
         onSuccess: () => {
             selectedOrderIds.value[mealType] = [];
-            showSubmitConfirmation = false;
+            showSubmitConfirmation.value = false;
         }
     });
 };
