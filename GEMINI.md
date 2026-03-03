@@ -76,6 +76,7 @@
     - Multi-format export (PDF, Word, Excel) for all reports.
     - AI Menu Scanning with duplicate detection and categorized item merging.
 - **Nueva Página de Estadísticas (Resumen Diario):**
+    - Habilitada para todos los roles (Comensal, Gerente, Adquisiciones y Admin).
     - Analíticas personalizadas por usuario: Pedidos mensuales y "Platillo Estrella".
     - Indicador visual de Tasa de Justificación.
     - Gráficas interactivas (CSS/SVG): Distribución de alimentos por tipo y actividad semanal.

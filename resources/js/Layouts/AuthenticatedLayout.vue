@@ -158,11 +158,11 @@ onUnmounted(() => {
                                 </div>
 
                                 <!-- Area Manager & Diner Context -->
-                                <template v-if="['area_manager', 'diner'].includes($page.props.auth.user.role) || ($page.props.auth.user.role === 'admin' && $page.props.auth.user.area_id)">
+                                <template v-if="['area_manager', 'diner', 'acquisitions_manager'].includes($page.props.auth.user.role) || ($page.props.auth.user.role === 'admin' && $page.props.auth.user.area_id)">
                                     <NavLink v-if="$page.props.auth.isAnySessionOpen || $page.props.auth.isAnySessionClosedToday" :href="route('justification.index')" :active="route().current('justification.*')">
                                         Justificación
                                     </NavLink>
-                                    <NavLink v-if="$page.props.auth.user.role !== 'diner'" :href="route('area.history')" :active="route().current('area.history')">
+                                    <NavLink v-if="!['diner', 'acquisitions_manager'].includes($page.props.auth.user.role)" :href="route('area.history')" :active="route().current('area.history')">
                                         Historial
                                     </NavLink>
                                     <NavLink :href="route('daily.summary')" :active="route().current('daily.summary')" class="text-indigo-600 font-black">
@@ -290,10 +290,10 @@ onUnmounted(() => {
                         </template>
 
                                 <!-- Mobile Area Manager & Diner Justification -->
-                        <template v-if="$page.props.auth.user.role === 'area_manager' || $page.props.auth.user.role === 'diner' || ($page.props.auth.user.role === 'admin' && $page.props.auth.user.area_id)">
+                        <template v-if="['area_manager', 'diner', 'acquisitions_manager'].includes($page.props.auth.user.role) || ($page.props.auth.user.role === 'admin' && $page.props.auth.user.area_id)">
                             <div class="px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b dark:border-gray-700 mt-2">Mi Área / Actividad</div>
                             <ResponsiveNavLink v-if="$page.props.auth.isAnySessionOpen || $page.props.auth.isAnySessionClosedToday" :href="route('justification.index')" :active="route().current('justification.*')">Justificación</ResponsiveNavLink>
-                            <ResponsiveNavLink v-if="$page.props.auth.user.role !== 'diner'" :href="route('area.history')" :active="route().current('area.history')">Historial de Área</ResponsiveNavLink>
+                            <ResponsiveNavLink v-if="!['diner', 'acquisitions_manager'].includes($page.props.auth.user.role)" :href="route('area.history')" :active="route().current('area.history')">Historial de Área</ResponsiveNavLink>
                                                         <ResponsiveNavLink :href="route('daily.summary')" :active="route().current('daily.summary')" class="text-indigo-600 font-bold">Resumen Diario</ResponsiveNavLink>
                         </template>
                     </div>
