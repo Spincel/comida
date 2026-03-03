@@ -28,52 +28,97 @@ const props = defineProps({
 
 // --- WhatsApp Sharing Logic ---
 const sendToWhatsApp = (areaSummary = null) => {
-    let message = `*RESUMEN DE PEDIDOS - ${props.mealType.toUpperCase()}*\n`;
-    message += `*Proveedor:* ${props.provider.name}\n`;
-    message += `*Fecha:* ${props.date}\n`;
-    message += `----------------------------\n\n`;
-
-    if (areaSummary) {
-        // Single Area Report
-        message += `*ÁREA:* ${areaSummary.area_name.toUpperCase()}\n`;
-        areaSummary.platillos.forEach(p => {
-            message += `• ${p.total_count}x ${p.platillo_name}\n`;
-            if (p.observations?.length > 0) {
-                p.observations.forEach(obs => message += `  - _${obs}_\n`);
-            }
-        });
-        message += `\n*Total Área:* ${areaSummary.total_area_orders} pedidos`;
-    } else {
-        // Global Report
-        const globalPlatillos = {};
-        props.ordersSummary.forEach(area => {
-            area.platillos.forEach(p => {
-                if (!globalPlatillos[p.platillo_name]) globalPlatillos[p.platillo_name] = 0;
-                globalPlatillos[p.platillo_name] += p.total_count;
-            });
-        });
-
-        message += `*RESUMEN GLOBAL POR PLATILLO:*\n`;
-        Object.entries(globalPlatillos).forEach(([name, count]) => {
-            message += `• ${count}x ${name}\n`;
-        });
+    try {
+        const providerName = props.provider?.name || 'Proveedor';
+        const mealType = props.mealType || 'Pedido';
         
-        message += `\n----------------------------\n`;
-        message += `*DETALLE POR ÁREA:*\n`;
-        props.ordersSummary.forEach(area => {
-            message += `\n*${area.area_name}:* ${area.total_area_orders}\n`;
-            area.platillos.forEach(p => {
-                message += `  - ${p.total_count}x ${p.platillo_name}\n`;
-            });
-        });
-        message += `\n*TOTAL GENERAL:* ${totalGrandOrders.value} pedidos`;
-    }
+        let message = `*RESUMEN DE PEDIDOS - ${mealType.toUpperCase()}*\n`;
+        message += `*Proveedor:* ${providerName}\n`;
+        message += `*Fecha:* ${props.date}\n`;
+        message += `----------------------------\n\n`;
 
-    const encodedMessage = encodeURIComponent(message);
-    // Clean phone number (remove non-digits)
-    const phone = props.provider.contact_phone ? props.provider.contact_phone.replace(/\D/g, '') : '';
-    const whatsappUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${encodedMessage}`;
-    window.open(whatsappUrl, '_blank');
+        if (areaSummary) {
+            // Single Area Report
+            const areaName = areaSummary.area_name || 'Área';
+            message += `*ÁREA:* ${areaName.toUpperCase()}\n`;
+            
+            if (areaSummary.platillos && areaSummary.platillos.length > 0) {
+                areaSummary.platillos.forEach(p => {
+                    const pName = p.platillo_name || 'Platillo';
+                    message += `• ${p.total_count}x ${pName}\n`;
+                    if (p.observations?.length > 0) {
+                        p.observations.forEach(obs => {
+                            if (obs) message += `  - _${obs}_\n`;
+                        });
+                    }
+                });
+            } else {
+                message += `(Sin platillos registrados)\n`;
+            }
+            message += `\n*Total Área:* ${areaSummary.total_area_orders || 0} pedidos`;
+        } else {
+            // Global Report
+                    const globalPlatillos = {};
+                    if (props.ordersSummary && props.ordersSummary.length > 0) {
+                        props.ordersSummary.forEach(area => {
+                            if (area.platillos && Array.isArray(area.platillos)) {
+                                area.platillos.forEach(p => {
+                                    const pName = p.platillo_name || 'Platillo';
+                                    if (!globalPlatillos[pName]) globalPlatillos[pName] = 0;
+                                    globalPlatillos[pName] += p.total_count;
+                                });
+                            }
+                        });
+                    }
+            
+                    message += `*RESUMEN GLOBAL POR PLATILLO:*\n`;
+                    const entries = Object.entries(globalPlatillos);
+                    if (entries.length > 0) {
+                        entries.forEach(([name, count]) => {
+                            message += `• ${count}x ${name}\n`;
+                        });
+                    } else {
+                        message += `(No hay pedidos registrados)\n`;
+                    }
+                    
+                    message += `\n----------------------------\n`;
+                    message += `*DETALLE POR ÁREA:*\n`;
+                    
+                    if (props.ordersSummary && props.ordersSummary.length > 0) {
+                        props.ordersSummary.forEach(area => {
+                            const aName = area.area_name || 'Área';
+                            message += `\n*${aName}:* ${area.total_area_orders || 0}\n`;
+                            if (area.platillos && Array.isArray(area.platillos)) {
+                                area.platillos.forEach(p => {
+                                    const pName = p.platillo_name || 'Platillo';
+                                    message += `  - ${p.total_count}x ${pName}\n`;
+                                });
+                            }
+                        });
+                    }            message += `\n*TOTAL GENERAL:* ${totalGrandOrders.value} pedidos`;
+        }
+
+        const encodedMessage = encodeURIComponent(message);
+        
+        // Clean phone number (remove non-digits)
+        let phone = props.provider.contact_phone ? props.provider.contact_phone.replace(/\D/g, '') : '';
+        
+        // If it's a 10 digit number, assume Mexico (+52)
+        if (phone.length === 10) {
+            phone = '52' + phone;
+        }
+
+        if (!phone) {
+            alert('El proveedor no tiene un número de teléfono válido registrado.');
+            return;
+        }
+
+        const whatsappUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${encodedMessage}`;
+        window.open(whatsappUrl, '_blank');
+    } catch (error) {
+        console.error('Error al generar mensaje de WhatsApp:', error);
+        alert('Ocurrió un error al generar el mensaje. Por favor revisa la consola.');
+    }
 };
 
 const formattedDate = computed(() => {

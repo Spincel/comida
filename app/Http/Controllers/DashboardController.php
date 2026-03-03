@@ -719,7 +719,7 @@ class DashboardController extends Controller
                 'platillo_name' => $pName,
                 'total_count' => $pOrders->count(), 
                 'observations' => $pOrders->pluck('preferences')->filter()->values(), 
-            ])->values()->sortBy('platillo_name'),
+            ])->values()->sortBy('platillo_name')->values(),
             'individual_orders' => $areaOrders->map(fn($order) => [
                 'user_name' => $order->user->name,
                 'avatar_url' => $order->user->avatar_url,
@@ -798,7 +798,7 @@ class DashboardController extends Controller
                 'platillo_name' => $pName, 
                 'total_count' => $pOrders->count(), 
                 'observations' => $pOrders->pluck('preferences')->filter()->values()
-            ])->values()->sortBy('platillo_name'),
+            ])->values()->sortBy('platillo_name')->values(),
             'individual_orders' => $aOrders->sortBy('user.name')->map(fn($o) => [
                 'user_name' => $o->user->name, 
                 'avatar_url' => $o->user->avatar_url, 
@@ -862,14 +862,14 @@ class DashboardController extends Controller
             $summary = collect(['Listado General' => [
                 'group_name' => 'Listado Alfabético General',
                 'total_count' => $orders->count(),
-                'platillos' => $orders->groupBy('dailyMenu.name')->map(fn($pOrders, $pName) => ['platillo_name' => $pName, 'total_count' => $pOrders->count(), 'observations' => $pOrders->pluck('preferences')->filter()->values()])->values()->sortBy('platillo_name'),
+                'platillos' => $orders->groupBy('dailyMenu.name')->map(fn($pOrders, $pName) => ['platillo_name' => $pName, 'total_count' => $pOrders->count(), 'observations' => $pOrders->pluck('preferences')->filter()->values()])->values()->sortBy('platillo_name')->values(),
                 'individual_orders' => $orders->sortBy('user.name')->map(fn($o) => ['user_name' => $o->user->name, 'avatar_url' => $o->user->avatar_url, 'area_name' => $o->user->area->name, 'platillo_name' => $o->dailyMenu->name, 'preferences' => $o->preferences, 'activity_performed' => $o->activity_performed]),
             ]]);
         } else {
             $summary = $orders->groupBy('user.area.name')->map(fn($aOrders, $aName) => [
                 'group_name' => $aName,
                 'total_count' => $aOrders->count(),
-                'platillos' => $aOrders->groupBy('dailyMenu.name')->map(fn($pOrders, $pName) => ['platillo_name' => $pName, 'total_count' => $pOrders->count(), 'observations' => $pOrders->pluck('preferences')->filter()->values()])->values()->sortBy('platillo_name'),
+                'platillos' => $aOrders->groupBy('dailyMenu.name')->map(fn($pOrders, $pName) => ['platillo_name' => $pName, 'total_count' => $pOrders->count(), 'observations' => $pOrders->pluck('preferences')->filter()->values()])->values()->sortBy('platillo_name')->values(),
                 'individual_orders' => $aOrders->sortBy('user.name')->map(fn($o) => ['user_name' => $o->user->name, 'avatar_url' => $o->user->avatar_url, 'area_name' => $o->user->area->name, 'platillo_name' => $o->dailyMenu->name, 'preferences' => $o->preferences, 'activity_performed' => $o->activity_performed]),
             ])->sortKeys();
         }
