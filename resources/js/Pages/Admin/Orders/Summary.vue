@@ -95,7 +95,9 @@ const sendToWhatsApp = (areaSummary = null) => {
                                 });
                             }
                         });
-                    }            message += `\n*TOTAL GENERAL:* ${totalGrandOrders.value} pedidos`;
+                    }
+            
+            message += `\n*TOTAL GENERAL:* ${totalGrandOrders.value} pedidos`;
         }
 
         const encodedMessage = encodeURIComponent(message);

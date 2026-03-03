@@ -1000,7 +1000,6 @@ class DashboardController extends Controller
             return "Error al generar el reporte: " . $e->getMessage();
         }
     }
-    }
 
     private function exportToExcel($data, $filename)
     {
