@@ -187,7 +187,7 @@ const openDeleteSessionModal = (session, provider) => {
 
 // --- Area Management ---
 const removeAreaFromSession = (session, areaId) => {
-    if (!confirm('¿Estás seguro de quitar esta área de la sesión activa?')) return;
+    if (!confirm('¿Estás seguro de quitar esta área de la sesión activa? \n\n¡ATENCIÓN! Se eliminarán las autorizaciones de los comensales y los pedidos que ya hayan realizado para esta sesión específica.')) return;
     const currentAreas = Array.isArray(session.selected_area_ids) ? session.selected_area_ids : JSON.parse(session.selected_area_ids || '[]');
     const newAreas = currentAreas.filter(id => id !== areaId);
     router.patch(route('dashboard.sessions.updateAreas', session.id), { selected_area_ids: newAreas }, { preserveScroll: true });

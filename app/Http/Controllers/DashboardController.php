@@ -774,8 +774,33 @@ class DashboardController extends Controller
             'selected_area_ids.*' => 'integer|exists:areas,id',
         ]);
 
-        $session->update(['selected_area_ids' => array_map('intval', $validated['selected_area_ids'])]);
-        return redirect()->route('dashboard')->with('success', 'Áreas actualizadas correctamente.');
+        $oldAreaIds = $session->selected_area_ids ?? [];
+        $newAreaIds = array_map('intval', $validated['selected_area_ids']);
+        
+        // Find areas being removed
+        $removedAreaIds = array_diff($oldAreaIds, $newAreaIds);
+
+        if (!empty($removedAreaIds)) {
+            // 1. Remove session authorizations for users in removed areas
+            \App\Models\SessionAuthorization::where('provider_daily_status_id', $session->id)
+                ->whereHas('user', function($q) use ($removedAreaIds) {
+                    $q->whereIn('area_id', $removedAreaIds);
+                })->delete();
+
+            // 2. Remove orders for users in removed areas for this specific session context
+            \App\Models\Order::where('meal_type', $session->meal_type)
+                ->whereHas('dailyMenu', function($q) use ($session) {
+                    $q->where('provider_id', $session->provider_id)
+                      ->where('available_on', $session->date);
+                })
+                ->whereHas('user', function($q) use ($removedAreaIds) {
+                    $q->whereIn('area_id', $removedAreaIds);
+                })->delete();
+        }
+
+        $session->update(['selected_area_ids' => $newAreaIds]);
+        
+        return redirect()->route('dashboard')->with('success', 'Áreas actualizadas y datos de pedidos/autorizaciones limpiados.');
     }
 
     public function showOrderSummary(Provider $provider, string $date, Request $request)
