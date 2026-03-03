@@ -185,7 +185,9 @@ const activateMenu = () => {
             </div>
 
             <form @submit.prevent="activateMenu">
-                <div class="mb-4">
+                <div class="mb-6">
+                    <InputError :message="form.errors.error" class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl text-[10px] font-black uppercase text-red-600 dark:text-red-400" />
+                    
                     <div class="grid grid-cols-4 gap-3">
                         <button v-for="opt in mealOptions" :key="opt" 
                                 type="button"

@@ -86,6 +86,7 @@
 - **Autorización Automática de Gerentes:** Se ajustó `DashboardController` y `OrderController` para que los Gerentes y Administradores estén autorizados implícitamente en las sesiones de su área, corrigiendo la desaparición del menú tras habilitar comensales.
 - **Robustez en Catálogo de Platillos:** Se implementó un casteo estricto a enteros (`(int)`) en las comparaciones de IDs de sesión y autorizaciones en `DashboardController` para asegurar que el catálogo de platillos sea visible para todos los usuarios autorizados (especialmente Comensales regulares).
 - **Visibilidad Dinámica de Navegación:** Se implementó el flag `isAnySessionOpen` en el middleware de Inertia para ocultar el enlace de "Justificación" cuando no hay sesiones activas, y se añadió el enlace de "Resumen Diario" solicitado.
+- **Validación de Activación:** Se añadió una restricción en `DashboardController@activateMenu` que impide abrir una sesión de servicio si el proveedor no tiene platillos marcados como **"Publicados"** para esa fecha, mostrando un mensaje de error claro en el modal.
 
 ## Current State
 - **Bug to watch:** Verify if Logo persists correctly in all environments (Symlink created).

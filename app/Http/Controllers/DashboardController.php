@@ -554,6 +554,18 @@ class DashboardController extends Controller
         $date = $validated['date'];
         $newAreaIds = array_map('intval', $validated['selected_area_ids']);
 
+        // NEW: Check if there are published dishes for this provider on this date
+        $dishesCount = DailyMenu::where('provider_id', $provider->id)
+                                ->where('available_on', $date)
+                                ->where('status', 'published')
+                                ->count();
+        
+        if ($dishesCount === 0) {
+            return back()->withErrors([
+                'error' => "No puedes activar el servicio para '{$provider->name}' porque no tiene platillos publicados para el día {$date}. Agrega y publica platillos primero."
+            ]);
+        }
+
         $existingOtherSessions = ProviderDailyStatus::where('date', $date)
             ->where('meal_type', $mealType)
             ->where('provider_id', '!=', $provider->id)
