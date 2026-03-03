@@ -70,7 +70,8 @@ const sendToWhatsApp = (areaSummary = null) => {
     }
 
     const encodedMessage = encodeURIComponent(message);
-    window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
 };
 
 const formattedDate = computed(() => {
@@ -343,17 +344,17 @@ const mealTypeTagColors = {
                         </div>
 
                         <!-- Footer de la Tarjeta con botón de impresión por área -->
-                        <div class="mt-auto p-6 bg-gray-50 dark:bg-gray-900/30 border-t dark:border-gray-700 flex flex-col gap-3">
+                        <div class="mt-auto p-6 bg-gray-50 dark:bg-gray-900/30 border-t dark:border-gray-700 grid grid-cols-2 gap-3">
                             <button 
                                 @click="openAreaExport(areaSummary.area_id)"
-                                class="w-full py-3 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-gray-600 dark:text-gray-300 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all flex items-center justify-center shadow-sm"
+                                class="w-full py-3 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl text-[9px] font-black uppercase tracking-widest text-gray-600 dark:text-gray-300 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all flex items-center justify-center shadow-sm"
                             >
-                                <DocumentArrowDownIcon class="h-4 w-4 mr-2" /> Exportar área {{ areaSummary.area_name }}
+                                <DocumentArrowDownIcon class="h-4 w-4 mr-2" /> Exportar
                             </button>
 
                             <button @click="sendToWhatsApp(areaSummary)" 
-                                    class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center shadow-md shadow-emerald-100 dark:shadow-none">
-                                <ChatBubbleBottomCenterTextIcon class="h-4 w-4 mr-2" /> WhatsApp Área
+                                    class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center shadow-md shadow-emerald-100 dark:shadow-none">
+                                <ChatBubbleBottomCenterTextIcon class="h-4 w-4 mr-2" /> WhatsApp
                             </button>
                         </div>
                     </div>
