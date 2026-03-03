@@ -92,6 +92,7 @@
 - **Cierre de Modal de Envío:** Se corrigió una asignación de `ref` faltante (`.value = false`) en `Dashboard.vue`, permitiendo que el modal de confirmación por deslizamiento se cierre automáticamente después de enviar los pedidos a cocina correctamente.
 - **Envío por WhatsApp en Resumen:** Se implementó la funcionalidad de compartir reportes por WhatsApp en `Summary.vue`. Permite enviar un resumen global (por platillo y por área) o un resumen específico por dependencia, formateado con negritas y viñetas para una lectura clara.
 - **Mejora de Compatibilidad y Diseño (Summary):** Se cambió la URL de WhatsApp a `api.whatsapp.com` para asegurar la apertura en navegadores móviles y de escritorio. Se rediseñó la tarjeta de área para mostrar los botones de **Exportar** y **WhatsApp** en una sola línea (50/50), optimizando el espacio visual.
+- **WhatsApp Directo al Proveedor:** Se vinculó el campo `contact_phone` del proveedor en la función de envío de WhatsApp en `Summary.vue`. Ahora, al hacer clic, se abre el chat directamente con el número del proveedor registrado en el catálogo.
 
 ## Current State
 - **Bug to watch:** Verify if Logo persists correctly in all environments (Symlink created).

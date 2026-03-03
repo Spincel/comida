@@ -70,7 +70,9 @@ const sendToWhatsApp = (areaSummary = null) => {
     }
 
     const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedMessage}`;
+    // Clean phone number (remove non-digits)
+    const phone = props.provider.contact_phone ? props.provider.contact_phone.replace(/\D/g, '') : '';
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${encodedMessage}`;
     window.open(whatsappUrl, '_blank');
 };
 
