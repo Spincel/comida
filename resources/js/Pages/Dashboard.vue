@@ -503,10 +503,22 @@ const formatTime = (dateString) => {
                             </div>
 
                             <!-- Columna 70%: Detalle Global -->
-                            <div v-if="activeSession" class="lg:col-span-8 bg-indigo-600 rounded-[3rem] p-8 text-white shadow-2xl flex flex-col transition-all">
+                            <div v-if="activeSession" 
+                                 class="lg:col-span-8 rounded-[3rem] p-8 text-white shadow-2xl flex flex-col transition-all duration-500"
+                                 :class="[
+                                    activeSession.provider_id % 4 === 0 ? 'bg-indigo-600 shadow-indigo-900/40' : 
+                                    activeSession.provider_id % 4 === 1 ? 'bg-emerald-600 shadow-emerald-900/40' : 
+                                    activeSession.provider_id % 4 === 2 ? 'bg-rose-600 shadow-rose-900/40' : 
+                                    'bg-amber-600 shadow-amber-900/40'
+                                 ]">
                                 <div class="flex justify-between items-start mb-6">
-                                    <div><h5 class="text-[10px] font-black uppercase tracking-[0.4em] opacity-70 mb-1">Monitor Consolidado</h5><p class="text-3xl font-black uppercase tracking-tighter leading-none">{{ activeSession.meal_type }}</p></div>
-                                    <div class="bg-white/20 px-5 py-2 rounded-xl border border-white/30 text-[10px] font-black uppercase tracking-[0.2em] backdrop-blur-xl">{{ activeSession.provider?.name }}</div>
+                                    <div>
+                                        <h5 class="text-[10px] font-black uppercase tracking-[0.4em] opacity-70 mb-1">Monitor Consolidado</h5>
+                                        <p class="text-3xl font-black uppercase tracking-tighter leading-none">{{ activeSession.provider?.name }}</p>
+                                    </div>
+                                    <div class="bg-white/20 px-5 py-2 rounded-xl border border-white/30 text-[10px] font-black uppercase tracking-[0.2em] backdrop-blur-xl">
+                                        {{ activeSession.meal_type }}
+                                    </div>
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center mb-6 bg-black/10 rounded-[2.5rem] p-8 border border-white/10">
@@ -640,11 +652,18 @@ const formatTime = (dateString) => {
 
                 <!-- TAB MY AREA -->
                 <div v-if="activeTab === 'my-area'" class="space-y-10">
-                    <!-- AVISO -->
-                    <div v-if="pendingAuthorizations?.length > 0" class="bg-emerald-50 dark:bg-emerald-900/10 border-2 border-emerald-200 dark:border-emerald-800 rounded-3xl p-8 shadow-lg shadow-emerald-50/50">
+                    <!-- AVISO (Only if there are open sessions for MY area) -->
+                    <div v-if="openSessions?.length > 0" class="bg-emerald-50 dark:bg-emerald-900/10 border-2 border-emerald-200 dark:border-emerald-800 rounded-3xl p-8 shadow-lg shadow-emerald-50/50">
                         <div class="flex items-center space-x-6">
-                            <div class="bg-white dark:bg-emerald-900/30 p-4 rounded-2xl border border-emerald-200 dark:border-emerald-800 shadow-sm"><ClockIcon class="h-10 w-10 text-emerald-600 animate-pulse" /></div>
-                            <div><h5 class="text-xl font-black text-emerald-800 dark:text-emerald-400 uppercase tracking-tight leading-none">Servicio Iniciado</h5><p class="text-[10px] font-bold text-emerald-600 dark:text-emerald-500 uppercase mt-2 tracking-widest">Habilita a tu equipo en el panel de abajo para desbloquear el menú.</p></div>
+                            <div class="bg-white dark:bg-emerald-900/30 p-4 rounded-2xl border border-emerald-200 dark:border-emerald-800 shadow-sm">
+                                <ClockIcon class="h-10 w-10 text-emerald-600 animate-pulse" />
+                            </div>
+                            <div>
+                                <h5 class="text-xl font-black text-emerald-800 dark:text-emerald-400 uppercase tracking-tight leading-none">Servicio Iniciado</h5>
+                                <p class="text-[10px] font-bold text-emerald-600 dark:text-emerald-500 uppercase mt-2 tracking-widest">
+                                    Habilita a tu equipo en el panel de abajo para desbloquear el menú de {{ openSessions.map(s => s.meal_type).join(' / ') }}.
+                                </p>
+                            </div>
                         </div>
                     </div>
 

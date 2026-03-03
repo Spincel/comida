@@ -21,29 +21,23 @@ class DashboardController extends Controller
         $today = Carbon::today()->toDateString();
         $props = ['userRole' => $user->role];
 
-        // Shared data: ALL sessions for today
+        // 1. Get ALL sessions for today (Base for filtering)
         $allSessionsToday = ProviderDailyStatus::where('date', $today)->with('provider')->get();
+        $openStatusesToday = $allSessionsToday->where('status', 'open')->values();
         $props['closedTodaySessions'] = $allSessionsToday->where('status', 'closed')->values();
-        
-        // Get authorizartions for the user's area (if applicable)
-        $allAreaAuthorizations = collect();
+        $props['allSessionsToday'] = $allSessionsToday->values();
+
+        // 2. Identify sessions relevant to the user's area
+        $myAreaSessions = collect();
         if ($user->area_id) {
-            $areaUserIds = \App\Models\User::where('area_id', $user->area_id)->pluck('id');
-            $allAreaAuthorizations = \App\Models\SessionAuthorization::whereIn('user_id', $areaUserIds)
-                ->whereIn('provider_daily_status_id', $allSessionsToday->pluck('id'))
-                ->get();
+            $myAreaSessions = $openStatusesToday->filter(function($session) use ($user) {
+                $selectedAreaIds = is_array($session->selected_area_ids) ? $session->selected_area_ids : json_decode($session->selected_area_ids, true);
+                $selectedAreaIds = array_map('intval', $selectedAreaIds ?: []);
+                return in_array((int)$user->area_id, $selectedAreaIds);
+            })->values();
         }
 
-        $openStatuses = $allSessionsToday->where('status', 'open')->values()->map(function($session) use ($user, $allAreaAuthorizations) {
-            $selectedAreaIds = is_array($session->selected_area_ids) ? $session->selected_area_ids : json_decode($session->selected_area_ids, true);
-            $selectedAreaIds = array_map('intval', $selectedAreaIds ?: []);
-            $session->is_open_for_my_area = $user->area_id && in_array((int)$user->area_id, $selectedAreaIds);
-            
-            // NEW: Common count for the pulsing notification
-            $session->authorized_count = $allAreaAuthorizations->where('provider_daily_status_id', $session->id)->count();
-            return $session;
-        });
-
+        // 3. Logic for ACQUISITIONS / ADMIN
         if ($user->role === 'acquisitions_manager' || $user->role === 'admin') {
             $allAreas = Area::all();
             $allAreas->each->append('full_path');
@@ -52,152 +46,102 @@ class DashboardController extends Controller
                 $provider->dailyStatuses = ProviderDailyStatus::where('provider_id', $provider->id)
                                                           ->where('date', $today)
                                                           ->get();
-                
                 $provider->dailyStatus = $provider->dailyStatuses->where('status', 'open')->first() 
                                         ?? $provider->dailyStatuses->sortByDesc('activated_at')->first();
-
-                // Dummy stats
-                $provider->weekly_orders = rand(0, 5); 
-                $provider->monthly_orders_count = rand(10, 50); 
-                
-                $todayOrders = Order::whereHas('dailyMenu', function ($query) use ($provider, $today) {
-                        $query->where('provider_id', $provider->id)
-                              ->where('available_on', $today);
-                    })->get();
-
-                $provider->current_orders_count = $todayOrders->count();
-
-                // NEW: Get last used date (most recent status date BEFORE today)
-                $lastSession = ProviderDailyStatus::where('provider_id', $provider->id)
-                    ->where('date', '<', $today)
-                    ->latest('date')
-                    ->first();
-                $provider->last_used_date = $lastSession ? $lastSession->date : null;
-
                 return $provider;
             });
 
-            // Detailed tracking for each open session
-            $openSessionsDetailed = $openStatuses->map(function($session) use ($allAreas, $today, $user) {
+            // Detailed tracking for ALL open sessions (Acquisitions View)
+            $openSessionsDetailed = $openStatusesToday->map(function($session) use ($allAreas, $today) {
                 $selectedAreaIds = is_array($session->selected_area_ids) ? $session->selected_area_ids : json_decode($session->selected_area_ids, true);
                 $selectedAreaIds = array_map('intval', $selectedAreaIds ?: []);
                 
-                // NEW: Is it open for the manager's own area?
-                $session->is_open_for_my_area = $user->area_id && in_array((int)$user->area_id, $selectedAreaIds);
-
                 $sessionOrders = Order::where('meal_type', $session->meal_type)
                     ->whereHas('dailyMenu', function($q) use ($session, $today) {
                         $q->where('provider_id', $session->provider_id)
                           ->where('available_on', $today);
-                    })
-                    ->with('user')
-                    ->get();
+                    })->with('user')->get();
 
-                $areasStatus = $allAreas->whereIn('id', $selectedAreaIds)->map(function($area) use ($sessionOrders) {
-                    $areaOrders = $sessionOrders->where('user.area_id', $area->id);
-                    $hasSubmitted = $areaOrders->where('status', 'submitted_by_manager')->count() > 0;
-                    $isPending = $areaOrders->where('status', 'submitted_by_user')->count() > 0;
-                    
-                    return [
-                        'id' => $area->id,
-                        'name' => $area->name,
-                        'is_submitted' => $hasSubmitted && !$isPending,
-                        'is_pending' => $isPending, // Added to show on monitor
-                        'order_count' => $areaOrders->count(),
-                        'submitted_count' => $areaOrders->where('status', 'submitted_by_manager')->count(),
-                    ];
-                })->values();
+                $session->areas_status = $allAreas->whereIn('id', $selectedAreaIds)->map(fn($area) => [
+                    'id' => $area->id,
+                    'name' => $area->name,
+                    'is_submitted' => $sessionOrders->where('user.area_id', $area->id)->where('status', 'submitted_by_manager')->count() > 0 && $sessionOrders->where('user.area_id', $area->id)->where('status', 'submitted_by_user')->count() == 0,
+                    'is_pending' => $sessionOrders->where('user.area_id', $area->id)->where('status', 'submitted_by_user')->count() > 0,
+                    'order_count' => $sessionOrders->where('user.area_id', $area->id)->count(),
+                    'submitted_count' => $sessionOrders->where('user.area_id', $area->id)->where('status', 'submitted_by_manager')->count(),
+                ])->values();
 
-                $session->areas_status = $areasStatus;
                 return $session;
             });
 
-            // Get Dish Summary for OPEN sessions
+            $props['providers'] = $providers;
+            $props['areas'] = $allAreas; 
+            $props['openSessions'] = $openSessionsDetailed->values();
+            $props['allOpenSessionsToday'] = $openStatusesToday; 
+
+            // Active orders summary for acquisitions monitor
             $activeOrders = Order::where('status', 'submitted_by_manager')
-                ->whereHas('dailyMenu', function($q) use ($today) {
-                    $q->where('available_on', $today);
-                })
-                ->whereIn(DB::raw("meal_type || '_' || (select provider_id from daily_menus where id = orders.daily_menu_id)"), 
-                    $openStatuses->map(fn($s) => $s->meal_type . '_' . $s->provider_id))
+                ->whereHas('dailyMenu', fn($q) => $q->where('available_on', $today))
                 ->with(['user.area', 'dailyMenu'])
                 ->get();
 
-            $dishSummaryToday = $activeOrders->groupBy(function($order) {
-                return $order->meal_type . '_' . $order->dailyMenu->provider_id;
-            })->map(function($mealOrders) {
-                return [
+            $props['dishSummaryToday'] = $activeOrders->groupBy(fn($o) => $o->meal_type . '_' . $o->dailyMenu->provider_id)
+                ->map(fn($mealOrders) => [
                     'meal_type' => $mealOrders->first()->meal_type,
                     'provider_id' => $mealOrders->first()->dailyMenu->provider_id,
                     'total' => $mealOrders->count(),
-                    'dishes' => $mealOrders->groupBy('dailyMenu.name')->map(function($orders, $name) {
-                        return [
-                            'name' => $name,
-                            'count' => $orders->count(),
-                        ];
-                    })->values()->sortByDesc('count')->values(),
-                ];
-            })->values();
+                    'dishes' => $mealOrders->groupBy('dailyMenu.name')->map(fn($orders, $name) => ['name' => $name, 'count' => $orders->count()])->values()->sortByDesc('count')->values(),
+                ])->values();
+        }
 
-            $props['providers'] = $providers;
-            $props['areas'] = $allAreas; 
-            $props['dishSummaryToday'] = $dishSummaryToday;
-            $props['totalOrdersToday'] = $activeOrders->count();
-            $props['openSessions'] = $openSessionsDetailed->values();
-            $props['allOpenSessionsToday'] = $openStatuses->values(); 
-            $props['allSessionsToday'] = $allSessionsToday->values();
+        // 4. Logic for AREA MANAGER / DINER (and Acquisitions with area)
+        if ($user->area_id) {
+            $areaUsers = \App\Models\User::where('area_id', $user->area_id)->get();
+            $areaUserIds = $areaUsers->pluck('id');
 
-            // ADDED: Acquisitions as Area Manager
-            if ($user->area_id) {
-                $areaUsers = \App\Models\User::where('area_id', $user->area_id)->get();
-                
-                // Get ALL authorizations for this area's users today
-                $allAreaAuthorizations = \App\Models\SessionAuthorization::whereIn('user_id', $areaUsers->pluck('id'))
-                    ->whereIn('provider_daily_status_id', $openStatuses->pluck('id'))
-                    ->get();
+            // Authorizations ONLY for sessions that include my area
+            $allAreaAuthorizations = \App\Models\SessionAuthorization::whereIn('user_id', $areaUserIds)
+                ->whereIn('provider_daily_status_id', $myAreaSessions->pluck('id'))
+                ->get();
 
-                // Detailed tracking for each open session (already updated above in $openSessionsDetailed)
-                // We ensure it includes the authorized count for THIS specific manager's view
-                $props['openSessions'] = $openSessionsDetailed->map(function($session) use ($allAreaAuthorizations) {
+            $teamOrders = Order::whereIn('user_id', $areaUserIds)
+                                ->whereHas('dailyMenu', fn($q) => $q->where('available_on', $today))
+                                ->with(['user', 'dailyMenu.provider'])
+                                ->get();
+            
+            $props['teamOrders'] = $areaUsers->map(fn($m) => [
+                'id' => $m->id,
+                'name' => $m->name,
+                'avatar_url' => $m->avatar_url,
+                'authorized_sessions' => $allAreaAuthorizations->where('user_id', $m->id)->pluck('provider_daily_status_id'),
+                'orders' => $teamOrders->where('user_id', $m->id)->map(fn($o) => [
+                    'id' => $o->id, 'platillo' => $o->dailyMenu->name, 'provider' => $o->dailyMenu->provider->name,
+                    'status' => $o->status, 'preferences' => $o->preferences, 'meal_type' => $o->meal_type,
+                ])->values(),
+            ])->values();
+
+            $props['area'] = $user->area;
+            $props['myOrdersToday'] = $teamOrders->where('user_id', $user->id)->values();
+            
+            // Available Menus ONLY for sessions that include my area
+            $props['availableMenus'] = DailyMenu::where('available_on', $today)
+                ->where('status', 'published')
+                ->whereIn('provider_id', $myAreaSessions->pluck('provider_id'))
+                ->whereIn('meal_type', $myAreaSessions->pluck('meal_type'))
+                ->with('provider')
+                ->get();
+
+            // Override openSessions for Managers to ONLY show what's for their area
+            if ($user->role !== 'acquisitions_manager' && $user->role !== 'admin') {
+                $props['openSessions'] = $myAreaSessions->map(function($session) use ($allAreaAuthorizations) {
                     $session->authorized_count = $allAreaAuthorizations->where('provider_daily_status_id', $session->id)->count();
                     return $session;
                 })->values();
-                
-                // Get ALL authorizations for this area's users today
-                $allAreaAuthorizations = \App\Models\SessionAuthorization::whereIn('user_id', $areaUsers->pluck('id'))
-                    ->whereIn('provider_daily_status_id', $openStatuses->pluck('id'))
-                    ->get();
+            }
+        }
 
-                $teamOrders = Order::whereIn('user_id', $areaUsers->pluck('id'))
-                                    ->whereHas('dailyMenu', function ($query) use ($today) {
-                                        $query->where('available_on', $today);
-                                    })
-                                    ->with(['user', 'dailyMenu.provider'])
-                                    ->get();
-                
-                $props['teamOrders'] = $areaUsers->map(function($teamMember) use ($teamOrders, $allAreaAuthorizations) {
-                    return [
-                        'id' => $teamMember->id,
-                        'name' => $teamMember->name,
-                        'avatar_url' => $teamMember->avatar_url,
-                        'authorized_sessions' => $allAreaAuthorizations->where('user_id', $teamMember->id)->pluck('provider_daily_status_id'),
-                        'orders' => $teamOrders->where('user_id', $teamMember->id)->map(fn($o) => [
-                            'id' => $o->id,
-                            'platillo' => $o->dailyMenu->name,
-                            'provider' => $o->dailyMenu->provider->name,
-                            'status' => $o->status,
-                            'preferences' => $o->preferences,
-                            'meal_type' => $o->meal_type,
-                        ])->values(),
-                    ];
-                })->values();
-                $props['area'] = $user->area;
-                $props['myOrdersToday'] = $teamOrders->where('user_id', $user->id)->values();
-                
-                // Get authorizations for THIS USER (Acquisitions acting as diner)
-                $userAuthorizations = \App\Models\SessionAuthorization::where('user_id', $user->id)
-                    ->whereIn('provider_daily_status_id', $openStatuses->pluck('id'))
-                    ->pluck('provider_daily_status_id')
-                    ->map(fn($id) => (int)$id)
+        return Inertia::render('Dashboard', $props);
+    }
                     ->toArray();
 
                 $availableSessionsForArea = $openStatuses->filter(function($session) use ($user, $userAuthorizations) {
