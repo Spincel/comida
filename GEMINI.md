@@ -1,4 +1,45 @@
-# Comedor System - Progress Snapshot (Monday Prep)
+# Comedor System - Progress Snapshot (Tuesday Update)
+
+> **⚠️ BASELINE DE SEGURIDAD - 03 MARZO 2026 ⚠️**
+> Este punto marca el estado de "Oro" del sistema en cuanto a diseño y funcionalidad. 
+> - **Diseño:** Sidebar 25/75, Glassmorphism, Bordes 3.5rem, Sin botones "+" en menú.
+> - **Lógica:** Autorización automática, sincronización instantánea de menús, casteo estricto de IDs.
+> - **Regla:** Cualquier cambio futuro que rompa la estética o la carga de menús debe revertirse a este estado.
+
+- **Refinamiento de Interfaz de Menú:**
+    - **Simplificación de Tarjetas:** Eliminación del botón redundante de agregar ("+"). Ahora toda la superficie de la tarjeta actúa como disparador de pedido, maximizando el espacio para el texto.
+- **Optimización de Densidad Tipográfica (Panel 75%):**
+    - **Re-escalado de Textos:** Reducción selectiva de tamaños de fuente en nombres de personal y platillos para evitar recortes (`truncate`) y mejorar la legibilidad.
+    - **Ajuste de Tarjetas de Menú:** Los nombres de platillos ahora utilizan una escala `text-xl` a `text-2xl` (en lugar de `4xl`), permitiendo visualizar el nombre completo.
+- **Dashboard Inteligente y Proactivo (Flujo de Gerencia):**
+    - **Autorización One-Click:** Eliminación del botón "Confirmar Personal"; ahora las autorizaciones se guardan automáticamente al tocar la tarjeta del comensal.
+    - **Sistema de Alertas "Glow":** Los botones del sidebar brillan dinámicamente para guiar al usuario (Habilitar brilla al iniciar servicio, Mi Menú brilla tras autorización).
+    - **Indicadores de Carga en Envío:** El botón de "Enviar a Cocina" muestra un contador discreto de pedidos recibidos y cambia a color de éxito cuando el equipo está completo (100% de autorizados han pedido).
+- **Rediseño Radical y Restauración Premium (Dashboard):**
+    - **Estructura Sidebar 25/75 (Gerentes):** Implementación de un panel lateral de acciones para Gerentes de Área, eliminando el scroll vertical excesivo.
+    - **Restauración Estética de Alto Nivel:** Recuperación de bordes extra redondeados (`rounded-[3.5rem]`), sombras profundas con color, efectos de glassmorphism (`backdrop-blur-3xl`) y animaciones de resplandor.
+    - **Gestión Centralizada:** Los gerentes ahora alternan entre "Habilitar Personal", "Enviar a Cocina", "Mi Menú Personal" y "Justificar Actividades" desde una sola vista dinámica.
+    - **Vista de Comensal Panorámica:** Los comensales ven ahora su menú a pantalla completa con un diseño limpio y directo, optimizado para una selección rápida.
+- **Correcciones de Lógica y Estabilidad:**
+    - **Sincronización de Menús:** Se corrigió la lógica en `DashboardController` para habilitar inmediatamente los platillos tras la autorización, eliminando filtros erróneos por columnas inexistentes.
+    - **Robustez en IDs:** Implementación de casteo estricto a enteros para comparaciones de autorización, garantizando acceso instantáneo.
+    - **Prevención de Truncamiento:** Corrección de errores de compilación de Vue causados por guardados incompletos de archivos grandes.
+- **Mejoras en Reportes e Historial:**
+    - **Robustez en Rutas:** Se corrigió un error que impedía ver resúmenes en el Historial Global para ciertos tipos de comida (Desayuno/Cena) al estandarizar el manejo de parámetros de ruta y consulta.
+- **Corrección Crítica de Acceso:**
+    - Restauración de Acceso: Se corrigió un error de sintaxis (`ParseError`) en `DashboardController` que impedía la carga del sitio.
+    - Refinamiento de Comunicación: Ajuste de formato en el mensaje global de WhatsApp para mejorar la legibilidad del resumen de pedidos.
+- **Optimización Estética del Monitor (Adquisiciones):**
+    - Compactación Global: Reducción de paddings (`p-10` a `p-8`) y márgenes en el monitor azul para una mejor densidad de información.
+    - Re-escalado de Fuentes: Ajuste de tamaños en contadores y etiquetas (ej: `text-80px` a `text-70px`) para evitar elementos desproporcionados.
+    - Tarjetas de Dependencias "Button-Style": Rediseño de las tarjetas de seguimiento con fuentes más pequeñas (`text-[9px]`), bordes suavizados (`rounded-2xl`) e interactividad mejorada (hover, scale y shadow).
+    - Unificación de Acciones: Se reemplazó el icono de reloj por un bote de basura (`TrashIcon`) en áreas sin enviar, permitiendo la eliminación directa al hacer clic en la tarjeta.
+    - Monitoreo en Tiempo Real (Colores): Implementación de cambio dinámico a fondo verde esmeralda (`bg-emerald-500/40`) en las tarjetas de dependencias una vez enviado el pedido, permitiendo un seguimiento visual instantáneo.
+    - Monitor Consolidado Multisesión: Se intercambiaron las etiquetas para mostrar el **Nombre del Proveedor** como título principal. El fondo del monitor ahora cambia de color según el proveedor activo para evitar errores en entornos con múltiples sesiones abiertas.
+- **Gestión Estricta por Área (Gerentes):**
+    - Filtrado de Sesiones: Los Gerentes de Área ahora solo ven información, habilitación de comensales y control de pedidos de las sesiones donde su dependencia fue explícitamente asignada.
+    - Limpieza de Interfaz: Se eliminaron avisos de "Servicio Iniciado" y secciones de autorización para proveedores ajenos al área del usuario, evitando confusiones y bloqueos de menú innecesarios.
+- **Limpieza de Sesión al Quitar Área:** Se implementó una lógica de cascada en `DashboardController@updateSessionAreas` que elimina automáticamente las autorizaciones de comensales y pedidos realizados cuando una dependencia es removida de una sesión activa, evitando que usuarios de áreas canceladas puedan seguir pidiendo o sus pedidos permanezcan en el monitor.
 
 ## Completed Features (Monday Update)
 - **Perfeccionamiento de Diseño y Funcionalidad (Wide):**
@@ -94,13 +135,15 @@
     - Se añadió un bloque `try-catch` global en el controlador de reportes para capturar y notificar errores específicos de generación.
 
 ## Technical Fixes
+- **Corrección de Error de Sintaxis (Martes):** Eliminación de llave redundante en `DashboardController` que provocaba Error 500.
+- **Refinamiento WhatsApp (Martes):** Corrección de formato y saltos de línea en el reporte global de pedidos.
 - Added `storage:link` for logo visibility.
 - Enabled multi-role middleware (`role:admin|area_manager`).
 - Corrected MassAssignment exceptions on SystemSettings.
 - Fixed 403 Forbidden errors for Admin role on historical routes.
 - **Corregido Error 500 (Undefined constant):** Se estandarizaron las importaciones de controladores (`use App\Http\Controllers\...`) en `routes/web.php` usando nombres cortos.
 - **Corregido Error de Vue (Invalid prop `openSessions`):** Se aplicó `->values()` en las colecciones retornadas por `DashboardController` para asegurar que Inertia las renderice como arreglos de JSON secuenciales en lugar de objetos clave-valor.
-- **Autorización Automática de Gerentes:** Se ajustó `DashboardController` y `OrderController` para que los Gerentes y Administradores estén autorizados implícitamente en las sesiones de su área, corrigiendo la desaparición del menú tras habilitar comensales.
+- **Autorización Automática de Gerentes:** Se ajustó `DashboardController` y `OrderController` para que los Gerentes y Administradores estén autorizados implícitamente en las sesiones de su área, corregiendo la desaparición del menú tras habilitar comensales.
 - **Robustez en Catálogo de Platillos:** Se implementó un casteo estricto a enteros (`(int)`) en las comparaciones de IDs de sesión y autorizaciones en `DashboardController` para asegurar que el catálogo de platillos sea visible para todos los usuarios autorizados (especialmente Comensales regulares).
 - **Visibilidad Dinámica de Navegación:** Se implementó el flag `isAnySessionOpen` en el middleware de Inertia para ocultar el enlace de "Justificación" cuando no hay sesiones activas, y se añadió el enlace de "Resumen Diario" solicitado.
 - **Validación de Activación:** Se añadió una restricción en `DashboardController@activateMenu` que impide abrir una sesión de servicio si el proveedor no tiene platillos marcados como **"Publicados"** para esa fecha, mostrando un mensaje de error claro en el modal.
@@ -111,18 +154,14 @@
 - **Mejora de Compatibilidad y Diseño (Summary):** Se cambió la URL de WhatsApp a `api.whatsapp.com` para asegurar la apertura en navegadores móviles y de escritorio. Se rediseñó la tarjeta de área para mostrar los botones de **Exportar** y **WhatsApp** en una sola línea (50/50), optimizando el espacio visual.
 - **Corrección de WhatsApp Global:** Se corrigió un error de serialización en el controlador donde la lista de platillos se enviaba como objeto en lugar de arreglo tras ser ordenada. Se añadió `->values()` en todos los métodos de reporte de `DashboardController` y se aplicaron validaciones defensivas en `Summary.vue` (`Array.isArray`) para garantizar el funcionamiento del botón global.
 - **WhatsApp Directo al Proveedor:** Se vinculó el campo `contact_phone` del proveedor en la función de envío de WhatsApp en `Summary.vue`. Ahora, al hacer clic, se abre el chat directamente con el número del proveedor registrado en el catálogo.
+- **Limpieza de Sesión al Quitar Área:** Se implementó una lógica de cascada en `DashboardController@updateSessionAreas` que elimina automáticamente las autorizaciones de comensales y pedidos realizados cuando una dependencia es removida de una sesión activa, evitando que usuarios de áreas canceladas puedan seguir pidiendo o sus pedidos permanezcan en el monitor.
 
 ## Current State
 - **Bug to watch:** Verify if Logo persists correctly in all environments (Symlink created).
-- **Monday Goal:** Final validation of the interface catalog and UI polishing.
+- **Tuesday Goal:** Maintain system stability and finalize UI polishing.
 - **Credentials:** `admin@example.com` / `password`.
 
 ## Files Modified
-- `app/Http/Controllers/UserController.php`
-- `app/Http/Controllers/Admin/SystemSettingsController.php`
-- `app/Http/Controllers/Admin/ImportExportController.php`
-- `resources/js/Pages/Admin/Settings/Interface.vue`
-- `resources/js/Layouts/AuthenticatedLayout.vue`
-- `routes/web.php`
-- `app/Models/User.php`
-- `app/Models/SystemSetting.php`
+- `app/Http/Controllers/DashboardController.php`
+- `resources/js/Pages/Admin/Orders/Summary.vue`
+- `GEMINI.md`
