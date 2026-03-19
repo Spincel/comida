@@ -1,59 +1,96 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🍱 SICOA - Sistema de Control de Alimentación
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+![Spincelaestream](https://img.shields.io/badge/Brand-Spincelaestream-blue?style=for-the-badge&logo=appveyor)
+![Laravel](https://img.shields.io/badge/Laravel-12-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)
+![Vue.js](https://img.shields.io/badge/Vue.js-3-4FC08D?style=for-the-badge&logo=vuedotjs&logoColor=white)
+![Inertia.js](https://img.shields.io/badge/Inertia.js-Modern_Monolith-9553E9?style=for-the-badge)
 
-## About Laravel
+SICOA es una plataforma integral para la gestión de comedores industriales y servicios de alimentación institucional. Diseñado bajo la filosofía de **Spincelaestream**, combina eficiencia tecnológica con una estética premium para optimizar la logística entre Proveedores, Áreas solicitantes y Administración.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🌟 Características Principales
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+* **Identidad Visual 2.0:** Motor de temas personalizados, catálogo de fondos dinámicos y diseño basado en *Glassmorphism* para una experiencia de usuario inmersiva y elegante.
+* **Gestión de Pedidos en Tiempo Real:** Monitor interactivo para controlar solicitudes de "Comida" y "Cena", con feedback visual instantáneo.
+* **Sincronización Horaria (Local Sync):** Operación estricta bajo la zona horaria local (CDMX) para evitar desfases en registros nocturnos.
+* **Seguridad y Cierre Automático:** Detección de sesiones de días anteriores y cierre automático para garantizar un inicio de operaciones limpio cada día.
+* **Control de Proveedores:** Activación por fecha y tipo de comida, con soporte para múltiples áreas.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 🛠️ Stack Tecnológico
 
-## Learning Laravel
+* **Backend:** PHP 8.3 / Laravel 12
+* **Frontend:** Vue.js 3 (Composition API) / Inertia.js / TailwindCSS
+* **Base de Datos:** MariaDB / MySQL
+* **Servidor Ideal:** Linux (Ubuntu/Debian) con Nginx y PHP-FPM
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+---
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🚀 Guía de Despliegue en HestiaCP (Producción)
 
-## Laravel Sponsors
+Esta sección documenta la configuración específica necesaria para desplegar SICOA en un entorno **HestiaCP** bajo el dominio `sicoa.aestream.xyz`.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 1. Clonar el repositorio y configurar el entorno
+```bash
+cd /home/admin/web/sicoa.aestream.xyz/public_html
+rm -rf *
+git clone <URL_DEL_REPOSITORIO> .
+cp .env.example .env
+# Configurar DB_DATABASE, DB_USERNAME, DB_PASSWORD en el .env
+# Asegurar que APP_ENV=production y APP_URL sea la correcta
+```
 
-### Premium Partners
+### 2. Instalación de Dependencias
+```bash
+# Ignorar chequeos estrictos de versión si Hestia usa PHP 8.3
+composer config platform-check false
+composer install --ignore-platform-reqs --optimize-autoloader --no-dev
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+# Frontend
+npm install
+npm run build
+```
 
-## Contributing
+### 3. Migraciones y Datos Base
+```bash
+php artisan key:generate
+php artisan migrate --force
+php artisan db:seed --class=DatabaseSeeder
+php artisan storage:link
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 4. Configuración Crítica de HestiaCP / Nginx
+Para que Laravel funcione correctamente en HestiaCP, se deben aplicar las siguientes configuraciones:
 
-## Code of Conduct
+**A. Liberar a PHP de la restricción `open_basedir`:**
+PHP necesita acceso a toda la carpeta del proyecto, no solo a `public`.
+Editar el archivo `/etc/php/8.3/fpm/pool.d/sicoa.aestream.xyz.conf` y asegurarse de que la ruta base no termine en `/public`:
+```ini
+# CORRECTO
+php_admin_value[open_basedir] = /home/admin/.../public_html:/tmp...
+# INCORRECTO (Hestia lo pone así por defecto si usas Custom Document Root)
+# php_admin_value[open_basedir] = /home/admin/.../public_html/public:/tmp...
+```
+*Reiniciar PHP después del cambio:* `systemctl restart php8.3-fpm`
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+**B. Ajustar el Document Root de Nginx:**
+El punto de entrada debe ser la carpeta `public` de Laravel.
+En los archivos `/home/admin/conf/web/sicoa.aestream.xyz/nginx.conf` y `nginx.ssl.conf`:
+```nginx
+root /home/admin/web/sicoa.aestream.xyz/public_html/public;
+```
+*Asegurarse de que no diga `/public/public` por error del panel.*
+*Reiniciar Nginx:* `systemctl restart nginx`
 
-## Security Vulnerabilities
+**C. Permisos de Carpetas:**
+El usuario del panel debe tener permisos de escritura en estas carpetas:
+```bash
+chown -R admin:admin /home/admin/web/sicoa.aestream.xyz/public_html
+chmod -R 775 storage bootstrap/cache
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## 🔐 Accesos por Defecto (Tras Seeder)
+* **URL:** `https://sicoa.aestream.xyz`
+* **Email:** `admin@admin.com`
+* **Contraseña:** `admin123` (Generada manualmente) o `password` (Por defecto del seeder)
 
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+*Desarrollado y mantenido por el equipo de ingeniería de **Spincelaestream**.*
