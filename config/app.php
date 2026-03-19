@@ -123,4 +123,16 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Gemini AI Configuration (Spincelaestream)
+    |--------------------------------------------------------------------------
+    |
+    | This key is used for AI-driven menu scanning and description generation.
+    | It should be set in your ".env" file as GEMINI_API_KEY.
+    |
+    */
+
+    'gemini_api_key' => env('GEMINI_API_KEY'),
+
 ];

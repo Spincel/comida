@@ -231,9 +231,9 @@ class DailyMenuController extends Controller
         // Increase execution time for AI processing
         set_time_limit(120);
 
-        $geminiApiKey = env('GEMINI_API_KEY');
+        $geminiApiKey = config('app.gemini_api_key') ?: env('GEMINI_API_KEY');
         if (!$geminiApiKey) {
-            Log::error('GEMINI_API_KEY not set in .env');
+            Log::error('GEMINI_API_KEY not found in config/app.php or .env');
             return response()->json(['error' => 'La clave API de Gemini no está configurada.'], 500);
         }
 
