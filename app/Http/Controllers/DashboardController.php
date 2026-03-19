@@ -17,14 +17,31 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
 
+/**
+ * DashboardController
+ * 
+ * Controlador principal del sistema SICOA (Spincelaestream).
+ * Gestiona la lógica del tablero de control, el ciclo de vida de las sesiones de comida,
+ * las autorizaciones por dependencia y la generación de reportes operativos.
+ */
 class DashboardController extends Controller
 {
+    /**
+     * Muestra la vista principal del Dashboard.
+     * 
+     * Implementa la lógica de:
+     * 1. Auto-cierre de sesiones: Cierra automáticamente sesiones de días previos.
+     * 2. Filtrado por área: Los usuarios solo ven menús y sesiones autorizadas para su dependencia.
+     * 3. Monitor de Adquisiciones: Vista global para administradores con conteo de platillos en tiempo real.
+     */
     public function index(Request $request)
     {
         $user = $request->user();
         $today = Carbon::today()->toDateString();
 
-        // AUTO-CLOSE: Mark as closed any session from previous days that was left open
+        // AUTO-CLOSE: Lógica de limpieza automática.
+        // Cualquier sesión que se haya quedado abierta de días anteriores se cierra
+        // al momento de que cualquier usuario entra al Dashboard hoy.
         ProviderDailyStatus::where('status', 'open')
             ->where('date', '<', $today)
             ->update(['status' => 'closed']);
