@@ -11,6 +11,8 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Support\Facades\Schema;
 
 class ImportExportController extends Controller
 {
@@ -21,184 +23,177 @@ class ImportExportController extends Controller
                 'users' => User::count(),
                 'areas' => Area::count(),
                 'providers' => Provider::count(),
-            ]
+            ],
+            'providers' => Provider::all(['id', 'name']),
         ]);
+    }
+
+    /**
+     * Generate and download a SQL database dump compatible with SQLite/MySQL.
+     */
+    public function backup()
+    {
+        $connection = config('database.default');
+        $driver = config("database.connections.{$connection}.driver");
+
+        return new StreamedResponse(function () use ($driver) {
+            $handle = fopen('php://output', 'w');
+            fwrite($handle, "-- Comedor System SQL Backup\n");
+            fwrite($handle, "-- Generated on: " . now()->toDateTimeString() . "\n");
+            fwrite($handle, "-- Driver: {$driver}\n\n");
+
+            if ($driver === 'sqlite') {
+                // SQLite Backup Logic
+                fwrite($handle, "PRAGMA foreign_keys = OFF;\n\n");
+                $tables = DB::select("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'");
+                foreach ($tables as $table) {
+                    $tableName = $table->name;
+                    $createTable = DB::select("SELECT sql FROM sqlite_master WHERE type='table' AND name = ?", [$tableName])[0];
+                    fwrite($handle, "DROP TABLE IF EXISTS `{$tableName}`;\n");
+                    fwrite($handle, $createTable->sql . ";\n\n");
+
+                    $rows = DB::table($tableName)->get();
+                    foreach ($rows as $row) {
+                        $rowArray = (array) $row;
+                        $columns = array_keys($rowArray);
+                        $escapedValues = array_map(fn($v) => is_null($v) ? 'NULL' : "'".str_replace("'", "''", $v)."'", array_values($rowArray));
+                        fwrite($handle, "INSERT INTO `{$tableName}` (`".implode('`, `', $columns)."`) VALUES (".implode(', ', $escapedValues).");\n");
+                    }
+                    fwrite($handle, "\n");
+                }
+                fwrite($handle, "PRAGMA foreign_keys = ON;\n");
+            } else {
+                // MySQL Backup Logic
+                fwrite($handle, "SET FOREIGN_KEY_CHECKS=0;\n\n");
+                $dbName = config("database.connections.{$connection}.database");
+                $tables = DB::select('SHOW TABLES');
+                $key = "Tables_in_{$dbName}";
+                foreach ($tables as $table) {
+                    $tableName = $table->$key;
+                    $createTable = DB::select("SHOW CREATE TABLE `{$tableName}`")[0];
+                    fwrite($handle, "DROP TABLE IF EXISTS `{$tableName}`;\n");
+                    fwrite($handle, $createTable->{'Create Table'} . ";\n\n");
+
+                    $rows = DB::table($tableName)->get();
+                    foreach ($rows as $row) {
+                        $rowArray = (array) $row;
+                        $escapedValues = array_map(fn($v) => is_null($v) ? 'NULL' : "'".str_replace("'", "''", $v)."'", array_values($rowArray));
+                        fwrite($handle, "INSERT INTO `{$tableName}` (`".implode('`, `', array_keys($rowArray))."`) VALUES (".implode(', ', $escapedValues).");\n");
+                    }
+                }
+                fwrite($handle, "SET FOREIGN_KEY_CHECKS=1;\n");
+            }
+            fclose($handle);
+        }, 200, [
+            'Content-Type' => 'application/sql',
+            'Content-Disposition' => 'attachment; filename="comedor_full_backup_'.now()->format('Y-m-d_His').'.sql"',
+        ]);
+    }
+
+    /**
+     * Import a SQL backup file.
+     */
+    public function importSql(Request $request)
+    {
+        $request->validate(['file' => 'required|file']);
+        $sql = file_get_contents($request->file('file')->getRealPath());
+
+        DB::beginTransaction();
+        try {
+            // Remove comments and split by semicolon (naive split, but works for standard dumps)
+            $queries = array_filter(array_map('trim', explode(";\n", $sql)));
+            
+            // For SQLite compatibility, ensure we enable/disable FKs
+            if (config('database.default') === 'sqlite') {
+                DB::statement('PRAGMA foreign_keys = OFF');
+            } else {
+                DB::statement('SET FOREIGN_KEY_CHECKS = 0');
+            }
+
+            foreach ($queries as $query) {
+                if (!empty($query)) DB::unprepared($query . ';');
+            }
+
+            if (config('database.default') === 'sqlite') {
+                DB::statement('PRAGMA foreign_keys = ON');
+            } else {
+                DB::statement('SET FOREIGN_KEY_CHECKS = 1');
+            }
+
+            DB::commit();
+            return back()->with('success', 'Base de datos restaurada correctamente.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Error en restauración: ' . $e->getMessage());
+        }
     }
 
     public function import(Request $request)
     {
-        // Increase execution time for large imports
-        ini_set('max_execution_time', 300); // 5 minutes
-
+        ini_set('max_execution_time', 300);
         $request->validate([
             'type' => 'required|in:users,areas,providers',
-            'file' => 'required|file|mimes:csv,txt,xlsx',
+            'file' => 'required|file',
         ]);
 
-        $file = $request->file('file');
-        $type = $request->type;
+        $rawData = array_map('str_getcsv', file($request->file('file')->getRealPath()));
+        if (empty($rawData)) return back()->with('error', 'Archivo vacío.');
 
-        // Native CSV parsing
-        $path = $file->getRealPath();
-        $rawData = array_map('str_getcsv', file($path));
-        if (empty($rawData)) return back()->with('error', 'El archivo está vacío.');
-
-        $header = array_shift($rawData);
-        // Clean header: lowercase, trim and remove accents/special chars if possible
-        $header = array_map(function($h) {
-            return Str::slug(trim($h), '_');
-        }, $header);
-
+        $header = array_map(fn($h) => Str::slug(trim($h), '_'), array_shift($rawData));
         $count = 0;
-        $skipped = 0;
-
-        // Performance caches
-        $areasCache = [];
-        $existingUsersByEmpNum = User::whereNotNull('employee_number')->pluck('id', 'employee_number')->toArray();
-        $existingUsersByName = User::get()->mapWithKeys(function ($user) {
-            $fullName = strtolower(trim($user->first_name . ' ' . $user->last_name . ' ' . $user->second_last_name));
-            return [$fullName => $user->id];
-        })->toArray();
-        
-        // Compute default password hash ONCE for the whole batch
-        $defaultPasswordHash = Hash::make('password123');
 
         DB::beginTransaction();
         try {
-            foreach ($rawData as $index => $row) {
-                // Skip empty rows or rows that don't match header count
-                if (empty($row) || count($row) !== count($header)) {
-                    if (count(array_filter($row)) === 0) continue; // It's just an empty line
-                    if (count($row) < count($header)) {
-                        $row = array_pad($row, count($header), '');
-                    } else {
-                        $row = array_slice($row, 0, count($header));
-                    }
-                }
-
+            foreach ($rawData as $row) {
+                if (count($row) !== count($header)) continue;
                 $row = array_combine($header, $row);
                 
-                if ($type === 'areas') {
-                    if (empty($row['nombre'])) continue;
-                    $areaName = mb_strtoupper(trim($row['nombre']), 'UTF-8');
-                    if (!isset($areasCache[$areaName])) {
-                        $area = Area::firstOrCreate(['name' => $areaName]);
-                        $areasCache[$areaName] = $area->id;
-                        $count++;
-                    }
-                } 
-                elseif ($type === 'providers') {
-                    if (empty($row['nombre'])) continue;
-                    Provider::updateOrCreate(
-                        ['name' => mb_strtoupper(trim($row['nombre']), 'UTF-8')],
-                        [
-                            'contact_person' => $row['contacto'] ?? null,
-                            'contact_phone' => $row['telefono'] ?? null,
-                            'contact_email' => $row['email'] ?? null,
-                            'address' => $row['direccion'] ?? null,
-                        ]
-                    );
-                    $count++;
-                }
-                elseif ($type === 'users') {
-                    $nombre = trim($row['nombre'] ?? '');
-                    $paterno = trim($row['apellido_paterno'] ?? '');
-                    $materno = trim($row['apellido_materno'] ?? '');
-                    $noEmpleado = trim($row['no_empleado'] ?? '');
-
-                    if (empty($nombre)) continue; 
-
-                    // --- DUPLICATE DETECTION ---
-                    $fullNameKey = strtolower(trim($nombre . ' ' . $paterno . ' ' . $materno));
-                    
-                    // If employee number exists in DB, or exact full name exists in DB, skip
-                    if (!empty($noEmpleado) && isset($existingUsersByEmpNum[$noEmpleado])) {
-                        $skipped++;
-                        continue;
-                    }
-                    if (isset($existingUsersByName[$fullNameKey])) {
-                        $skipped++;
-                        continue;
-                    }
-
-                    // 1. Generate Username if missing
-                    $username = !empty($row['usuario'] ?? '') 
-                        ? trim($row['usuario']) 
-                        : Str::slug(substr($nombre, 0, 1) . $paterno . ($count + 1)); // Added counter to avoid username collision
-                    
-                    // 2. Generate Email if missing
-                    $email = !empty($row['email'] ?? '') 
-                        ? trim($row['email']) 
-                        : Str::slug($nombre . '.' . $paterno) . ($count + 1) . '@comedor.local';
-
-                    // 3. Generate Employee Number if missing
-                    $noEmpleado = !empty($noEmpleado) 
-                        ? $noEmpleado 
-                        : (User::max('employee_number') ?? 1000) + $count + 1;
-
-                    // 4. Handle Area with local cache
-                    $areaName = mb_strtoupper(trim($row['area'] ?? ''), 'UTF-8');
-                    $areaId = null;
-                    if (!empty($areaName)) {
-                        if (!isset($areasCache[$areaName])) {
-                            $area = Area::firstOrCreate(['name' => $areaName]);
-                            $areasCache[$areaName] = $area->id;
-                        }
-                        $areaId = $areasCache[$areaName];
-                    }
-
-                    // 5. Use pre-computed hash if no specific password provided
-                    $password = !empty($row['password']) ? Hash::make($row['password']) : $defaultPasswordHash;
-
-                    $user = User::create([
-                        'username' => $username,
-                        'first_name' => $nombre,
-                        'last_name' => $paterno,
-                        'second_last_name' => $materno,
-                        'email' => $email,
-                        'employee_number' => $noEmpleado,
-                        'password' => $password,
-                        'role' => (!empty($row['rol'])) ? $row['rol'] : 'diner',
-                        'area_id' => $areaId,
+                if ($request->type === 'areas') {
+                    Area::firstOrCreate(['name' => mb_strtoupper(trim($row['nombre']), 'UTF-8')]);
+                } elseif ($request->type === 'providers') {
+                    Provider::updateOrCreate(['name' => mb_strtoupper(trim($row['nombre']), 'UTF-8')], [
+                        'contact_person' => $row['contacto'] ?? null,
+                        'contact_phone' => $row['telefono'] ?? null,
+                        'address' => $row['direccion'] ?? null,
                     ]);
-
-                    // Add to cache to prevent duplicates within the same file
-                    $existingUsersByEmpNum[$noEmpleado] = $user->id;
-                    $existingUsersByName[$fullNameKey] = $user->id;
-                    $count++;
+                } elseif ($request->type === 'users') {
+                    User::create([
+                        'username' => $row['usuario'] ?? Str::random(8),
+                        'first_name' => $row['nombre'],
+                        'last_name' => $row['apellido_paterno'] ?? '',
+                        'email' => $row['email'] ?? Str::random(5).'@comedor.local',
+                        'password' => Hash::make($row['password'] ?? 'password123'),
+                        'role' => $row['rol'] ?? 'diner',
+                    ]);
                 }
+                $count++;
             }
             DB::commit();
-            
-            $msg = "Se importaron $count registros correctamente.";
-            if ($skipped > 0) {
-                $msg .= " Se omitieron $skipped registros porque parecían ser duplicados (mismo número de empleado o nombre completo).";
-            }
-            return back()->with('success', $msg);
-            
+            return back()->with('success', "Se importaron $count registros.");
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', "Error al importar: " . $e->getMessage());
+            return back()->with('error', "Error: " . $e->getMessage());
         }
     }
 
     public function truncate(Request $request)
     {
-        $request->validate(['type' => 'required|in:users,areas,providers,sessions,all']);
+        $request->validate(['type' => 'required']);
         $type = $request->type;
 
-        if ($type === 'all' || $type === 'users') User::where('id', '!=', auth()->id())->delete();
-        if ($type === 'all' || $type === 'areas') Area::whereDoesntHave('users')->delete();
-        if ($type === 'all' || $type === 'providers') Provider::delete();
-        
-        if ($type === 'all' || $type === 'sessions') {
-            // This clears all history: Orders, Authorizations, and Session status
+        if ($type === 'all') {
+            User::where('id', '!=', auth()->id())->delete();
+            Area::whereDoesntHave('users')->delete();
+            Provider::query()->delete();
             DB::statement('DELETE FROM orders');
-            DB::statement('DELETE FROM session_authorizations');
             DB::statement('DELETE FROM provider_daily_statuses');
-            DB::statement('DELETE FROM session_deletion_logs');
+        } else if ($type === 'sessions') {
+            DB::statement('DELETE FROM orders');
+            DB::statement('DELETE FROM provider_daily_statuses');
+        } else if ($type === 'users') {
+            User::where('id', '!=', auth()->id())->delete();
         }
 
-        return back()->with('success', 'Base de datos limpiada correctamente (Respetando integridad).');
+        return back()->with('success', 'Limpieza completada.');
     }
 }

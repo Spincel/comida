@@ -13,8 +13,9 @@ class DailyMenu extends Model
         'name',
         'description',
         'available_on',
-        'status', // status can also be mass assigned
+        'status', 
         'provider_id',
+        'ai_source_image',
     ];
 
     /**

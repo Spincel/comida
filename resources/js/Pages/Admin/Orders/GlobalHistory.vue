@@ -36,6 +36,15 @@ const clearFilters = () => {
     applyFilters();
 };
 
+const startDateInput = ref(null);
+const endDateInput = ref(null);
+
+const triggerPicker = (inputRef) => {
+    if (inputRef && inputRef.showPicker) {
+        inputRef.showPicker();
+    }
+};
+
 // --- Unified Color Helpers ---
 const mealTypeTagColors = {
     'Desayuno': 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800',
@@ -72,31 +81,40 @@ const getProviderColor = (id) => providerColors[id % providerColors.length];
         <div class="py-12 bg-gray-50 dark:bg-gray-950 min-h-screen transition-colors duration-300">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
                 
-                <!-- FILTROS -->
-                <div class="bg-white dark:bg-gray-800 rounded-[2.5rem] p-8 shadow-xl border border-gray-100 dark:border-gray-700">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black uppercase text-gray-400">Desde</label>
-                            <input type="date" v-model="form.start_date" @change="applyFilters"
-                                   class="w-full rounded-xl border-gray-100 dark:border-gray-700 dark:bg-gray-900 text-sm focus:ring-indigo-500" />
+                <!-- FILTROS PREMIUM -->
+                <div class="bg-white dark:bg-gray-800 rounded-[2.5rem] p-8 shadow-2xl border border-gray-100 dark:border-gray-700">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="space-y-3">
+                            <label class="text-[10px] font-black uppercase text-gray-400 ml-2 tracking-widest leading-none">Desde la fecha:</label>
+                            <div class="relative group cursor-pointer" @click="triggerPicker(startDateInput)">
+                                <CalendarDaysIcon class="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-hover:text-indigo-500 transition-colors pointer-events-none" />
+                                <input type="date" ref="startDateInput" v-model="form.start_date" @change="applyFilters"
+                                       class="w-full pl-12 pr-4 py-3.5 rounded-2xl border-2 border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm font-black text-gray-700 dark:text-white uppercase focus:border-indigo-500 focus:ring-0 transition-all cursor-pointer [color-scheme:light] dark:[color-scheme:dark]" />
+                            </div>
                         </div>
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black uppercase text-gray-400">Hasta</label>
-                            <input type="date" v-model="form.end_date" @change="applyFilters"
-                                   class="w-full rounded-xl border-gray-100 dark:border-gray-700 dark:bg-gray-900 text-sm focus:ring-indigo-500" />
+                        <div class="space-y-3">
+                            <label class="text-[10px] font-black uppercase text-gray-400 ml-2 tracking-widest leading-none">Hasta la fecha:</label>
+                            <div class="relative group cursor-pointer" @click="triggerPicker(endDateInput)">
+                                <CalendarDaysIcon class="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-hover:text-indigo-500 transition-colors pointer-events-none" />
+                                <input type="date" ref="endDateInput" v-model="form.end_date" @change="applyFilters"
+                                       class="w-full pl-12 pr-4 py-3.5 rounded-2xl border-2 border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm font-black text-gray-700 dark:text-white uppercase focus:border-indigo-500 focus:ring-0 transition-all cursor-pointer [color-scheme:light] dark:[color-scheme:dark]" />
+                            </div>
                         </div>
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black uppercase text-gray-400">Proveedor</label>
-                            <select v-model="form.provider_id" @change="applyFilters"
-                                    class="w-full rounded-xl border-gray-100 dark:border-gray-700 dark:bg-gray-900 text-sm focus:ring-indigo-500">
-                                <option value="">Todos los proveedores</option>
-                                <option v-for="p in providers" :key="p.id" :value="p.id">{{ p.name }}</option>
-                            </select>
+                        <div class="space-y-3">
+                            <label class="text-[10px] font-black uppercase text-gray-400 ml-2 tracking-widest leading-none">Proveedor:</label>
+                            <div class="relative group">
+                                <BuildingStorefrontIcon class="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-indigo-500 transition-colors pointer-events-none" />
+                                <select v-model="form.provider_id" @change="applyFilters"
+                                        class="w-full pl-12 pr-10 py-3.5 rounded-2xl border-2 border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm font-black text-gray-700 dark:text-white uppercase focus:border-indigo-500 focus:ring-0 transition-all appearance-none">
+                                    <option value="">Todos los proveedores</option>
+                                    <option v-for="p in providers" :key="p.id" :value="p.id">{{ p.name }}</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
-                    <div v-if="Object.values(form).some(v => v !== '')" class="mt-4 flex justify-end">
-                        <button @click="clearFilters" class="text-[10px] font-black text-red-500 uppercase flex items-center gap-1">
-                            <XMarkIcon class="h-4 w-4" /> Limpiar
+                    <div v-if="Object.values(form).some(v => v !== '')" class="mt-6 flex justify-end">
+                        <button @click="clearFilters" class="text-[10px] font-black text-red-500 uppercase flex items-center gap-2 hover:scale-105 transition-transform">
+                            <XMarkIcon class="h-4 w-4" /> Limpiar Filtros
                         </button>
                     </div>
                 </div>

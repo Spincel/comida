@@ -30,6 +30,7 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
+        if ($user) $user->refresh(); // Force refresh to get latest theme_settings
         $orderStatus = null;
 
         if ($user && $user->area_id) {

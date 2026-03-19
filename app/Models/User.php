@@ -29,6 +29,8 @@ class User extends Authenticatable
         'password',
         'area_id',
         'role',
+        'status',
+        'theme_settings',
     ];
 
     /**
@@ -79,6 +81,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'theme_settings' => 'array',
         ];
     }
 

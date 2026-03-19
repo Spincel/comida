@@ -13,11 +13,13 @@ defineProps({
 });
 
 const page = usePage();
-const companyName = computed(() => page.props.settings?.company_name || 'SiCoA');
+const companyName = computed(() => {
+    return page.props.system?.settings?.app_name || 'Comedor System';
+});
 </script>
 
 <template>
-    <Head title="Bienvenido" />
+    <Head :title="companyName" />
     <div class="bg-slate-50 text-black/50 dark:bg-slate-950 dark:text-white/50 min-h-screen flex flex-col items-center justify-center p-6">
         <div class="relative w-full max-w-md">
             <!-- Card de Bienvenida -->
@@ -63,7 +65,7 @@ const companyName = computed(() => page.props.settings?.company_name || 'SiCoA')
                 <!-- Footer de la Card -->
                 <div class="bg-slate-50 dark:bg-slate-800/50 p-4 border-t border-slate-100 dark:border-slate-800 text-center">
                     <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                        &copy; {{ $page.props.settings?.footer_year || '2026' }} {{ companyName }}
+                        &copy; 2026 {{ companyName }}
                     </p>
                 </div>
             </div>

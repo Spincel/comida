@@ -174,4 +174,124 @@ class UserController extends Controller
 
         return back()->with('success', 'Usuario eliminado correctamente.');
     }
+
+    /**
+     * Display the manager's team members.
+     */
+    public function indexTeam(Request $request)
+    {
+        $user = $request->user();
+        if (!$user->area_id) abort(403, 'No tienes un área asignada.');
+
+        $team = User::where('area_id', $user->area_id)
+            ->where('id', '!=', $user->id) // Hide self
+            ->orderBy('first_name')
+            ->get();
+
+        return Inertia::render('Admin/Users/TeamManagement', [
+            'team' => $team,
+            'area' => $user->area
+        ]);
+    }
+
+    /**
+     * Store a new member in the manager's area.
+     */
+    public function storeTeam(Request $request)
+    {
+        $manager = $request->user();
+        if (!$manager->area_id) abort(403);
+
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'second_last_name' => 'nullable|string|max:255',
+            'avatar' => 'nullable|image|max:5120', // Max 5MB
+        ]);
+
+        // Auto-generate credentials
+        $baseUsername = strtolower(substr($validated['first_name'], 0, 1) . str_replace(' ', '', $validated['last_name']));
+        $username = $baseUsername;
+        $counter = 1;
+        while (User::where('username', $username)->exists()) {
+            $username = $baseUsername . $counter++;
+        }
+
+        $employeeNumber = 'TEMP' . rand(1000, 9999);
+        while (User::where('employee_number', $employeeNumber)->exists()) {
+            $employeeNumber = 'TEMP' . rand(1000, 9999);
+        }
+
+        $avatarPath = null;
+        if ($request->hasFile('avatar')) {
+            $avatarPath = $request->file('avatar')->store('avatars', 'public');
+        }
+
+        User::create([
+            'first_name' => $validated['first_name'],
+            'last_name' => $validated['last_name'],
+            'second_last_name' => $validated['second_last_name'],
+            'name' => trim($validated['first_name'] . ' ' . $validated['last_name'] . ' ' . ($validated['second_last_name'] ?? '')),
+            'username' => $username,
+            'email' => $username . '@comedor.local',
+            'employee_number' => $employeeNumber,
+            'avatar' => $avatarPath,
+            'password' => \Illuminate\Support\Facades\Hash::make($employeeNumber),
+            'role' => 'diner',
+            'area_id' => $manager->area_id,
+            'status' => 'active',
+        ]);
+
+        return back()->with('success', 'Nuevo comensal añadido a la plantilla.');
+    }
+
+    /**
+     * Update a team member's information.
+     */
+    public function updateTeam(Request $request, User $user)
+    {
+        $manager = $request->user();
+        if ($user->area_id !== $manager->area_id) abort(403);
+
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'second_last_name' => 'nullable|string|max:255',
+            'avatar' => 'nullable|image|max:5120',
+        ]);
+
+        $data = [
+            'first_name' => $validated['first_name'],
+            'last_name' => $validated['last_name'],
+            'second_last_name' => $validated['second_last_name'],
+            'name' => trim($validated['first_name'] . ' ' . $validated['last_name'] . ' ' . ($validated['second_last_name'] ?? '')),
+        ];
+
+        if ($request->hasFile('avatar')) {
+            // Delete old avatar
+            if ($user->avatar) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($user->avatar);
+            }
+            $data['avatar'] = $request->file('avatar')->store('avatars', 'public');
+        }
+
+        $user->update($data);
+
+        return back()->with('success', 'Información actualizada.');
+    }
+
+    /**
+     * Toggle status (enable/disable) for a team member.
+     */
+    public function toggleTeamStatus(Request $request, User $user)
+    {
+        $manager = $request->user();
+        if ($user->area_id !== $manager->area_id) abort(403);
+
+        $user->update([
+            'status' => $user->status === 'active' ? 'inactive' : 'active'
+        ]);
+
+        return back()->with('success', 'Estatus del comensal actualizado.');
+    }
 }

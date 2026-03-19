@@ -26,8 +26,10 @@ class DailyMenuController extends Controller
 
         if ($selectedProviderId) {
             $query->where('provider_id', $selectedProviderId);
+        } else {
+            // Only filter by date if NO provider is selected (general view)
+            $query->where('available_on', $selectedDate);
         }
-        $query->where('available_on', $selectedDate);
 
         $menus = $query->get()->map(function($menu) {
             // Calculate popularity based on historical orders of the same dish name for this provider
@@ -206,9 +208,8 @@ class DailyMenuController extends Controller
      */
     public function getExistingItems(Request $request, Provider $provider): JsonResponse
     {
-        $date = $request->query('date', now()->toDateString());
+        // Ignore date filter to check against PERMANENT catalog duplicates
         $items = DailyMenu::where('provider_id', $provider->id)
-                          ->where('available_on', $date)
                           ->get(['id', 'name', 'description', 'status']);
         
         return response()->json(['items' => $items]);

@@ -42,6 +42,15 @@ const applyFilters = () => {
     });
 };
 
+const startDateInput = ref(null);
+const endDateInput = ref(null);
+
+const triggerPicker = (inputRef) => {
+    if (inputRef && inputRef.showPicker) {
+        inputRef.showPicker();
+    }
+};
+
 const clearFilters = () => {
     form.value = { area_id: '', provider_id: '', meal_type: '', start_date: '', end_date: '' };
     applyFilters();
@@ -146,47 +155,64 @@ const handleExport = (format) => {
                     </div>
                 </section>
 
-                <!-- FILTROS AVANZADOS -->
-                <section class="bg-white dark:bg-gray-800 rounded-[2.5rem] p-8 shadow-xl border border-gray-100 dark:border-gray-700">
-                    <div class="flex items-center gap-2 mb-8">
+                <!-- FILTROS AVANZADOS PREMIUM -->
+                <section class="bg-white dark:bg-gray-800 rounded-[2.5rem] p-8 shadow-2xl border border-gray-100 dark:border-gray-700">
+                    <div class="flex items-center gap-2 mb-8 px-2">
                         <FunnelIcon class="h-5 w-5 text-indigo-500" />
-                        <h3 class="text-sm font-black uppercase tracking-widest text-gray-700 dark:text-gray-300">Filtros de Reporte Global</h3>
+                        <h3 class="text-sm font-black uppercase tracking-[0.2em] text-gray-700 dark:text-gray-300">Filtros del Reporte General</h3>
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black uppercase text-gray-400 tracking-tighter">Desde</label>
-                            <input type="date" v-model="form.start_date" @change="applyFilters" class="w-full rounded-xl border-gray-100 dark:border-gray-700 dark:bg-gray-900 text-sm focus:ring-indigo-500" />
+                        <div class="space-y-3">
+                            <label class="text-[10px] font-black uppercase text-gray-400 ml-2 tracking-widest leading-none">Desde:</label>
+                            <div class="relative group cursor-pointer" @click="triggerPicker(startDateInput)">
+                                <CalendarDaysIcon class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-hover:text-indigo-500 transition-colors pointer-events-none" />
+                                <input type="date" ref="startDateInput" v-model="form.start_date" @change="applyFilters" 
+                                       class="w-full pl-10 pr-4 py-3 rounded-2xl border-2 border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-xs font-black text-gray-700 dark:text-white uppercase focus:border-indigo-500 focus:ring-0 transition-all cursor-pointer [color-scheme:light] dark:[color-scheme:dark]" />
+                            </div>
                         </div>
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black uppercase text-gray-400 tracking-tighter">Hasta</label>
-                            <input type="date" v-model="form.end_date" @change="applyFilters" class="w-full rounded-xl border-gray-100 dark:border-gray-700 dark:bg-gray-900 text-sm focus:ring-indigo-500" />
+                        <div class="space-y-3">
+                            <label class="text-[10px] font-black uppercase text-gray-400 ml-2 tracking-widest leading-none">Hasta:</label>
+                            <div class="relative group cursor-pointer" @click="triggerPicker(endDateInput)">
+                                <CalendarDaysIcon class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-hover:text-indigo-500 transition-colors pointer-events-none" />
+                                <input type="date" ref="endDateInput" v-model="form.end_date" @change="applyFilters" 
+                                       class="w-full pl-10 pr-4 py-3 rounded-2xl border-2 border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-xs font-black text-gray-700 dark:text-white uppercase focus:border-indigo-500 focus:ring-0 transition-all cursor-pointer [color-scheme:light] dark:[color-scheme:dark]" />
+                            </div>
                         </div>
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black uppercase text-gray-400 tracking-tighter">Área</label>
-                            <select v-model="form.area_id" @change="applyFilters" class="w-full rounded-xl border-gray-100 dark:border-gray-700 dark:bg-gray-900 text-sm focus:ring-indigo-500">
-                                <option value="">Todas</option>
-                                <option v-for="a in areas" :key="a.id" :value="a.id">{{ a.name }}</option>
-                            </select>
+                        <div class="space-y-3">
+                            <label class="text-[10px] font-black uppercase text-gray-400 ml-2 tracking-widest leading-none">Área:</label>
+                            <div class="relative group">
+                                <BuildingOfficeIcon class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors pointer-events-none" />
+                                <select v-model="form.area_id" @change="applyFilters" class="w-full pl-10 pr-4 py-3 rounded-2xl border-2 border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-xs font-black text-gray-700 dark:text-white uppercase focus:border-indigo-500 focus:ring-0 transition-all appearance-none">
+                                    <option value="">Todas</option>
+                                    <option v-for="a in areas" :key="a.id" :value="a.id">{{ a.name }}</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black uppercase text-gray-400 tracking-tighter">Proveedor</label>
-                            <select v-model="form.provider_id" @change="applyFilters" class="w-full rounded-xl border-gray-100 dark:border-gray-700 dark:bg-gray-900 text-sm focus:ring-indigo-500">
-                                <option value="">Todos</option>
-                                <option v-for="p in providers" :key="p.id" :value="p.id">{{ p.name }}</option>
-                            </select>
+                        <div class="space-y-3">
+                            <label class="text-[10px] font-black uppercase text-gray-400 ml-2 tracking-widest leading-none">Proveedor:</label>
+                            <div class="relative group">
+                                <BuildingStorefrontIcon class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors pointer-events-none" />
+                                <select v-model="form.provider_id" @change="applyFilters" class="w-full pl-10 pr-4 py-3 rounded-2xl border-2 border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-xs font-black text-gray-700 dark:text-white uppercase focus:border-indigo-500 focus:ring-0 transition-all appearance-none">
+                                    <option value="">Todos</option>
+                                    <option v-for="p in providers" :key="p.id" :value="p.id">{{ p.name }}</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black uppercase text-gray-400 tracking-tighter">Sesión</label>
-                            <select v-model="form.meal_type" @change="applyFilters" class="w-full rounded-xl border-gray-100 dark:border-gray-700 dark:bg-gray-900 text-sm focus:ring-indigo-500">
-                                <option value="">Todas</option>
-                                <option v-for="m in mealOptions" :key="m" :value="m">{{ m }}</option>
-                            </select>
+                        <div class="space-y-3">
+                            <label class="text-[10px] font-black uppercase text-gray-400 ml-2 tracking-widest leading-none">Sesión:</label>
+                            <div class="relative group">
+                                <ClockIcon class="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors pointer-events-none" />
+                                <select v-model="form.meal_type" @change="applyFilters" class="w-full pl-10 pr-4 py-3 rounded-2xl border-2 border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-xs font-black text-gray-700 dark:text-white uppercase focus:border-indigo-500 focus:ring-0 transition-all appearance-none">
+                                    <option value="">Todas</option>
+                                    <option v-for="m in mealOptions" :key="m" :value="m">{{ m }}</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
-                    <div v-if="Object.values(form).some(v => v !== '')" class="mt-6 flex justify-end">
-                        <button @click="clearFilters" class="text-[10px] font-black uppercase text-red-500 hover:text-red-600 flex items-center gap-1">
+                    <div v-if="Object.values(form).some(v => v !== '')" class="mt-8 flex justify-end px-2">
+                        <button @click="clearFilters" class="text-[10px] font-black uppercase text-red-500 hover:text-red-600 flex items-center gap-2 transition-all hover:scale-105">
                             <XMarkIcon class="h-4 w-4" /> Limpiar Filtros
                         </button>
                     </div>
@@ -227,10 +253,19 @@ const handleExport = (format) => {
                                         <td class="p-6">
                                             <div class="flex items-center">
                                                 <div class="h-2 w-2 rounded-full mr-2" 
-                                                     :class="order.status === 'submitted_by_manager' ? 'bg-green-500' : 'bg-orange-400'"></div>
+                                                     :class="[
+                                                        order.status === 'submitted_by_manager' ? 'bg-green-500' : 
+                                                        (order.status === 'cancelled' ? 'bg-rose-500' : 'bg-orange-400')
+                                                     ]"></div>
                                                 <span class="text-[9px] font-black uppercase tracking-widest"
-                                                      :class="order.status === 'submitted_by_manager' ? 'text-green-600' : 'text-orange-500'">
-                                                    {{ order.status === 'submitted_by_manager' ? 'Confirmado' : 'Pendiente' }}
+                                                      :class="[
+                                                        order.status === 'submitted_by_manager' ? 'text-green-600' : 
+                                                        (order.status === 'cancelled' ? 'text-rose-600' : 'text-orange-500')
+                                                      ]">
+                                                    {{ 
+                                                        order.status === 'submitted_by_manager' ? 'Confirmado' : 
+                                                        (order.status === 'cancelled' ? 'Cambio de Proveedor' : 'Pendiente') 
+                                                    }}
                                                 </span>
                                             </div>
                                         </td>

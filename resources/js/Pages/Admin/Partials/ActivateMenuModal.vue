@@ -33,9 +33,16 @@ const props = defineProps({
 const emit = defineEmits(['close']);
 
 const mode = ref('new');
+const dateInput = ref(null);
+
+const triggerPicker = () => {
+    if (dateInput.value && dateInput.value.showPicker) {
+        dateInput.value.showPicker();
+    }
+};
 
 const form = useForm({
-    date: new Date().toISOString().split('T')[0],
+    date: new Date().toLocaleDateString('sv-SE'), // Local YYYY-MM-DD
     status: 'open',
     selected_area_ids: [],
     meal_type: 'Comida',
@@ -103,7 +110,7 @@ const hasConflicts = computed(() => {
 watch(() => props.show, (isVisible) => {
     if (isVisible) {
         form.clearErrors();
-        form.date = new Date().toISOString().split('T')[0];
+        form.date = new Date().toLocaleDateString('sv-SE'); // Local YYYY-MM-DD
         mode.value = props.initialMode;
         sliderValue.value = 0;
         areaSearch.value = '';
@@ -186,6 +193,15 @@ const activateMenu = () => {
 
             <form @submit.prevent="activateMenu">
                 <div class="mb-6">
+                    <div class="mb-6">
+                        <InputLabel value="Fecha de la Sesión" class="text-[10px] font-black uppercase text-gray-400 mb-2 ml-2 tracking-widest" />
+                        <div class="relative group cursor-pointer" @click="triggerPicker">
+                            <CalendarDaysIcon class="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-hover:text-indigo-500 transition-colors pointer-events-none" />
+                            <input type="date" ref="dateInput" v-model="form.date" 
+                                   class="w-full pl-12 pr-4 py-3.5 rounded-2xl border-2 border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm font-black text-gray-700 dark:text-white uppercase focus:border-indigo-500 focus:ring-0 transition-all cursor-pointer [color-scheme:light] dark:[color-scheme:dark]" />
+                        </div>
+                    </div>
+
                     <InputError :message="form.errors.error" class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl text-[10px] font-black uppercase text-red-600 dark:text-red-400" />
                     
                     <div class="grid grid-cols-4 gap-3">

@@ -15,8 +15,16 @@ class ProviderDailyStatus extends Model
         'meal_type',
         'status',
         'activated_at',
-        'selected_area_ids', // Add to fillable
+        'selected_area_ids',
+        'evidence_image', // NEW
     ];
+
+    protected $appends = ['evidence_url'];
+
+    public function getEvidenceUrlAttribute()
+    {
+        return $this->evidence_image ? asset('storage/' . $this->evidence_image) : null;
+    }
 
     protected $casts = [
         'selected_area_ids' => 'array', // Cast as array

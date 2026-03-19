@@ -43,6 +43,10 @@ const providerColors = [
 ];
 
 const getProviderColor = (index) => providerColors[index % providerColors.length];
+
+const isProfileComplete = (provider) => {
+    return !!(provider.name && provider.address && provider.contact_person && provider.contact_phone && provider.contact_email);
+};
 </script>
 
 <template>
@@ -116,8 +120,12 @@ const getProviderColor = (index) => providerColors[index % providerColors.length
                             </button>
 
                             <Link :href="route('providers.edit', provider.id)" 
-                                  class="w-full py-3 bg-gray-50 dark:bg-gray-900/30 text-gray-400 dark:text-gray-500 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:text-indigo-600 transition-all flex items-center justify-center">
-                                <PencilSquareIcon class="h-4 w-4 mr-2" /> Editar Perfil
+                                  class="w-full py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center border-2 shadow-sm"
+                                  :class="isProfileComplete(provider) 
+                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-600 hover:bg-emerald-600 hover:text-white hover:border-emerald-600' 
+                                    : 'bg-red-50 border-red-200 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 animate-pulse-subtle'">
+                                <PencilSquareIcon class="h-4 w-4 mr-2" /> 
+                                {{ isProfileComplete(provider) ? 'Perfil Completo' : 'Completar Perfil' }}
                             </Link>
                         </div>
                     </div>

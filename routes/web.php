@@ -23,7 +23,7 @@ Route::get('/', function () {
     ]);
 });
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard'); // Use DashboardController
+Route::get('/inicio', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard'); // Use DashboardController
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -51,14 +51,17 @@ Route::middleware(['auth', 'role:acquisitions_manager|admin'])->group(function (
     // Phase 2: Interface, Utilities, and Roles
     Route::middleware('role:admin')->group(function () {
         Route::get('admin/settings/interface', [SystemSettingsController::class, 'index'])->name('admin.settings.interface');
-        Route::post('admin/settings/interface', [SystemSettingsController::class, 'update'])->name('admin.settings.interface.update');
         
         Route::get('admin/utilities/data', [ImportExportController::class, 'index'])->name('admin.utilities.data');
+        Route::get('admin/utilities/backup', [ImportExportController::class, 'backup'])->name('admin.utilities.backup');
         Route::post('admin/utilities/import', [ImportExportController::class, 'import'])->name('admin.utilities.import');
+        Route::post('admin/utilities/import-sql', [ImportExportController::class, 'importSql'])->name('admin.utilities.import.sql');
         Route::post('admin/utilities/truncate', [ImportExportController::class, 'truncate'])->name('admin.utilities.truncate');
         
         Route::get('admin/settings/roles', [RoleController::class, 'index'])->name('admin.settings.roles');
         Route::put('admin/settings/roles/{role}', [RoleController::class, 'update'])->name('admin.settings.roles.update');
+
+        Route::get('admin/sessions/logs', [DashboardController::class, 'showDeletionLogs'])->name('admin.sessions.logs');
     });
 
     Route::resource('daily-menus', DailyMenuController::class);
@@ -82,19 +85,27 @@ Route::middleware(['auth', 'role:acquisitions_manager|admin'])->group(function (
 
 Route::middleware(['auth'])->group(function () {
     // Shared Summary Routes
-    Route::get('admin/orders-summary/{provider}/{date}/{meal_type?}', [DashboardController::class, 'showOrderSummary'])->name('admin.orders.summary');
     Route::get('admin/orders-summary/{provider}/{date}/pdf', [DashboardController::class, 'generatePdfReport'])->name('admin.orders.summary.pdf');
+    Route::get('admin/orders-summary/{provider}/{date}/{meal_type?}', [DashboardController::class, 'showOrderSummary'])->name('admin.orders.summary');
     Route::get('admin/send-order/{provider}/{date}', [DashboardController::class, 'showSendOrderView'])->name('admin.orders.send');
 
     Route::get('justification', [DashboardController::class, 'showJustificationPage'])->name('justification.index');
     Route::put('orders/{order}/justification', [OrderController::class, 'updateOwnJustification'])->name('orders.updateJustification');
+    Route::post('sessions/{session}/evidence', [DashboardController::class, 'uploadEvidence'])->name('sessions.uploadEvidence');
     
+    // Team Management for Area Managers
+    Route::get('team', [UserController::class, 'indexTeam'])->name('team.index')->middleware('role:area_manager|admin');
+    Route::post('team', [UserController::class, 'storeTeam'])->name('team.store')->middleware('role:area_manager|admin');
+    Route::put('team/{user}', [UserController::class, 'updateTeam'])->name('team.update')->middleware('role:area_manager|admin');
+    Route::patch('team/{user}/toggle-status', [UserController::class, 'toggleTeamStatus'])->name('team.toggleStatus')->middleware('role:area_manager|admin');
+
     Route::get('area/history', [DashboardController::class, 'showAreaHistory'])->name('area.history')->middleware('role:area_manager|admin');
     Route::get('area/reports', [DashboardController::class, 'showAreaReports'])->name('area.reports')->middleware('role:area_manager|admin');
     Route::get('daily-summary', [DashboardController::class, 'showDailySummary'])->name('daily.summary');
 
     Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
     Route::put('orders/{order}', [OrderController::class, 'update'])->name('orders.update');
+    Route::delete('orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
     Route::post('orders/authorize-diners', [OrderController::class, 'authorizeDiners'])
         ->middleware('role:area_manager|admin|acquisitions_manager')
         ->name('orders.authorizeDiners');
@@ -104,6 +115,19 @@ Route::middleware(['auth'])->group(function () {
     Route::put('orders/batch-justification', [OrderController::class, 'saveJustifications'])
         ->middleware('role:area_manager|admin')
         ->name('orders.saveJustifications');
+
+    // Shared Configuration
+    Route::get('admin/settings/reports', [SystemSettingsController::class, 'showReportSettings'])
+        ->name('admin.settings.reports')
+        ->middleware('role:admin|area_manager|acquisitions_manager');
+    
+    Route::post('admin/settings/interface', [SystemSettingsController::class, 'update'])
+        ->name('admin.settings.interface.update')
+        ->middleware('role:admin|area_manager|acquisitions_manager');
+    
+    // Theme and Background Management
+    Route::post('settings/theme', [SystemSettingsController::class, 'updateUserTheme'])->name('settings.theme.update');
+    Route::post('admin/settings/backgrounds/upload', [SystemSettingsController::class, 'uploadBackground'])->name('admin.settings.backgrounds.upload')->middleware('role:admin');
 });
 
 require __DIR__.'/auth.php';

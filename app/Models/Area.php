@@ -58,6 +58,18 @@ class Area extends Model
     protected $appends = []; // Removed full_path and total_branch_users from auto-loading
 
     /**
+     * Get IDs of all descendant areas recursively.
+     */
+    public function getAllChildrenIds()
+    {
+        $ids = [$this->id];
+        foreach ($this->children as $child) {
+            $ids = array_merge($ids, $child->getAllChildrenIds());
+        }
+        return $ids;
+    }
+
+    /**
      * Get the users for the area.
      */
     public function users()

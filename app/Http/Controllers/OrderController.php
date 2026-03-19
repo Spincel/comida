@@ -17,58 +17,89 @@ class OrderController extends Controller
     {
         $validated = $request->validate([
             'daily_menu_id' => 'required|exists:daily_menus,id',
-            'meal_type' => 'required|string', // Added
+            'meal_type' => 'required|string',
             'preferences' => 'nullable|string|max:255',
+            'target_user_id' => 'nullable|exists:users,id', // Support manager-led orders
         ]);
 
         $user = $request->user();
         $today = Carbon::today()->toDateString();
+        
+        // Determine the actual owner of the order
+        $orderUserId = $user->id;
+        if ($validated['target_user_id']) {
+            if (!in_array($user->role, ['admin', 'area_manager', 'acquisitions_manager'])) {
+                abort(403, 'No tienes permiso para realizar pedidos por otros.');
+            }
+            $orderUserId = $validated['target_user_id'];
+            $orderOwner = \App\Models\User::findOrFail($orderUserId);
+            
+            // Security: Manager can only order for their area unless Admin
+            if ($user->role !== 'admin' && $orderOwner->area_id !== $user->area_id) {
+                abort(403, 'Solo puedes realizar pedidos para personal de tu área.');
+            }
+        }
 
-        // Security check: Is this menu open for this user's area?
+        // Security check: Is this menu open for the target user's area?
         $menu = DailyMenu::findOrFail($validated['daily_menu_id']);
+        $targetUser = \App\Models\User::findOrFail($orderUserId);
+        
         $status = ProviderDailyStatus::where('provider_id', $menu->provider_id)
                                      ->where('date', $today)
-                                     ->where('meal_type', $validated['meal_type']) // Specific check
+                                     ->where('meal_type', $validated['meal_type'])
                                      ->where('status', 'open')
-                                     ->whereJsonContains('selected_area_ids', (int)$user->area_id)
+                                     ->whereJsonContains('selected_area_ids', (int)$targetUser->area_id)
                                      ->first();
 
         if (!$status) {
-            return back()->withErrors(['error' => 'Este menú no está disponible para tu área o ya ha sido cerrado.']);
+            return back()->withErrors(['error' => 'Este menú no está disponible para el área del comensal o ya ha sido cerrado.']);
         }
 
-        // NEW: Check if user is authorized by Area Manager for this session
-        // Managers and Admins are implicitly authorized if session is open for their area
-        $isManager = in_array($user->role, ['admin', 'acquisitions_manager', 'area_manager']);
+        // AUTO-AUTHORIZE if manager is placing the order
+        if ($validated['target_user_id']) {
+            \App\Models\SessionAuthorization::updateOrCreate([
+                'provider_daily_status_id' => $status->id,
+                'user_id' => $orderUserId,
+            ], [
+                'authorized_by_user_id' => $user->id
+            ]);
+        }
+
+        // Check if user is authorized
+        $isManager = in_array($targetUser->role, ['admin', 'acquisitions_manager', 'area_manager']);
         $isAuthorized = $isManager || \App\Models\SessionAuthorization::where('provider_daily_status_id', $status->id)
-                                                        ->where('user_id', $user->id)
+                                                        ->where('user_id', $orderUserId)
                                                         ->exists();
         
         if (!$isAuthorized) {
-            return back()->withErrors(['error' => 'No estás autorizado por tu gerente para realizar pedidos en esta sesión.']);
+            return back()->withErrors(['error' => 'El comensal no está autorizado para realizar pedidos en esta sesión.']);
         }
 
         // Check if already has an order for THIS SPECIFIC meal type today
-        $existingOrder = Order::where('user_id', $user->id)
-                              ->where('meal_type', $validated['meal_type']) // Check specifically for meal type
+        $existingOrder = Order::where('user_id', $orderUserId)
+                              ->where('meal_type', $validated['meal_type'])
                               ->whereHas('dailyMenu', function ($query) use ($today) {
                                   $query->where('available_on', $today);
                               })
                               ->first();
 
         if ($existingOrder) {
-            return back()->withErrors(['error' => "Ya has realizado un pedido de {$validated['meal_type']} para el día de hoy."]);
+            if ($existingOrder->status === 'cancelled') {
+                $existingOrder->delete();
+            } else {
+                return back()->withErrors(['error' => "Ya se ha realizado un pedido de {$validated['meal_type']} para este usuario hoy."]);
+            }
         }
 
         Order::create([
-            'user_id' => $user->id,
+            'user_id' => $orderUserId,
             'daily_menu_id' => $validated['daily_menu_id'],
             'meal_type' => $validated['meal_type'],
             'preferences' => $validated['preferences'],
             'status' => 'submitted_by_user',
         ]);
 
-        return redirect()->route('dashboard')->with('success', '¡Tu pedido ha sido registrado con éxito!');
+        return redirect()->route('dashboard')->with('success', '¡Pedido registrado con éxito!');
     }
 
     /**
@@ -78,12 +109,14 @@ class OrderController extends Controller
     {
         $validated = $request->validate([
             'daily_menu_id' => 'required|exists:daily_menus,id',
-            'meal_type' => 'required|string', // Added
+            'meal_type' => 'required|string',
             'preferences' => 'nullable|string|max:255',
         ]);
 
         $user = $request->user();
-        if ($order->user_id !== $user->id) {
+        $isManagerEditing = ($user->role !== 'diner' && $order->user->area_id === $user->area_id) || $user->role === 'admin';
+
+        if ($order->user_id !== $user->id && !$isManagerEditing) {
             abort(403);
         }
 
@@ -95,21 +128,21 @@ class OrderController extends Controller
                                      ->where('date', $today)
                                      ->where('meal_type', $validated['meal_type'])
                                      ->where('status', 'open')
-                                     ->whereJsonContains('selected_area_ids', (int)$user->area_id)
+                                     ->whereJsonContains('selected_area_ids', (int)$order->user->area_id)
                                      ->first();
 
         if (!$status) {
-            return back()->withErrors(['error' => 'No puedes editar tu pedido porque el menú para tu área está cerrado.']);
+            return back()->withErrors(['error' => 'No puedes editar el pedido porque el menú está cerrado.']);
         }
 
         $order->update([
             'daily_menu_id' => $validated['daily_menu_id'],
             'meal_type' => $validated['meal_type'],
             'preferences' => $validated['preferences'],
-            'status' => 'submitted_by_user', // Reset status so area manager must re-approve if they already did
+            'status' => 'submitted_by_user',
         ]);
 
-        return redirect()->route('dashboard')->with('success', '¡Tu pedido ha sido actualizado correctamente!');
+        return redirect()->route('dashboard')->with('success', '¡Pedido actualizado correctamente!');
     }
 
     /**
@@ -245,5 +278,34 @@ class OrderController extends Controller
         ]);
 
         return back()->with('success', 'Actividad registrada correctamente.');
+    }
+
+    /**
+     * Remove the specified order from storage.
+     */
+    public function destroy(Order $order)
+    {
+        $user = auth()->user();
+        $isManager = ($user->role !== 'diner' && $order->user->area_id === $user->area_id) || $user->role === 'admin';
+
+        if ($order->user_id !== $user->id && !$isManager) {
+            abort(403);
+        }
+
+        // Only allow deletion if the session is still open
+        $today = \Carbon\Carbon::today()->toDateString();
+        $status = \App\Models\ProviderDailyStatus::where('provider_id', $order->dailyMenu->provider_id)
+                                     ->where('date', $today)
+                                     ->where('meal_type', $order->meal_type)
+                                     ->where('status', 'open')
+                                     ->first();
+
+        if (!$status) {
+            return back()->withErrors(['error' => 'No puedes eliminar el pedido porque el menú ya ha sido cerrado.']);
+        }
+
+        $order->delete();
+
+        return back()->with('success', 'Pedido eliminado correctamente.');
     }
 }

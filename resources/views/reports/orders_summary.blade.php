@@ -2,251 +2,167 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reporte de Pedidos - {{ $mealType }}</title>
+    <title>{{ $reportConfig['main_title'] ?? 'Reporte de Pedidos' }} - {{ $mealType }}</title>
     <style>
         @page {
-            margin: 1.5cm;
+            margin: 0.5cm;
         }
         body {
             font-family: 'Helvetica', 'Arial', sans-serif;
             color: #333;
-            line-height: 1.4;
-            font-size: 10pt;
+            line-height: 1.1;
+            font-size: {{ $reportConfig['font_size'] ?? '9px' }};
+            margin: 0;
+            padding: 0;
         }
         .header {
             text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 3px solid #4f46e5;
-            padding-bottom: 15px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid {{ $reportConfig['report_color'] ?? '#4f46e5' }};
+            padding-bottom: 8px;
         }
         .header h1 {
             margin: 0;
-            color: #4f46e5;
+            color: {{ $reportConfig['report_color'] ?? '#4f46e5' }};
             text-transform: uppercase;
-            font-size: 18pt;
-            letter-spacing: -1px;
+            font-size: 14pt;
         }
         .header h2 {
-            margin: 5px 0;
+            margin: 3px 0;
             color: #666;
-            font-size: 12pt;
+            font-size: 10pt;
         }
         .header p {
             margin: 0;
-            font-size: 9pt;
+            font-size: 7pt;
             color: #999;
-            font-weight: bold;
             text-transform: uppercase;
+            font-weight: bold;
         }
         .area-section {
-            margin-bottom: 40px;
+            margin-bottom: 15px;
             page-break-inside: avoid;
         }
         .area-title {
             background-color: #f8fafc;
-            padding: 10px 15px;
-            border-left: 5px solid #4f46e5;
-            margin-bottom: 15px;
+            padding: 6px 10px;
+            border-left: 4px solid {{ $reportConfig['report_color'] ?? '#4f46e5' }};
+            margin-bottom: 8px;
         }
         .area-title h3 {
             margin: 0;
             text-transform: uppercase;
-            font-size: 12pt;
-            color: #1e293b;
-        }
-        .area-title span {
-            float: right;
             font-size: 9pt;
-            color: #64748b;
-        }
-        .dish-summary {
-            width: 100%;
-            margin-bottom: 15px;
-            background-color: #fff;
-        }
-        .dish-summary td {
-            padding: 5px 0;
-            border-bottom: 1px dashed #e2e8f0;
-        }
-        .dish-name {
-            font-weight: bold;
-            color: #4f46e5;
-        }
-        .dish-count {
-            text-align: right;
-            font-weight: bold;
+            color: {{ $reportConfig['report_color'] ?? '#4f46e5' }};
         }
         .individual-orders {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
+            margin-bottom: 10px;
         }
         .individual-orders th {
             text-align: left;
-            padding: 8px;
-            background-color: #4f46e5;
+            padding: 5px;
+            background-color: {{ $reportConfig['report_color'] ?? '#4f46e5' }};
             color: white;
-            font-size: 8pt;
+            font-size: 7pt;
             text-transform: uppercase;
         }
         .individual-orders td {
-            padding: 8px;
+            padding: 5px;
             border-bottom: 1px solid #f1f5f9;
-            font-size: 9pt;
+            vertical-align: middle;
         }
         .avatar {
-            width: 20px;
-            height: 20px;
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
-            vertical-align: middle;
-            margin-right: 8px;
+            margin-right: 4px;
         }
-        .preferences {
-            font-style: italic;
-            color: #64748b;
-            font-size: 8pt;
+        .evidence-box {
+            margin-top: 10px; 
+            padding: 10px; 
+            border: 1px dashed #cbd5e1; 
+            background-color: #f8fafc; 
+            border-radius: 8px;
+            text-align: center;
+        }
+        .evidence-img {
+            max-width: 300px; 
+            max-height: 200px;
+            height: auto; 
+            border-radius: 4px; 
+            border: 2px solid white; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .footer {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
             text-align: center;
-            font-size: 8pt;
+            font-size: 6pt;
             color: #94a3b8;
-            border-top: 1px solid #f1f5f9;
-            padding-top: 10px;
+            margin-top: 20px;
         }
-        .badge {
-            display: inline-block;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 7pt;
-            font-weight: bold;
-            background: #eef2ff;
-            color: #4f46e5;
-            text-transform: uppercase;
+        .signature-box {
+            border-bottom: 1px solid #ccc;
+            height: 25px;
+            width: 80px;
         }
-        /* Meal Type Colors */
-        .meal-desayuno { background-color: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
-        .meal-comida { background-color: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; }
-        .meal-cena { background-color: #f3e8ff; color: #7e22ce; border: 1px solid #e9d5ff; }
-        .meal-extra { background-color: #f0fdf4; color: #047857; border: 1px solid #bbf7d0; }
     </style>
 </head>
 <body>
     <div class="header">
-        <p>Reporte de Control de Alimentos</p>
-        <h1 class="meal-{{ strtolower($mealType) }}" style="display: inline-block; padding: 10px 20px; border-radius: 15px;">{{ $mealType }}</h1>
-        <h2 style="margin-top: 15px;">{{ $provider->name }}</h2>
-        <p>Fecha: {{ \Carbon\Carbon::parse($date)->locale('es')->isoFormat('dddd, D [de] MMMM [de] YYYY') }}</p>
-        <div style="margin-top: 10px;">
-            <span class="badge">Acomodo: Por {{ $sortBy === 'area' ? 'Área' : ($sortBy === 'platillo' ? 'Platillo' : 'Nombre') }}</span>
-        </div>
+        <p>{{ $reportConfig['main_title'] ?? 'Reporte de Control de Alimentos' }}</p>
+        <h1>{{ $mealType }}</h1>
+        <h2>{{ $provider->name }}</h2>
+        <p>{{ \Carbon\Carbon::parse($date)->locale('es')->isoFormat('LL') }}</p>
     </div>
 
     @foreach($ordersSummary as $summary)
         <div class="area-section">
             <div class="area-title">
-                <h3>
-                    {{ $summary['group_name'] }}
-                    <span class="badge meal-{{ strtolower($mealType) }}">{{ $mealType }}</span>
-                    <span>{{ $summary['total_count'] }} Platillos en total</span>
-                </h3>
+                <h3>{{ $summary['group_name'] }} ({{ $summary['total_count'] }} pedidos)</h3>
             </div>
 
-            @if($viewMode === 'dishes')
-                <table class="individual-orders">
-                    <thead>
+            <table class="individual-orders">
+                <thead>
+                    <tr>
+                        <th style="width: 30%;">Comensal</th>
+                        @if($reportConfig['show_area'] ?? true) <th style="width: 15%;">Dependencia</th> @endif
+                        @if($reportConfig['show_platillo'] ?? true) <th style="width: 20%;">Platillo</th> @endif
+                        @if($reportConfig['show_preferences'] ?? true) <th style="width: 15%;">Obs.</th> @endif
+                        @if($reportConfig['show_activity'] ?? true) <th style="width: 20%;">Actividad</th> @endif
+                        @if($reportConfig['show_signature'] ?? false) <th style="width: 15%; text-align: center;">Firma</th> @endif
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($summary['individual_orders'] as $order)
                         <tr>
-                            <th style="width: 40%;">Platillo</th>
-                            <th style="width: 15%; text-align: center;">Cantidad</th>
-                            <th style="width: 45%;">Observaciones Consolidadas</th>
+                            <td>
+                                @if(($reportConfig['show_avatar'] ?? true) && ($order['avatar_url'] ?? null))
+                                    <img src="{{ $order['avatar_url'] }}" class="avatar">
+                                @endif
+                                <strong>{{ $order['user_name'] }}</strong>
+                            </td>
+                            @if($reportConfig['show_area'] ?? true) <td>{{ $order['area_name'] }}</td> @endif
+                            @if($reportConfig['show_platillo'] ?? true) <td>{{ $order['platillo_name'] }}</td> @endif
+                            @if($reportConfig['show_preferences'] ?? true) <td style="font-style: italic; color: #666;">{{ $order['preferences'] ?: '-' }}</td> @endif
+                            @if($reportConfig['show_activity'] ?? true) <td>{{ $order['activity_performed'] ?: '' }}</td> @endif
+                            @if($reportConfig['show_signature'] ?? false) <td><div class="signature-box"></div></td> @endif
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($summary['platillos'] as $platillo)
-                            <tr>
-                                <td class="dish-name">{{ $platillo['platillo_name'] }}</td>
-                                <td style="text-align: center;"><strong>{{ $platillo['total_count'] }}</strong></td>
-                                <td class="preferences">
-                                    @if(count($platillo['observations']) > 0)
-                                        <ul style="margin: 0; padding-left: 15px;">
-                                            @foreach($platillo['observations'] as $obs)
-                                                <li>{{ $obs }}</li>
-                                            @endforeach
-                                        </ul>
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            @endif
+                    @endforeach
+                </tbody>
+            </table>
 
-            @if($viewMode === 'detailed')
-                <table class="individual-orders">
-                    <thead>
-                        <tr>
-                            <th style="width: 35%;">Nombre Comensal</th>
-                            <th style="width: 30%;">Platillo</th>
-                            <th style="width: 35%;">Observaciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($summary['individual_orders'] as $order)
-                            <tr>
-                                <td>
-                                    @if($order['avatar_url'])
-                                        <img src="{{ $order['avatar_url'] }}" class="avatar" alt="">
-                                    @endif
-                                    <strong>{{ $order['user_name'] }}</strong>
-                                    <br><small style="color: #999; font-size: 7pt;">{{ $order['area_name'] }}</small>
-                                </td>
-                                <td>{{ $order['platillo_name'] }}</td>
-                                <td class="preferences">{{ $order['preferences'] ?: '-' }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            @endif
-
-            @if($viewMode === 'names')
-                <table class="individual-orders">
-                    <thead>
-                        <tr>
-                            <th style="width: 35%;">Nombre Comensal</th>
-                            <th style="width: 45%;">Actividad Realizada (Justificación)</th>
-                            <th style="width: 20%; text-align: center;">Firma</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($summary['individual_orders'] as $order)
-                            <tr style="height: 50px;">
-                                <td style="vertical-align: middle;">
-                                    <strong>{{ $order['user_name'] }}</strong>
-                                    <br><small style="color: #999; font-size: 7pt;">{{ $order['area_name'] }}</small>
-                                </td>
-                                <td style="font-size: 8pt; vertical-align: middle; border-bottom: 1px solid #eee;">
-                                    {{ $order['activity_performed'] ?: '' }}
-                                </td>
-                                <td style="border-bottom: 1px solid #ccc; vertical-align: bottom; text-align: center;">
-                                    <span style="font-size: 6pt; color: #ccc; display: block; margin-bottom: 2px;">Firma del Comensal</span>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+            @if($summary['evidence_path'] ?? null)
+                <div class="evidence-box">
+                    <p style="margin: 0 0 8px 0; font-size: 7pt; font-weight: bold; color: #64748b; text-transform: uppercase;">Evidencia de Entrega:</p>
+                    <img src="{{ $summary['evidence_path'] }}" class="evidence-img">
+                </div>
             @endif
         </div>
     @endforeach
 
     <div class="footer">
-        Generado automáticamente por el Sistema de Gestión de Comidas.
-        Página <script type="text/php">echo $FONT_METRICS->get_font("Arial", "bold"); {PAGE_NUM} de {PAGE_COUNT}</script>
-        | {{ \Carbon\Carbon::now()->format('d/m/Y H:i') }}
+        Generado el {{ date('d/m/Y H:i') }}
     </div>
 </body>
 </html>

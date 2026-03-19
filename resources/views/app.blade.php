@@ -4,7 +4,15 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        @php
+            $settings = \App\Models\SystemSetting::all()->pluck('value', 'key');
+            $appName = $settings['app_name'] ?? config('app.name', 'Comedor System');
+            $favicon = $settings['favicon'] ?? 'favicon.ico';
+            $faviconUrl = (str_contains($favicon, '.') && !str_contains($favicon, '/')) ? asset($favicon) : asset('storage/' . $favicon);
+        @endphp
+
+        <title inertia>{{ $appName }}</title>
+        <link rel="icon" type="image/x-icon" href="{{ $faviconUrl }}">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">

@@ -1,11 +1,12 @@
 <script setup>
-import { ref, watch, onUnmounted, onMounted } from 'vue';
+import { ref, watch, onUnmounted, onMounted, computed } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import ThemeSelectorModal from '@/Pages/Admin/Partials/ThemeSelectorModal.vue';
+import { Link, usePage, Head } from '@inertiajs/vue3';
 import { 
     Bars3Icon, 
     SunIcon, 
@@ -20,7 +21,11 @@ import {
     BriefcaseIcon,
     WrenchScrewdriverIcon,
     BuildingStorefrontIcon,
-    CloudArrowUpIcon
+    CloudArrowUpIcon,
+    DocumentChartBarIcon,
+    PaintBrushIcon,
+    ComputerDesktopIcon,
+    XMarkIcon
 } from '@heroicons/vue/24/outline';
 
 const showingNavigationDropdown = ref(false);
@@ -28,8 +33,53 @@ const page = usePage();
 const visibleFlash = ref(null);
 let flashTimeout = null;
 
+const user = computed(() => page.props.auth.user);
+const backgroundCatalog = computed(() => JSON.parse(page.props.system?.settings?.background_catalog || '[]'));
+const dynamicAppName = computed(() => page.props.system?.settings?.app_name || 'Comedor System');
+
 // Dark Mode logic
 const isDarkMode = ref(false);
+const showThemeSelector = ref(false);
+
+const applyThemeMode = (mode) => {
+    if (mode === 'dark') {
+        document.documentElement.classList.add('dark');
+        isDarkMode.value = true;
+    } else if (mode === 'light') {
+        document.documentElement.classList.remove('dark');
+        isDarkMode.value = false;
+    } else {
+        // System
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (systemPrefersDark) document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
+        isDarkMode.value = systemPrefersDark;
+    }
+};
+
+watch(() => user.value?.theme_settings, (settings) => {
+    if (settings?.theme_mode) {
+        applyThemeMode(settings.theme_mode);
+    }
+}, { immediate: true, deep: true });
+
+onMounted(() => {
+    const settings = user.value?.theme_settings;
+    if (settings?.theme_mode) {
+        applyThemeMode(settings.theme_mode);
+    } else {
+        const savedTheme = localStorage.getItem('theme');
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
+            isDarkMode.value = true;
+            document.documentElement.classList.add('dark');
+        } else {
+            isDarkMode.value = false;
+            document.documentElement.classList.remove('dark');
+        }
+    }
+});
 
 const toggleDarkMode = () => {
     isDarkMode.value = !isDarkMode.value;
@@ -41,19 +91,6 @@ const toggleDarkMode = () => {
         localStorage.setItem('theme', 'light');
     }
 };
-
-onMounted(() => {
-    const savedTheme = localStorage.getItem('theme');
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
-        isDarkMode.value = true;
-        document.documentElement.classList.add('dark');
-    } else {
-        isDarkMode.value = false;
-        document.documentElement.classList.remove('dark');
-    }
-});
 
 watch(() => page.props.flash?.success, (newMsg) => {
     if (newMsg) {
@@ -71,10 +108,23 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div>
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+    <div class="relative min-h-screen overflow-hidden">
+        <Head :title="dynamicAppName" />
+        <!-- BACKGROUND LAYER GLOBAL -->
+        <div v-if="user?.theme_settings?.background_url" class="fixed inset-0 z-0 transition-opacity duration-1000">
+            <img :src="user.theme_settings.background_url" class="w-full h-full object-cover" />
+            <div class="absolute inset-0 bg-white/20 dark:bg-black/40 backdrop-blur-[2px]"></div>
+        </div>
+
+        <div class="relative z-10 min-h-screen flex flex-col transition-all duration-700"
+             :class="[
+                user?.theme_settings?.background_url 
+                    ? 'bg-transparent with-custom-bg' 
+                    : 'bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/20'
+             ]">
             <nav
-                class="border-b border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800 transition-colors duration-300"
+                class="border-b border-gray-200 dark:border-gray-700 transition-colors duration-300 sticky top-0 z-50"
+                :class="user?.theme_settings?.background_url ? 'bg-white/40 dark:bg-gray-900/40 backdrop-blur-2xl' : 'bg-gray-50/80 dark:bg-gray-800/80 backdrop-blur-xl'"
             >
                 <!-- Primary Navigation Menu -->
                 <div class="mx-auto max-w-[85%] px-4 sm:px-6 lg:px-8">
@@ -96,8 +146,10 @@ onUnmounted(() => {
                                 <NavLink
                                     :href="route('dashboard')"
                                     :active="route().current('dashboard')"
+                                    class="!text-emerald-600"
+                                    :class="{ '!border-emerald-500': route().current('dashboard') }"
                                 >
-                                    Dashboard
+                                    Inicio
                                 </NavLink>
 
                                 <!-- Admin & Acquisitions Dropdown -->
@@ -112,14 +164,14 @@ onUnmounted(() => {
                                         </template>
                                         <template #content>
                                             <div class="block px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-b dark:border-gray-700">Gestión de Servicio</div>
-                                            <DropdownLink :href="route('providers.index')">
-                                                <div class="flex items-center"><BuildingStorefrontIcon class="h-4 w-4 mr-2" /> Proveedores/Catálogo</div>
-                                            </DropdownLink>
                                             <DropdownLink :href="route('admin.history')">
-                                                <div class="flex items-center"><ClipboardDocumentIcon class="h-4 w-4 mr-2" /> Historial Global</div>
+                                                <div class="flex items-center"><ClipboardDocumentIcon class="h-4 w-4 mr-2" /> Historial General</div>
+                                            </DropdownLink>
+                                            <DropdownLink v-if="$page.props.auth.user.role === 'admin'" :href="route('admin.sessions.logs')">
+                                                <div class="flex items-center"><ShieldCheckIcon class="h-4 w-4 mr-2 text-rose-500" /> Auditoría de Sesiones</div>
                                             </DropdownLink>
                                             <DropdownLink :href="route('admin.reports')">
-                                                <div class="flex items-center"><TableCellsIcon class="h-4 w-4 mr-2" /> Reportes Globales</div>
+                                                <div class="flex items-center"><TableCellsIcon class="h-4 w-4 mr-2" /> Reportes Generales</div>
                                             </DropdownLink>
                                         </template>
                                     </Dropdown>
@@ -147,6 +199,9 @@ onUnmounted(() => {
                                             <DropdownLink :href="route('admin.settings.interface')">
                                                 <div class="flex items-center"><SwatchIcon class="h-4 w-4 mr-2" /> Interfaz y Logos</div>
                                             </DropdownLink>
+                                            <DropdownLink :href="route('admin.settings.reports')">
+                                                <div class="flex items-center"><DocumentChartBarIcon class="h-4 w-4 mr-2" /> Configurar Reportes</div>
+                                            </DropdownLink>
                                             <DropdownLink :href="route('admin.settings.roles')">
                                                 <div class="flex items-center"><ShieldCheckIcon class="h-4 w-4 mr-2" /> Roles y Permisos</div>
                                             </DropdownLink>
@@ -159,14 +214,14 @@ onUnmounted(() => {
 
                                 <!-- Area Manager & Diner Context -->
                                 <template v-if="['area_manager', 'diner', 'acquisitions_manager'].includes($page.props.auth.user.role) || ($page.props.auth.user.role === 'admin' && $page.props.auth.user.area_id)">
-                                    <NavLink v-if="$page.props.auth.isAnySessionOpen || $page.props.auth.isAnySessionClosedToday" :href="route('justification.index')" :active="route().current('justification.*')">
-                                        Justificación
+                                    <NavLink v-if="['area_manager', 'admin'].includes($page.props.auth.user.role)" :href="route('team.index')" :active="route().current('team.*')">
+                                        Mi Plantilla
                                     </NavLink>
-                                    <NavLink v-if="!['diner', 'acquisitions_manager'].includes($page.props.auth.user.role)" :href="route('area.history')" :active="route().current('area.history')">
-                                        Historial
+                                    <NavLink :href="route('justification.index')" :active="route().current('justification.*')" :class="{ '!text-rose-600 !border-rose-500': route().current('justification.*') }">
+                                        Historial / Justificar
                                     </NavLink>
-                                    <NavLink :href="route('daily.summary')" :active="route().current('daily.summary')" class="text-indigo-600 font-black">
-                                        Resumen Diario
+                                    <NavLink :href="route('daily.summary')" :active="route().current('daily.summary')" :class="{ '!text-indigo-600 !border-indigo-500': route().current('daily.summary') }">
+                                        {{ ['area_manager', 'admin'].includes($page.props.auth.user.role) ? 'Estadísticas de Área' : 'Resumen Diario' }}
                                     </NavLink>
                                 </template>
                             </div>
@@ -174,6 +229,16 @@ onUnmounted(() => {
 
                         <!-- Right Side Navigation -->
                         <div class="flex items-center space-x-2 sm:ms-6">
+                            <!-- Report Settings Icon (Admin, Manager, Acquisitions) -->
+                            <Link 
+                                v-if="['admin', 'area_manager', 'acquisitions_manager'].includes($page.props.auth.user.role)"
+                                :href="route('admin.settings.reports')"
+                                class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
+                                title="Configurar Reportes"
+                            >
+                                <DocumentChartBarIcon class="h-5 w-5" />
+                            </Link>
+
                             <!-- Providers Button (Acquisitions & Admin) -->
                             <Link 
                                 v-if="$page.props.auth.user.role === 'acquisitions_manager' || $page.props.auth.user.role === 'admin'"
@@ -182,6 +247,16 @@ onUnmounted(() => {
                             >
                                 Proveedores/Catálogo
                             </Link>
+
+                            <!-- Theme Customizer Button -->
+                            <button
+                                @click="showThemeSelector = true"
+                                type="button"
+                                class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200 focus:outline-none"
+                                title="Personalizar Fondo y Tema"
+                            >
+                                <PaintBrushIcon class="h-5 w-5" />
+                            </button>
 
                             <!-- Theme Toggle Button -->
                             <button
@@ -267,16 +342,18 @@ onUnmounted(() => {
                         <ResponsiveNavLink
                             :href="route('dashboard')"
                             :active="route().current('dashboard')"
+                            class="!text-emerald-600 font-black"
                         >
-                            Dashboard
+                            Inicio
                         </ResponsiveNavLink>
 
                         <!-- Mobile Acquisitions Group -->
                         <template v-if="['admin', 'acquisitions_manager'].includes($page.props.auth.user.role)">
                             <div class="px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b dark:border-gray-700">Adquisiciones</div>
-                            <ResponsiveNavLink :href="route('providers.index')" :active="route().current('providers.*')">Proveedores/Catálogo</ResponsiveNavLink>
-                            <ResponsiveNavLink :href="route('admin.history')" :active="route().current('admin.history')">Historial Global</ResponsiveNavLink>
-                            <ResponsiveNavLink :href="route('admin.reports')" :active="route().current('admin.reports')">Reportes Globales</ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('admin.history')" :active="route().current('admin.history')">Historial General</ResponsiveNavLink>
+                            <ResponsiveNavLink v-if="$page.props.auth.user.role === 'admin'" :href="route('admin.sessions.logs')" :active="route().current('admin.sessions.logs')" class="text-rose-500">Auditoría de Sesiones</ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('admin.reports')" :active="route().current('admin.reports')">Reportes Generales</ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('admin.settings.reports')" :active="route().current('admin.settings.reports')">Configurar Reportes</ResponsiveNavLink>
                         </template>
 
                         <!-- Mobile Admin Tools -->
@@ -292,9 +369,9 @@ onUnmounted(() => {
                                 <!-- Mobile Area Manager & Diner Justification -->
                         <template v-if="['area_manager', 'diner', 'acquisitions_manager'].includes($page.props.auth.user.role) || ($page.props.auth.user.role === 'admin' && $page.props.auth.user.area_id)">
                             <div class="px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b dark:border-gray-700 mt-2">Mi Área / Actividad</div>
-                            <ResponsiveNavLink v-if="$page.props.auth.isAnySessionOpen || $page.props.auth.isAnySessionClosedToday" :href="route('justification.index')" :active="route().current('justification.*')">Justificación</ResponsiveNavLink>
-                            <ResponsiveNavLink v-if="!['diner', 'acquisitions_manager'].includes($page.props.auth.user.role)" :href="route('area.history')" :active="route().current('area.history')">Historial de Área</ResponsiveNavLink>
-                                                        <ResponsiveNavLink :href="route('daily.summary')" :active="route().current('daily.summary')" class="text-indigo-600 font-bold">Resumen Diario</ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('justification.index')" :active="route().current('justification.*')" class="text-rose-600 font-bold">Historial / Justificar</ResponsiveNavLink>
+                            <ResponsiveNavLink v-if="['admin', 'area_manager'].includes($page.props.auth.user.role)" :href="route('admin.settings.reports')" :active="route().current('admin.settings.reports')">Configurar Reportes</ResponsiveNavLink>
+                            <ResponsiveNavLink :href="route('daily.summary')" :active="route().current('daily.summary')" class="text-indigo-600 font-bold">Resumen Diario</ResponsiveNavLink>
                         </template>
                     </div>
 
@@ -380,9 +457,81 @@ onUnmounted(() => {
             </header>
 
             <!-- Page Content -->
-            <main>
+            <main class="pb-20">
                 <slot />
             </main>
+
+            <!-- Institutional Footer -->
+            <footer class="bg-gray-50/80 dark:bg-gray-800/80 border-t border-gray-200 dark:border-gray-700 backdrop-blur-xl py-12 transition-colors duration-300">
+                <div class="mx-auto max-w-[85%] px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div class="flex items-center gap-4">
+                        <ApplicationLogo class="h-8 w-auto opacity-50 grayscale" />
+                        <div>
+                            <p class="text-[11px] font-black text-gray-800 dark:text-gray-200 uppercase tracking-[0.2em]">{{ page.props.system?.settings?.footer_title || 'Sistema Integral de Comedor' }}</p>
+                            <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">{{ page.props.system?.settings?.footer_subtitle || 'Gestión Administrativa y Control de Alimentos' }}</p>
+                        </div>
+                    </div>
+                    <div class="text-center md:text-right">
+                        <p class="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">{{ page.props.system?.settings?.footer_brand || 'UTICS ® Marca Registrada' }}</p>
+                        <p class="text-[8px] font-bold text-gray-400 uppercase tracking-[0.3em] mt-2">© {{ page.props.system?.settings?.footer_year || '2026' }} Todos los derechos reservados</p>
+                    </div>
+                </div>
+            </footer>
         </div>
+
+        <ThemeSelectorModal 
+            :show="showThemeSelector" 
+            @close="showThemeSelector = false"
+            :currentSettings="user?.theme_settings"
+            :catalog="backgroundCatalog"
+        />
     </div>
 </template>
+
+<style>
+/* Atmosphere 2.0 - Inspired by propuesta.png */
+.with-custom-bg .bg-gray-50,
+.with-custom-bg .bg-slate-50,
+.with-custom-bg .bg-indigo-50,
+.with-custom-bg .bg-gray-100 {
+    background-color: transparent !important;
+}
+
+.with-custom-bg .dark .bg-gray-900,
+.with-custom-bg .dark .bg-gray-950,
+.with-custom-bg .dark .bg-slate-900 {
+    background-color: transparent !important;
+}
+
+/* Glassmorphism only for Header and Nav */
+.with-custom-bg nav {
+    background-color: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(20px) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+.with-custom-bg .dark nav {
+    background-color: rgba(15, 23, 42, 0.7) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Solid Cards with depth - As seen in the reference image */
+.with-custom-bg .bg-white:not(nav) {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+}
+
+.with-custom-bg .dark .bg-gray-800:not(nav) {
+    background-color: rgba(31, 41, 55, 0.95) !important;
+}
+
+/* Main Content Wrapper */
+.with-custom-bg main {
+    background-color: transparent !important;
+}
+
+/* Scrollbar styling */
+.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.2); border-radius: 10px; }
+</style>
