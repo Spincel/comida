@@ -152,7 +152,12 @@ const getProviderColor = (id) => providerColors[id % providerColors.length];
 
                 <div v-else class="p-20 bg-white dark:bg-gray-800 rounded-[3rem] border-2 border-dashed border-gray-200 dark:border-gray-700 text-center">
                     <ClipboardDocumentListIcon class="h-16 w-16 text-gray-200 mx-auto mb-4" />
-                    <p class="text-gray-400 font-bold uppercase tracking-widest text-sm">No se encontraron sesiones en el historial</p>
+                    <p class="text-gray-400 font-bold uppercase tracking-widest text-sm mb-6">No se encontraron sesiones en el historial</p>
+                    
+                    <Link :href="route('dashboard')" 
+                        class="inline-flex items-center px-8 py-4 bg-indigo-600 dark:bg-indigo-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-500/20 active:scale-95">
+                        <ArrowLeftIcon class="h-4 w-4 mr-2" /> Regresar al Dashboard
+                    </Link>
                 </div>
 
                 <!-- PAGINACIÓN -->
