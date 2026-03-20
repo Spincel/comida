@@ -94,6 +94,19 @@ class User extends Authenticatable
     }
 
     /**
+     * Spincelaestream Security Model: Permisos y Niveles de Usuario.
+     */
+    public function hasPermission($permissionName)
+    {
+        if ($this->role === 'admin') return true;
+
+        $role = Role::where('name', $this->role)->first();
+        if (!$role) return false;
+
+        return $role->permissions()->where('name', $permissionName)->exists();
+    }
+
+    /**
      * Get the orders for the user.
      */
     public function orders()
