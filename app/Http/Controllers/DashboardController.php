@@ -157,7 +157,7 @@ class DashboardController extends Controller
             $teamOrders = Order::whereIn('user_id', $areaUserIds)
                                 ->whereDate('orders.created_at', $today)
                                 ->where('status', '!=', 'cancelled') // CRITICAL: Ignore cancelled orders
-                                ->with(['user', 'dailyMenu.provider'])
+                                ->with(['user' => fn($q) => $q->withTrashed(), 'dailyMenu.provider'])
                                 ->get();
             
             $props['teamOrders'] = $areaUsers->map(fn($m) => [
@@ -176,9 +176,9 @@ class DashboardController extends Controller
             $props['myOrdersToday'] = $myOrdersToday->values();
 
             // Fetch order history grouped by session for the sidebar
-            $recentOrders = Order::with(['dailyMenu.provider', 'user'])
+            $recentOrders = Order::with(['dailyMenu.provider', 'user' => fn($q) => $q->withTrashed()])
                 ->where('status', '!=', 'cancelled')
-                ->whereHas('user', fn($q) => $q->whereIn('area_id', $allMyAreaIds))
+                ->whereHas('user', fn($q) => $q->withTrashed()->whereIn('area_id', $allMyAreaIds))
                 ->latest()
                 ->limit(100)
                 ->get();
@@ -834,7 +834,7 @@ class DashboardController extends Controller
             ->whereDate('orders.created_at', $date)
             ->where('status', '!=', 'cancelled')
             ->whereHas('dailyMenu', fn($q) => $q->where('provider_id', $provider->id))
-            ->with(['user.area', 'dailyMenu'])->get();
+            ->with(['user' => fn($q) => $q->withTrashed(), 'user.area', 'dailyMenu'])->get();
 
         $summary = $orders->groupBy('user.area.name')->map(fn($areaOrders, $areaName) => [
             'area_name' => $areaName,

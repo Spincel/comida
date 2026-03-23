@@ -15,6 +15,10 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
+        if (!$request->user()->hasPermission('users.view')) {
+            abort(403, 'No tienes permiso para ver la lista de usuarios.');
+        }
+
         $query = User::with('area');
 
         // Filter by Area
@@ -69,6 +73,10 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
+        if (!$request->user()->hasPermission('users.manage')) {
+            abort(403, 'No tienes permiso para crear usuarios.');
+        }
+
         $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -162,6 +170,10 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
+        if (!auth()->user()->hasPermission('users.manage')) {
+            abort(403, 'No tienes permiso para eliminar usuarios.');
+        }
+
         if ($user->id === auth()->id()) {
             return back()->with('error', 'No puedes eliminarte a ti mismo.');
         }
@@ -172,7 +184,7 @@ class UserController extends Controller
 
         $user->delete();
 
-        return back()->with('success', 'Usuario eliminado correctamente.');
+        return back()->with('success', 'Usuario desactivado correctamente.');
     }
 
     /**
