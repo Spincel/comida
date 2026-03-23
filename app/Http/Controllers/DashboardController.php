@@ -1097,6 +1097,133 @@ class DashboardController extends Controller
         }
     }
 
+    public function generateExpedienteReport(Provider $provider, string $date, Request $request, $meal_type = null)
+    {
+        try {
+            $mealType = $meal_type ?? $request->query('meal_type', 'Comida');
+            $areaId = $request->query('area_id');
+            $format = $request->query('format', 'pdf');
+
+            // 1. GATHER ALL DATA
+            $query = Order::where('meal_type', $mealType)
+                ->whereDate('orders.created_at', $date)
+                ->where('status', '!=', 'cancelled')
+                ->whereHas('dailyMenu', fn($q) => $q->where('provider_id', $provider->id))
+                ->with(['user' => fn($q) => $q->withTrashed(), 'user.area', 'dailyMenu']);
+
+            if ($areaId) $query->whereHas('user', fn($q) => $q->withTrashed()->where('area_id', $areaId));
+            $orders = $query->get();
+
+            $session = ProviderDailyStatus::where('date', $date)
+                ->where('provider_id', $provider->id)
+                ->where('meal_type', $mealType)
+                ->first();
+
+            // 2. CONVERT ASSETS TO BASE64 (Required for DOMPDF)
+            $toBase64 = function($path) {
+                if (!$path || !file_exists($path)) return null;
+                $type = pathinfo($path, PATHINFO_EXTENSION);
+                $data = file_get_contents($path);
+                return 'data:image/' . $type . ';base64,' . base64_encode($data);
+            };
+
+            $logoPath = public_path('logo.png');
+            $logoBase64 = $toBase64($logoPath);
+
+            // 3. GROUP DATA BY AREA (Dossier Format)
+            $summary = $orders->groupBy('user.area.name')->map(function($aOrders, $aName) use ($session, $toBase64) {
+                $areaId = $aOrders->first()->user->area_id;
+                $evidence = $session ? \App\Models\AreaSessionStatus::where('provider_daily_status_id', $session->id)
+                    ->where('area_id', $areaId)->first() : null;
+
+                return [
+                    'group_name' => $aName,
+                    'total_count' => $aOrders->count(),
+                    'evidence_path' => ($evidence && $evidence->evidence_image) ? $toBase64(public_path('storage/' . $evidence->evidence_image)) : null,
+                    'individual_orders' => $aOrders->sortBy('user.name')->map(fn($o) => [
+                        'user_name' => $o->user->name, 
+                        'area_name' => $o->user->area->name ?? 'N/A', 
+                        'platillo_name' => $o->dailyMenu->name, 
+                        'activity_performed' => $o->activity_performed
+                    ]),
+                ];
+            })->sortKeys();
+
+            $data = [
+                'provider' => $provider,
+                'date' => $date,
+                'mealType' => $mealType,
+                'session' => $session,
+                'ordersSummary' => $summary->values(),
+                'totalOrders' => $orders->count(),
+                'logo_base64' => $logoBase64,
+            ];
+
+            $filename = "expediente_{$mealType}_{$provider->name}_$date";
+
+            if ($format === 'excel') {
+                return $this->exportExpedienteToExcel($data, $filename);
+            }
+
+            if ($format === 'word') {
+                return response()->view('reports.expediente', $data)
+                    ->header('Content-Type', 'application/msword')
+                    ->header('Content-Disposition', "attachment; filename={$filename}.doc");
+            }
+
+            $pdf = Pdf::loadView('reports.expediente', $data);
+            return $pdf->stream("{$filename}.pdf");
+
+        } catch (\Exception $e) {
+            Log::error("Error generating dossier: " . $e->getMessage());
+            return "Error al generar el expediente digital: " . $e->getMessage();
+        }
+    }
+
+    /**
+     * Helper to export the comprehensive dossier data to Excel/CSV.
+     */
+    private function exportExpedienteToExcel($data, $filename)
+    {
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename={$filename}.csv",
+        ];
+
+        $callback = function() use ($data) {
+            $file = fopen('php://output', 'w');
+            fputs($file, $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) )); // UTF-8 BOM
+
+            // 1. CARATULA
+            fputcsv($file, ['EXPEDIENTE DIGITAL DE ALIMENTACIÓN - SICOA']);
+            fputcsv($file, ['Fecha de Servicio:', $data['date']]);
+            fputcsv($file, ['Tipo de Alimento:', strtoupper($data['mealType'])]);
+            fputcsv($file, ['Proveedor:', $data['provider']->name]);
+            fputcsv($file, ['Total Pedidos:', $data['totalOrders']]);
+            fputcsv($file, []); // Empty
+
+            // 2. CUERPO DE DATOS
+            fputcsv($file, ['#', 'ÁREA/DEPENDENCIA', 'NOMBRE DEL COMENSAL', 'PLATILLO SOLICITADO', 'JUSTIFICACIÓN / ACTIVIDAD']);
+            
+            $count = 1;
+            foreach ($data['ordersSummary'] as $group) {
+                foreach ($group['individual_orders'] as $o) {
+                    fputcsv($file, [
+                        $count++,
+                        $group['group_name'],
+                        $o['user_name'],
+                        $o['platillo_name'],
+                        $o['activity_performed'] ?: 'SIN JUSTIFICACIÓN'
+                    ]);
+                }
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
     private function exportToExcel($data, $filename)
     {
         $headers = [

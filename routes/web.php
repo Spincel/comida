@@ -146,6 +146,9 @@ Route::middleware(['auth'])->group(function () {
     // Theme and Background Management
     Route::post('settings/theme', [SystemSettingsController::class, 'updateUserTheme'])->name('settings.theme.update');
     Route::post('admin/settings/backgrounds/upload', [SystemSettingsController::class, 'uploadBackground'])->name('admin.settings.backgrounds.upload')->middleware('role:admin');
+
+    // TEST ROUTE: Expediente Digital (Local Review Only)
+    Route::get('admin/test/expediente/{provider}/{date}/{meal_type?}', [DashboardController::class, 'generateExpedienteReport'])->name('admin.test.expediente');
 });
 
 require __DIR__.'/auth.php';

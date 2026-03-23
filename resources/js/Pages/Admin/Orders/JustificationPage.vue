@@ -16,6 +16,7 @@ import {
     CheckBadgeIcon,
     ArrowPathIcon,
     PrinterIcon,
+    BriefcaseIcon,
     FunnelIcon,
     MagnifyingGlassIcon,
     ExclamationTriangleIcon,
@@ -126,9 +127,11 @@ const autoSaveJustification = (orderId, value) => {
 const selectedSession = ref(null);
 const searchQuery = ref('');
 const showExportModal = ref(false);
+const showExpedienteModal = ref(false);
 const sessionToExport = ref(null);
 
 const openExportModal = (session) => { sessionToExport.value = session; showExportModal.value = true; };
+const openExpedienteModal = (session) => { sessionToExport.value = session; showExpedienteModal.value = true; };
 
 const handleExport = (format) => {
     const session = sessionToExport.value;
@@ -136,6 +139,16 @@ const handleExport = (format) => {
     const url = route('admin.orders.summary.pdf', { 
         provider: session.provider_id, date: session.date, meal_type: session.meal_type,
         area_id: user.area_id, view_mode: 'names', sort: 'name', format: format
+    });
+    window.open(url, '_blank');
+};
+
+const handleExportExpediente = (format) => {
+    const session = sessionToExport.value;
+    if (!session) return;
+    const url = route('admin.test.expediente', { 
+        provider: session.provider_id, date: session.date, meal_type: session.meal_type,
+        area_id: user.area_id, format: format
     });
     window.open(url, '_blank');
 };
@@ -270,7 +283,8 @@ const openEvidence = (url) => {
                                 </div>
                                 <div class="flex items-center gap-4">
                                     <div class="bg-green-50 dark:bg-green-900/20 px-6 py-3 rounded-[1.5rem] border-2 border-green-100 flex items-center space-x-3 shadow-sm"><CheckBadgeIcon class="h-5 w-5 text-green-500" /><span class="text-[10px] font-black text-green-700 uppercase tracking-widest">Respaldo Automático</span></div>
-                                    <button @click="openExportModal(selectedSession)" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest flex items-center shadow-lg"><PrinterIcon class="h-4 w-4 mr-2" /> Reporte</button>
+                                    <button @click="openExportModal(selectedSession)" class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 px-6 py-3 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest flex items-center shadow-lg border border-gray-200 dark:border-gray-600"><PrinterIcon class="h-4 w-4 mr-2" /> Reporte</button>
+                                    <button @click="openExpedienteModal(selectedSession)" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest flex items-center shadow-lg"><BriefcaseIcon class="h-4 w-4 mr-2" /> Expediente Digital</button>
                                 </div>
                             </div>
                             <!-- Barra de Progreso Interna -->
@@ -369,6 +383,7 @@ const openEvidence = (url) => {
         </div>
 
         <ExportChoiceModal :show="showExportModal" @close="showExportModal = false" @select="handleExport" />
+        <ExportChoiceModal :show="showExpedienteModal" @close="showExpedienteModal = false" @select="handleExportExpediente" />
     </AuthenticatedLayout>
 </template>
 
