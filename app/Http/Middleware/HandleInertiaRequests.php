@@ -77,7 +77,11 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $user,
+                'user' => $user ? array_merge($user->toArray(), [
+                    'permissions' => $user->role === 'admin' 
+                        ? \App\Models\Permission::all()->pluck('slug')->toArray()
+                        : ($user->role ? (\App\Models\Role::where('slug', $user->role)->first()?->load('permissions')->permissions->pluck('slug')->toArray() ?? []) : [])
+                ]) : null,
                 'orderStatus' => $orderStatus,
                 'isAnySessionOpen' => isset($openSessions) ? $openSessions->isNotEmpty() : false,
                 'isAnySessionClosedToday' => $closedSessionsToday ?? false,

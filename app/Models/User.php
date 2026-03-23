@@ -100,10 +100,10 @@ class User extends Authenticatable
     {
         if ($this->role === 'admin') return true;
 
-        $role = Role::where('name', $this->role)->first();
+        $role = Role::where('slug', $this->role)->first();
         if (!$role) return false;
 
-        return $role->permissions()->where('name', $permissionName)->exists();
+        return $role->permissions()->where('slug', $permissionName)->exists();
     }
 
     /**

@@ -34,6 +34,11 @@ const visibleFlash = ref(null);
 let flashTimeout = null;
 
 const user = computed(() => page.props.auth.user);
+const can = (permission) => {
+    if (user.value?.role === 'admin') return true;
+    if (user.value?.role === 'acquisitions_manager' && ['areas.manage', 'reports.global', 'providers.manage', 'menus.manage', 'sessions.manage', 'orders.monitor'].includes(permission)) return true;
+    return user.value?.permissions?.includes(permission);
+};
 const backgroundCatalog = computed(() => JSON.parse(page.props.system?.settings?.background_catalog || '[]'));
 const dynamicAppName = computed(() => page.props.system?.settings?.app_name || 'Comedor System');
 
@@ -153,7 +158,7 @@ onUnmounted(() => {
                                 </NavLink>
 
                                 <!-- Admin & Acquisitions Dropdown -->
-                                <div v-if="['admin', 'acquisitions_manager'].includes($page.props.auth.user.role)" class="hidden sm:flex sm:items-center sm:ms-6">
+                                <div v-if="can('reports.global') || can('orders.monitor') || can('areas.manage')" class="hidden sm:flex sm:items-center sm:ms-6">
                                     <Dropdown align="left" width="64">
                                         <template #trigger>
                                             <button type="button" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-indigo-700 dark:hover:text-indigo-400 focus:outline-none transition ease-in-out duration-150">
@@ -164,21 +169,24 @@ onUnmounted(() => {
                                         </template>
                                         <template #content>
                                             <div class="block px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-b dark:border-gray-700">Gestión de Servicio</div>
-                                            <DropdownLink :href="route('admin.history')">
+                                            <DropdownLink v-if="can('reports.global')" :href="route('admin.history')">
                                                 <div class="flex items-center"><ClipboardDocumentIcon class="h-4 w-4 mr-2" /> Historial General</div>
                                             </DropdownLink>
-                                            <DropdownLink v-if="$page.props.auth.user.role === 'admin'" :href="route('admin.sessions.logs')">
+                                            <DropdownLink v-if="can('security.manage')" :href="route('admin.sessions.logs')">
                                                 <div class="flex items-center"><ShieldCheckIcon class="h-4 w-4 mr-2 text-rose-500" /> Auditoría de Sesiones</div>
                                             </DropdownLink>
-                                            <DropdownLink :href="route('admin.reports')">
+                                            <DropdownLink v-if="can('reports.global')" :href="route('admin.reports')">
                                                 <div class="flex items-center"><TableCellsIcon class="h-4 w-4 mr-2" /> Reportes Generales</div>
+                                            </DropdownLink>
+                                            <DropdownLink v-if="can('areas.manage')" :href="route('areas.index')">
+                                                <div class="flex items-center"><BuildingOfficeIcon class="h-4 w-4 mr-2 text-emerald-500" /> Áreas del Sistema</div>
                                             </DropdownLink>
                                         </template>
                                     </Dropdown>
                                 </div>
 
                                 <!-- Admin Specialized Tools -->
-                                <div v-if="$page.props.auth.user.role === 'admin'" class="hidden sm:flex sm:items-center sm:ms-6">
+                                <div v-if="can('users.manage') || can('system.settings') || can('security.manage')" class="hidden sm:flex sm:items-center sm:ms-6">
                                     <Dropdown align="left" width="64">
                                         <template #trigger>
                                             <button type="button" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-indigo-700 dark:hover:text-indigo-400 focus:outline-none transition ease-in-out duration-150">
@@ -189,23 +197,23 @@ onUnmounted(() => {
                                         </template>
                                         <template #content>
                                             <div class="block px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-b dark:border-gray-700">Configuración Base</div>
-                                            <DropdownLink :href="route('users.index')">
+                                            <DropdownLink v-if="can('users.manage')" :href="route('users.index')">
                                                 <div class="flex items-center"><UsersIcon class="h-4 w-4 mr-2" /> Usuarios</div>
                                             </DropdownLink>
-                                            <DropdownLink :href="route('areas.index')">
+                                            <DropdownLink v-if="can('areas.manage') && $page.props.auth.user.role === 'admin'" :href="route('areas.index')">
                                                 <div class="flex items-center"><BuildingOfficeIcon class="h-4 w-4 mr-2" /> Áreas</div>
                                             </DropdownLink>
                                             <div class="block px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-t border-b dark:border-gray-700 mt-2">Sistema</div>
-                                            <DropdownLink :href="route('admin.settings.interface')">
+                                            <DropdownLink v-if="can('system.settings')" :href="route('admin.settings.interface')">
                                                 <div class="flex items-center"><SwatchIcon class="h-4 w-4 mr-2" /> Interfaz y Logos</div>
                                             </DropdownLink>
-                                            <DropdownLink :href="route('admin.settings.reports')">
+                                            <DropdownLink v-if="can('reports.global')" :href="route('admin.settings.reports')">
                                                 <div class="flex items-center"><DocumentChartBarIcon class="h-4 w-4 mr-2" /> Configurar Reportes</div>
                                             </DropdownLink>
-                                            <DropdownLink :href="route('admin.settings.roles')">
+                                            <DropdownLink v-if="can('security.manage')" :href="route('admin.settings.roles')">
                                                 <div class="flex items-center"><ShieldCheckIcon class="h-4 w-4 mr-2" /> Roles y Permisos</div>
                                             </DropdownLink>
-                                            <DropdownLink :href="route('admin.utilities.data')">
+                                            <DropdownLink v-if="can('system.settings')" :href="route('admin.utilities.data')">
                                                 <div class="flex items-center"><CloudArrowUpIcon class="h-4 w-4 mr-2" /> Mantenimiento de Datos</div>
                                             </DropdownLink>
                                         </template>
@@ -348,22 +356,22 @@ onUnmounted(() => {
                         </ResponsiveNavLink>
 
                         <!-- Mobile Acquisitions Group -->
-                        <template v-if="['admin', 'acquisitions_manager'].includes($page.props.auth.user.role)">
+                        <template v-if="can('reports.global') || can('orders.monitor') || can('areas.manage')">
                             <div class="px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b dark:border-gray-700">Adquisiciones</div>
-                            <ResponsiveNavLink :href="route('admin.history')" :active="route().current('admin.history')">Historial General</ResponsiveNavLink>
-                            <ResponsiveNavLink v-if="$page.props.auth.user.role === 'admin'" :href="route('admin.sessions.logs')" :active="route().current('admin.sessions.logs')" class="text-rose-500">Auditoría de Sesiones</ResponsiveNavLink>
-                            <ResponsiveNavLink :href="route('admin.reports')" :active="route().current('admin.reports')">Reportes Generales</ResponsiveNavLink>
-                            <ResponsiveNavLink :href="route('admin.settings.reports')" :active="route().current('admin.settings.reports')">Configurar Reportes</ResponsiveNavLink>
+                            <ResponsiveNavLink v-if="can('reports.global')" :href="route('admin.history')" :active="route().current('admin.history')">Historial General</ResponsiveNavLink>
+                            <ResponsiveNavLink v-if="can('security.manage')" :href="route('admin.sessions.logs')" :active="route().current('admin.sessions.logs')" class="text-rose-500">Auditoría de Sesiones</ResponsiveNavLink>
+                            <ResponsiveNavLink v-if="can('reports.global')" :href="route('admin.reports')" :active="route().current('admin.reports')">Reportes Generales</ResponsiveNavLink>
+                            <ResponsiveNavLink v-if="can('areas.manage')" :href="route('areas.index')" :active="route().current('areas.index')">Áreas del Sistema</ResponsiveNavLink>
                         </template>
 
                         <!-- Mobile Admin Tools -->
-                        <template v-if="$page.props.auth.user.role === 'admin'">
+                        <template v-if="can('users.manage') || can('system.settings') || can('security.manage')">
                             <div class="px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b dark:border-gray-700 mt-2">Administración</div>
-                            <ResponsiveNavLink :href="route('users.index')" :active="route().current('users.*')">Usuarios</ResponsiveNavLink>
-                            <ResponsiveNavLink :href="route('areas.index')" :active="route().current('areas.*')">Áreas</ResponsiveNavLink>
-                            <ResponsiveNavLink :href="route('admin.settings.interface')" :active="route().current('admin.settings.interface')">Interfaz y Logos</ResponsiveNavLink>
-                            <ResponsiveNavLink :href="route('admin.settings.roles')" :active="route().current('admin.settings.roles')">Roles y Permisos</ResponsiveNavLink>
-                            <ResponsiveNavLink :href="route('admin.utilities.data')" :active="route().current('admin.utilities.data')">Mantenimiento de Datos</ResponsiveNavLink>
+                            <ResponsiveNavLink v-if="can('users.manage')" :href="route('users.index')" :active="route().current('users.*')">Usuarios</ResponsiveNavLink>
+                            <ResponsiveNavLink v-if="can('areas.manage') && $page.props.auth.user.role === 'admin'" :href="route('areas.index')" :active="route().current('areas.*')">Áreas</ResponsiveNavLink>
+                            <ResponsiveNavLink v-if="can('system.settings')" :href="route('admin.settings.interface')" :active="route().current('admin.settings.interface')">Interfaz y Logos</ResponsiveNavLink>
+                            <ResponsiveNavLink v-if="can('security.manage')" :href="route('admin.settings.roles')" :active="route().current('admin.settings.roles')">Roles y Permisos</ResponsiveNavLink>
+                            <ResponsiveNavLink v-if="can('system.settings')" :href="route('admin.utilities.data')" :active="route().current('admin.utilities.data')">Mantenimiento de Datos</ResponsiveNavLink>
                         </template>
 
                                 <!-- Mobile Area Manager & Diner Justification -->

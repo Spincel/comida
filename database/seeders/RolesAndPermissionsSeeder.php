@@ -13,54 +13,60 @@ class RolesAndPermissionsSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Definir todos los Permisos del Sistema Spincelaestream
+        // 1. Definir todos los Permisos del Sistema Spincelaestream (Enhanced with Slugs & Groups)
         $permissions = [
+            // Usuarios
+            ['name' => 'Ver Usuarios', 'slug' => 'users.view', 'group' => 'Usuarios'],
+            ['name' => 'Gestionar Usuarios', 'slug' => 'users.manage', 'group' => 'Usuarios'],
+            
+            // Áreas
+            ['name' => 'Ver Áreas', 'slug' => 'areas.view', 'group' => 'Áreas'],
+            ['name' => 'Gestionar Áreas', 'slug' => 'areas.manage', 'group' => 'Áreas'],
+
             // Gestión de Menús y Proveedores
-            ['name' => 'manage_providers', 'description' => 'Crear, editar y eliminar proveedores'],
-            ['name' => 'manage_menus', 'description' => 'Gestionar platillos y menús diarios'],
-            ['name' => 'activate_sessions', 'description' => 'Abrir y cerrar sesiones de comida'],
+            ['name' => 'Gestionar Proveedores', 'slug' => 'providers.manage', 'group' => 'Proveedores'],
+            ['name' => 'Gestionar Menús', 'slug' => 'menus.manage', 'group' => 'Proveedores'],
             
-            // Gestión de Pedidos
-            ['name' => 'place_orders', 'description' => 'Realizar pedidos propios'],
-            ['name' => 'authorize_team_orders', 'description' => 'Autorizar pedidos de su área/equipo'],
-            ['name' => 'view_all_orders', 'description' => 'Ver todos los pedidos del sistema'],
+            // Operación
+            ['name' => 'Gestionar Sesiones', 'slug' => 'sessions.manage', 'group' => 'Operación'],
+            ['name' => 'Monitorear Pedidos', 'slug' => 'orders.monitor', 'group' => 'Operación'],
+            ['name' => 'Autorizar Pedidos de Equipo', 'slug' => 'orders.authorize_team', 'group' => 'Operación'],
             
-            // Reportes y Analíticas
-            ['name' => 'view_area_reports', 'description' => 'Ver reportes de su dependencia'],
-            ['name' => 'view_global_reports', 'description' => 'Ver reportes de toda la institución'],
+            // Reportes
+            ['name' => 'Reportes de Área', 'slug' => 'reports.area', 'group' => 'Reportes'],
+            ['name' => 'Reportes Globales', 'slug' => 'reports.global', 'group' => 'Reportes'],
             
             // Administración del Sistema
-            ['name' => 'manage_users', 'description' => 'Gestionar usuarios y sus áreas'],
-            ['name' => 'manage_roles_permissions', 'description' => 'Modificar niveles de seguridad y permisos'],
-            ['name' => 'manage_system_settings', 'description' => 'Cambiar branding, logos y configuración global'],
+            ['name' => 'Configuración del Sistema', 'slug' => 'system.settings', 'group' => 'Sistema'],
+            ['name' => 'Gestionar Roles y Permisos', 'slug' => 'security.manage', 'group' => 'Sistema'],
         ];
 
         foreach ($permissions as $p) {
-            Permission::updateOrCreate(['name' => $p['name']], $p);
+            Permission::updateOrCreate(['slug' => $p['slug']], $p);
         }
 
         // 2. Definir Roles y Asignar Permisos (Spincelaestream Robust Model)
         
         // ADMIN: Acceso Total
-        $adminRole = Role::updateOrCreate(['name' => 'admin', 'display_name' => 'Administrador General']);
+        $adminRole = Role::updateOrCreate(['slug' => 'admin'], ['name' => 'Administrador General']);
         $adminRole->permissions()->sync(Permission::all());
 
         // ACQUISITIONS: Lógica de Abastecimiento
-        $acqRole = Role::updateOrCreate(['name' => 'acquisitions_manager', 'display_name' => 'Gerente de Adquisiciones']);
-        $acqRole->permissions()->sync(Permission::whereIn('name', [
-            'manage_providers', 'manage_menus', 'activate_sessions', 'view_all_orders', 'view_global_reports'
+        $acqRole = Role::updateOrCreate(['slug' => 'acquisitions_manager'], ['name' => 'Gerente de Adquisiciones']);
+        $acqRole->permissions()->sync(Permission::whereIn('slug', [
+            'providers.manage', 'menus.manage', 'sessions.manage', 'orders.monitor', 'reports.global', 'areas.view', 'areas.manage'
         ])->get());
 
         // AREA MANAGER: Control de Dependencia
-        $managerRole = Role::updateOrCreate(['name' => 'area_manager', 'display_name' => 'Gerente de Área']);
-        $managerRole->permissions()->sync(Permission::whereIn('name', [
-            'place_orders', 'authorize_team_orders', 'view_area_reports'
+        $managerRole = Role::updateOrCreate(['slug' => 'area_manager'], ['name' => 'Gerente de Área']);
+        $managerRole->permissions()->sync(Permission::whereIn('slug', [
+            'orders.authorize_team', 'reports.area'
         ])->get());
 
         // DINER: Usuario Final
-        $dinerRole = Role::updateOrCreate(['name' => 'diner', 'display_name' => 'Comensal']);
-        $dinerRole->permissions()->sync(Permission::whereIn('name', [
-            'place_orders'
+        $dinerRole = Role::updateOrCreate(['slug' => 'diner'], ['name' => 'Comensal']);
+        $dinerRole->permissions()->sync(Permission::whereIn('slug', [
+            // No custom permissions needed if defaults are used
         ])->get());
     }
 }

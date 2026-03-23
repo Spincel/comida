@@ -44,24 +44,42 @@ Route::middleware(['auth', 'role:acquisitions_manager|admin'])->group(function (
     Route::get('admin/reports/export', [DashboardController::class, 'exportGlobalReports'])->name('admin.reports.export');
 
     Route::resource('users', UserController::class)
-        ->middleware('role:admin');
+        ->middleware('permission:users.manage');
     Route::resource('areas', AreaController::class)
-        ->middleware('role:admin');
+        ->middleware('permission:areas.manage');
 
     // Phase 2: Interface, Utilities, and Roles
-    Route::middleware('role:admin')->group(function () {
-        Route::get('admin/settings/interface', [SystemSettingsController::class, 'index'])->name('admin.settings.interface');
+    Route::middleware('auth')->group(function () {
+        Route::get('admin/settings/interface', [SystemSettingsController::class, 'index'])
+            ->name('admin.settings.interface')
+            ->middleware('permission:system.settings');
         
-        Route::get('admin/utilities/data', [ImportExportController::class, 'index'])->name('admin.utilities.data');
-        Route::get('admin/utilities/backup', [ImportExportController::class, 'backup'])->name('admin.utilities.backup');
-        Route::post('admin/utilities/import', [ImportExportController::class, 'import'])->name('admin.utilities.import');
-        Route::post('admin/utilities/import-sql', [ImportExportController::class, 'importSql'])->name('admin.utilities.import.sql');
-        Route::post('admin/utilities/truncate', [ImportExportController::class, 'truncate'])->name('admin.utilities.truncate');
+        Route::get('admin/utilities/data', [ImportExportController::class, 'index'])
+            ->name('admin.utilities.data')
+            ->middleware('permission:system.settings');
+        Route::get('admin/utilities/backup', [ImportExportController::class, 'backup'])
+            ->name('admin.utilities.backup')
+            ->middleware('permission:system.settings');
+        Route::post('admin/utilities/import', [ImportExportController::class, 'import'])
+            ->name('admin.utilities.import')
+            ->middleware('permission:system.settings');
+        Route::post('admin/utilities/import-sql', [ImportExportController::class, 'importSql'])
+            ->name('admin.utilities.import.sql')
+            ->middleware('permission:system.settings');
+        Route::post('admin/utilities/truncate', [ImportExportController::class, 'truncate'])
+            ->name('admin.utilities.truncate')
+            ->middleware('permission:system.settings');
         
-        Route::get('admin/settings/roles', [RoleController::class, 'index'])->name('admin.settings.roles');
-        Route::put('admin/settings/roles/{role}', [RoleController::class, 'update'])->name('admin.settings.roles.update');
+        Route::get('admin/settings/roles', [RoleController::class, 'index'])
+            ->name('admin.settings.roles')
+            ->middleware('permission:security.manage');
+        Route::put('admin/settings/roles/{role}', [RoleController::class, 'update'])
+            ->name('admin.settings.roles.update')
+            ->middleware('permission:security.manage');
 
-        Route::get('admin/sessions/logs', [DashboardController::class, 'showDeletionLogs'])->name('admin.sessions.logs');
+        Route::get('admin/sessions/logs', [DashboardController::class, 'showDeletionLogs'])
+            ->name('admin.sessions.logs')
+            ->middleware('permission:security.manage');
     });
 
     Route::resource('daily-menus', DailyMenuController::class);
