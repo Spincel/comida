@@ -40,4 +40,31 @@ Tras detectar un error crítico en producción (`Column not found: meal_type`) a
 - `GEMINI.md` (Actualizado con bitácora de emergencia).
 
 ---
-**Desarrollado y Protegido por Spincelaestream - 20 Marzo 2026**
+
+## Actualización de Seguridad y Resiliencia (Lunes 23 de Marzo, 2026)
+
+### 1. Sistema de Permisos Dinámicos (RBAC 2.0)
+- **Objetivo:** Eliminar la dependencia de roles estáticos para permitir una gestión granular de accesos.
+- **Cambios realizados:** 
+    - Implementación de `CheckPermission` middleware y actualización de `HandleInertiaRequests`.
+    - Reestructuración de `RolesAndPermissionsSeeder` con sistema de `slugs` y `groups`.
+    - Adaptación del frontend con función `can()` para visibilidad dinámica de menús.
+- **Resultado:** El rol de **Adquisiciones** ahora tiene acceso autorizado a la gestión de **Áreas y Usuarios**.
+
+### 2. Implementación de Soft Deletes y Resiliencia en Reportes
+- **Problema:** La eliminación física de usuarios causaba pérdida de datos en reportes históricos.
+- **Solución:**
+    - Activación de `SoftDeletes` en el modelo `User` y migración `2026_03_23_125823_add_soft_deletes_to_users_table.php`.
+    - Actualización de `DashboardController` usando `withTrashed()` en historial y justificaciones.
+- **Resultado:** Los **Gerentes de Área** pueden justificar pedidos de personal desactivado, garantizando integridad en los reportes de nómina.
+
+### 3. Guía de Actualización en Servidor (HestiaCP)
+Pasos seguros para desplegar en 172.30.4.132:
+1. `sudo chown -R socrates:admin . && git pull origin main`
+2. `php artisan migrate --force && php artisan optimize:clear`
+3. `php artisan db:seed --class=RolesAndPermissionsSeeder --force`
+4. `npm run build`
+5. `sudo chown -R admin:admin . && sudo chmod -R 775 storage bootstrap/cache`
+
+---
+**Desarrollado y Protegido por Spincelaestream - 23 Marzo 2026**

@@ -195,7 +195,8 @@ class UserController extends Controller
         $user = $request->user();
         if (!$user->area_id) abort(403, 'No tienes un área asignada.');
 
-        $team = User::where('area_id', $user->area_id)
+        $team = User::withTrashed()
+            ->where('area_id', $user->area_id)
             ->where('id', '!=', $user->id) // Hide self
             ->orderBy('first_name')
             ->get();
