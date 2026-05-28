@@ -13,18 +13,42 @@ import {
 const props = defineProps({ provider: Object, date: String, mealType: String, ordersSummary: Array });
 
 const sendToWhatsApp = (area = null) => {
-    let msg = `*PEDIDO ${props.mealType.toUpperCase()} - ${props.date}*\n\n`;
+    let msg = `*SOLICITUD DE PEDIDO ${props.mealType.toUpperCase()} - ${props.date}*\n`;
+    msg += `----------------------------\n\n`;
+
+    const processArea = (a) => {
+        let areaMsg = `📍 *${a.area_name.toUpperCase()}*\n`;
+        
+        // List individual diners with their dish and observations
+        a.individual_orders.forEach((o, i) => {
+            const obs = o.preferences ? ` _(Obs: ${o.preferences})_` : '';
+            areaMsg += `${i + 1}. ${o.user_name} - *${o.platillo_name}*${obs}\n`;
+        });
+
+        // Add grouped summary for this area
+        areaMsg += `\n*TOTAL PLATILLOS ÁREA:*`;
+        a.platillos.forEach(p => {
+            areaMsg += `\n• ${p.total_count}x ${p.platillo_name}`;
+        });
+        
+        return areaMsg + `\n\n`;
+    };
+
     if (area) {
-        msg += `📍 *${area.area_name.toUpperCase()}*\n`;
-        area.individual_orders.forEach((o, i) => msg += `${i+1}. ${o.user_name} - ${o.platillo_name}\n`);
+        msg += processArea(area);
     } else {
         props.ordersSummary.forEach(a => {
-            msg += `📍 *${a.area_name.toUpperCase()}* (${a.total_area_orders})\n`;
-            a.platillos.forEach(p => msg += `• ${p.total_count}x ${p.platillo_name}\n`);
-            msg += `\n`;
+            msg += processArea(a);
         });
+        
+        // Final Global Grand Total
+        const total = props.ordersSummary.reduce((t, a) => t + (a.total_area_orders || 0), 0);
+        msg += `----------------------------\n`;
+        msg += `*TOTAL GLOBAL PEDIDOS: ${total}*`;
     }
-    window.open(`https://api.whatsapp.com/send?phone=52${props.provider.contact_phone || ''}&text=${encodeURIComponent(msg)}`, '_blank');
+
+    const phone = props.provider.contact_phone || '';
+    window.open(`https://api.whatsapp.com/send?${phone ? 'phone=52' + phone + '&' : ''}text=${encodeURIComponent(msg)}`, '_blank');
 };
 
 const showExportModal = ref(false), exportTargetArea = ref(null);

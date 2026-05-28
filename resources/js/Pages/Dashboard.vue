@@ -52,6 +52,37 @@ const bentoProviderId = ref(null);
 const bentoSelectedAreas = ref([]);
 const areaSearchTerm = ref('');
 
+// --- AUTO-SYNC SELECTED AREAS WITH ACTIVE SESSION ---
+// Only reset selection when Turno or Provider changes
+watch([bentoTurno, bentoProviderId], () => {
+    const session = props.openSessions?.find(s => 
+        s.meal_type === bentoTurno.value && 
+        s.provider_id === bentoProviderId.value
+    );
+    if (session) {
+        const ids = Array.isArray(session.selected_area_ids) 
+            ? session.selected_area_ids 
+            : JSON.parse(session.selected_area_ids || '[]');
+        bentoSelectedAreas.value = ids.map(id => parseInt(id));
+    } else {
+        bentoSelectedAreas.value = [];
+    }
+}, { immediate: true });
+
+// Sync from props only if a session exists (to keep current active areas updated without wiping drafts)
+watch(() => props.openSessions, (newSessions) => {
+    const session = newSessions?.find(s => 
+        s.meal_type === bentoTurno.value && 
+        s.provider_id === bentoProviderId.value
+    );
+    if (session) {
+        const ids = Array.isArray(session.selected_area_ids) 
+            ? session.selected_area_ids 
+            : JSON.parse(session.selected_area_ids || '[]');
+        bentoSelectedAreas.value = ids.map(id => parseInt(id));
+    }
+}, { deep: true });
+
 const filteredBentoAreas = computed(() => {
     if (!areaSearchTerm.value) return props.areas;
     return props.areas.filter(a => a.name.toLowerCase().includes(areaSearchTerm.value.toLowerCase()));
@@ -95,18 +126,20 @@ const toggleBentoArea = (areaId) => {
 };
 
 const submitBentoActivation = () => {
-    if (!bentoProviderId.value) return;
+    if (!bentoProviderId.value) return alert('Por favor, selecciona un proveedor.');
+    if (bentoSelectedAreas.value.length === 0) return alert('Debes seleccionar al menos un área de trabajo para habilitar el servicio.');
+    
+    // Use local date YYYY-MM-DD to avoid timezone shifts at night
+    const localDate = new Date().toLocaleDateString('en-CA'); 
+
     router.post(route('dashboard.providers.activate', bentoProviderId.value), {
-        date: new Date().toISOString().split('T')[0],
+        date: localDate,
         status: 'open',
         selected_area_ids: bentoSelectedAreas.value,
         meal_type: bentoTurno.value,
         conflict_resolution: 'merge'
     }, {
         preserveScroll: true,
-        onSuccess: () => {
-            bentoSelectedAreas.value = [];
-        }
     });
 };
 
@@ -254,7 +287,15 @@ const openActivateMenuModal = (provider) => { selectedProviderForActivation.valu
 const openEditSessionModal = (status, provider) => { selectedProviderForActivation.value = provider; activateModalMode.value = 'edit'; sessionToEdit.value = status; showActivateMenuModal.value = true; };
 const showDeactivateMenuModal = ref(false), sessionToDeactivate = ref(null);
 const openDeactivateMenuModal = (session, provider) => { sessionToDeactivate.value = { ...session, provider_name: provider?.name || session.provider?.name }; showDeactivateMenuModal.value = true; };
-const confirmDeactivation = () => { router.patch(route('dashboard.providers.deactivate', sessionToDeactivate.value.provider_id), { date: new Date().toISOString().split('T')[0], meal_type: sessionToDeactivate.value.meal_type }, { preserveScroll: true, onSuccess: () => { showDeactivateMenuModal.value = false; } }); };
+const confirmDeactivation = () => { 
+    router.patch(route('dashboard.providers.deactivate', sessionToDeactivate.value.provider_id), { 
+        date: sessionToDeactivate.value.date, 
+        meal_type: sessionToDeactivate.value.meal_type 
+    }, { 
+        preserveScroll: true, 
+        onSuccess: () => { showDeactivateMenuModal.value = false; } 
+    }); 
+};
 const showDeleteSessionModal = ref(false), sessionToDelete = ref(null);
 const openDeleteSessionModal = (session, provider) => { sessionToDelete.value = { ...session, provider_name: provider.name }; showDeleteSessionModal.value = true; };
 
@@ -522,6 +563,33 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                             <UsersIcon class="h-6 w-6" />
                             <span class="text-[10px] font-black uppercase tracking-[0.2em]">👥 Usuarios</span>
                         </Link>
+
+                        <!-- ADMIN ONLY CONFIGURATION SECTION -->
+                        <template v-if="user.role === 'admin'">
+                            <div class="border-t border-white/10 my-4"></div>
+                            <h5 class="text-[10px] font-black uppercase opacity-60 tracking-[0.3em] mb-4 ml-4">Configuración del Sistema</h5>
+                            
+                            <Link :href="route('admin.settings.interface')" class="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-5 rounded-2xl border border-white/20 transition-all">
+                                <SwatchIcon class="h-6 w-6" />
+                                <span class="text-[10px] font-black uppercase tracking-[0.2em]">🎨 Interfaz y Logo</span>
+                            </Link>
+                            <Link :href="route('admin.settings.reports')" class="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-5 rounded-2xl border border-white/20 transition-all">
+                                <DocumentChartBarIcon class="h-6 w-6" />
+                                <span class="text-[10px] font-black uppercase tracking-[0.2em]">📄 Conf. Reportes</span>
+                            </Link>
+                            <Link :href="route('admin.settings.roles')" class="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-5 rounded-2xl border border-white/20 transition-all">
+                                <ShieldCheckIcon class="h-6 w-6" />
+                                <span class="text-[10px] font-black uppercase tracking-[0.2em]">🔐 Roles y Permisos</span>
+                            </Link>
+                            <Link :href="route('admin.utilities.data')" class="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-5 rounded-2xl border border-white/20 transition-all">
+                                <WrenchScrewdriverIcon class="h-6 w-6" />
+                                <span class="text-[10px] font-black uppercase tracking-[0.2em]">🛠️ Mantenimiento</span>
+                            </Link>
+                            <Link :href="route('admin.sessions.logs')" class="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-5 rounded-2xl border border-white/20 transition-all">
+                                <ListBulletIcon class="h-6 w-6" />
+                                <span class="text-[10px] font-black uppercase tracking-[0.2em]">📜 Bitácora de Logs</span>
+                            </Link>
+                        </template>
                     </div>
                 </div>
             </div>

@@ -13,7 +13,7 @@ const props = defineProps({
 const form = useForm({
     name: '',
     description: '',
-    available_on: new Date().toISOString().split('T')[0], // Defaults to today
+    available_on: new Date().toLocaleDateString('en-CA'), // Defaults to today in local time
     provider_id: props.providers.length > 0 ? props.providers[0].id : '', // Initialize with first provider or empty
 });
 

@@ -23,7 +23,8 @@ import {
     CloudArrowUpIcon,
     DocumentChartBarIcon,
     CalendarDaysIcon,
-    XMarkIcon
+    XMarkIcon,
+    CheckBadgeIcon
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
@@ -169,6 +170,15 @@ watch(() => page.props.flash?.success, (newMsg) => {
                                 <DropdownLink :href="route('users.index')">👥 Usuarios</DropdownLink>
                                 <DropdownLink :href="route('areas.index')">🏢 Áreas</DropdownLink>
                                 <DropdownLink :href="route('providers.index')">🚚 Proveedores</DropdownLink>
+                            </template>
+
+                            <template v-if="user.role === 'admin'">
+                                <div class="block px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest border-t border-b dark:border-gray-700 mt-1">Sistema y Seguridad</div>
+                                <DropdownLink :href="route('admin.settings.interface')">🎨 Interfaz y Logo</DropdownLink>
+                                <DropdownLink :href="route('admin.settings.reports')">📄 Configurar Reportes</DropdownLink>
+                                <DropdownLink :href="route('admin.settings.roles')">🔐 Roles y Permisos</DropdownLink>
+                                <DropdownLink :href="route('admin.utilities.data')">🛠️ Mantenimiento BD</DropdownLink>
+                                <DropdownLink :href="route('admin.sessions.logs')">📜 Auditoría de Logs</DropdownLink>
                             </template>
 
                             <DropdownLink :href="route('logout')" method="post" as="button" class="text-rose-500 font-bold border-t dark:border-gray-700">🚪 Cerrar Sesión</DropdownLink>

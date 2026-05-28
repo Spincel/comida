@@ -10,12 +10,17 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import Pagination from '@/Components/Pagination.vue';
 import { 
     PlusIcon, PencilSquareIcon, TrashIcon, BuildingOfficeIcon, EnvelopeIcon, XMarkIcon,
-    IdentificationIcon, PhotoIcon, MagnifyingGlassIcon, FunnelIcon, UserIcon, UsersIcon
+    IdentificationIcon, PhotoIcon, MagnifyingGlassIcon, FunnelIcon, UserIcon, UsersIcon,
+    CheckBadgeIcon
 } from '@heroicons/vue/24/outline';
+import { usePage } from '@inertiajs/vue3';
 
 const props = defineProps({
     users: Object, areas: Array, filters: Object,
 });
+
+const page = usePage();
+const user = computed(() => page.props.auth.user);
 
 const search = ref(props.filters.search || '');
 const areaFilter = ref(props.filters.area_id || '');

@@ -190,7 +190,7 @@ const isProfileComplete = (provider) => {
         <ScanMenuModal 
             :show="showScanModal"
             :provider="selectedProviderForScan"
-            :selectedDate="new Date().toISOString().split('T')[0]"
+            :selectedDate="new Date().toLocaleDateString('en-CA')"
             @close="showScanModal = false"
         />
     </AuthenticatedLayout>
