@@ -43,9 +43,9 @@ const selectedSessionId = ref(null);
 const activeTimers = ref({});
 const authorizedUserIds = ref({}); 
 const processingAuthorizations = ref({}); 
-const processingJustifications = ref({}); 
+const processingJustifications = ref({});
+const expandedHistorySessions = ref(new Set());
 const authStatus = ref({});
-
 // --- BENTO V2.0 STATE ---
 const bentoTurno = ref('Comida');
 const bentoProviderId = ref(null);
@@ -208,6 +208,14 @@ const handleEvidenceFileChange = (e) => {
             uploadingEvidenceSessionId.value = null;
         }
     });
+};
+
+const toggleHistorySession = (sessionId) => {
+    if (expandedHistorySessions.value.has(sessionId)) {
+        expandedHistorySessions.value.delete(sessionId);
+    } else {
+        expandedHistorySessions.value.add(sessionId);
+    }
 };
 
 // --- WATCHERS & COMPUTEDS ---
@@ -743,18 +751,20 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                             </div>
                             <Link :href="route('orders.justification')" class="px-6 py-2.5 bg-white/20 hover:bg-white/30 rounded-xl text-[10px] font-black uppercase shadow-lg transition-all flex items-center gap-2">
                                 <CalendarDaysIcon class="h-4 w-4" />
-                                Ver Todo el Historial
+                                Ver Todo
                             </Link>
                         </div>
                         
-                        <div class="p-10">
+                        <div class="p-10 space-y-6">
                             <div v-if="groupedHistory.length > 0" class="space-y-4">
                                 <div v-for="session in groupedHistory" :key="'history-' + session.id + session.date + session.meal_type" 
-                                     class="p-6 bg-slate-50/50 dark:bg-gray-800/50 rounded-[2.5rem] border-2 border-slate-50 dark:border-gray-800 transition-all hover:border-rose-200 dark:hover:border-rose-900 group">
-                                    <div class="flex flex-col md:flex-row md:items-center gap-6">
+                                     class="bg-slate-50/50 dark:bg-gray-800/50 rounded-[2.5rem] border-2 border-slate-50 dark:border-gray-800 overflow-hidden transition-all hover:border-rose-100 dark:hover:border-rose-950">
+                                    
+                                    <!-- Cabecera de la Sesión -->
+                                    <div class="p-6 flex flex-col md:flex-row md:items-center gap-6 cursor-pointer" @click="toggleHistorySession(session.id + session.date + session.meal_type)">
                                         <div class="h-12 w-12 rounded-2xl bg-white dark:bg-gray-700 flex flex-col items-center justify-center shadow-sm border border-slate-100 dark:border-gray-600">
                                             <span class="text-[8px] font-black text-rose-500 leading-none">{{ session.date.split('-')[2] }}</span>
-                                            <span class="text-[6px] font-bold text-slate-400 uppercase leading-none mt-1">{{ new Date(session.date).toLocaleString('es-ES', { month: 'short' }).replace('.', '') }}</span>
+                                            <span class="text-[6px] font-bold text-slate-400 uppercase leading-none mt-1">{{ new Date(session.date + 'T12:00:00').toLocaleString('es-ES', { month: 'short' }).replace('.', '') }}</span>
                                         </div>
                                         <div class="flex-1">
                                             <h6 class="text-xs font-black uppercase text-slate-800 dark:text-gray-200 tracking-tight">{{ session.provider_name }}</h6>
@@ -763,19 +773,49 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                                                 <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">• {{ session.total_orders }} Pedidos</span>
                                             </div>
                                         </div>
+                                        
+                                        <!-- Botón de Evidencia -->
+                                        <button @click.stop="triggerEvidenceUpload(session.id)" 
+                                                class="flex items-center gap-2 px-4 py-2 rounded-xl border-2 transition-all shadow-sm group/btn active:scale-95"
+                                                :class="session.evidence_url ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-white border-slate-100 text-slate-400 hover:border-rose-200 hover:text-rose-600'">
+                                            <PhotoIcon class="h-4 w-4" />
+                                            <span class="text-[8px] font-black uppercase tracking-widest">{{ session.evidence_url ? 'Evidencia Lista' : 'Subir Evidencia' }}</span>
+                                            <CheckBadgeIcon v-if="session.evidence_url" class="h-3 w-3" />
+                                        </button>
+
                                         <div class="flex items-center gap-4">
-                                            <div class="text-right">
-                                                <p class="text-[8px] font-black uppercase text-slate-400 mb-1">Estatus Justificación</p>
-                                                <div class="flex items-center gap-2">
-                                                    <div class="h-1.5 w-24 bg-slate-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                                        <div class="h-full bg-emerald-500 transition-all" :style="{ width: (session.justified_count / session.total_orders * 100) + '%' }"></div>
-                                                    </div>
-                                                    <span class="text-[9px] font-black text-emerald-600 dark:text-emerald-400">{{ session.justified_count }}/{{ session.total_orders }}</span>
+                                            <div class="text-right hidden sm:block">
+                                                <div class="h-1.5 w-16 bg-slate-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                                    <div class="h-full bg-emerald-500 transition-all" :style="{ width: (session.justified_count / session.total_orders * 100) + '%' }"></div>
                                                 </div>
                                             </div>
-                                            <Link :href="route('orders.justification')" class="h-10 w-10 rounded-xl bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 flex items-center justify-center text-slate-400 group-hover:text-rose-600 group-hover:border-rose-200 transition-all shadow-sm">
-                                                <ChevronRightIcon class="h-5 w-5" />
-                                            </Link>
+                                            <ChevronDownIcon class="h-5 w-5 text-slate-300 transition-transform duration-300" :class="{ 'rotate-180': expandedHistorySessions.has(session.id + session.date + session.meal_type) }" />
+                                        </div>
+                                    </div>
+
+                                    <!-- Detalle de Pedidos para Justificar -->
+                                    <div v-if="expandedHistorySessions.has(session.id + session.date + session.meal_type)" class="px-6 pb-6 pt-2 space-y-3 border-t-2 border-slate-100 dark:border-gray-800/50 bg-white/50 dark:bg-gray-900/50">
+                                        <div v-for="order in session.orders" :key="order.id" class="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-gray-800/50 border border-slate-100 dark:border-gray-800 group/order">
+                                            <div class="flex items-center gap-3 w-full sm:w-1/3">
+                                                <img :src="order.avatar_url" class="h-8 w-8 rounded-full border-2 border-white dark:border-gray-700 shadow-sm" />
+                                                <div class="min-w-0">
+                                                    <p class="text-[9px] font-black uppercase text-slate-700 dark:text-gray-300 truncate">{{ order.user_name }}</p>
+                                                    <p class="text-[8px] font-bold text-indigo-500 uppercase truncate tracking-tighter">{{ order.platillo }}</p>
+                                                </div>
+                                            </div>
+                                            <div class="flex-1 w-full relative">
+                                                <textarea v-model="order.activity_performed" 
+                                                          @blur="saveActivity(order.id, order.activity_performed)" 
+                                                          placeholder="Justificación / Actividad realizada..." 
+                                                          rows="1" 
+                                                          class="w-full bg-white dark:bg-gray-900 border-none rounded-xl p-3 text-[9px] font-bold text-slate-600 dark:text-gray-300 shadow-inner focus:ring-1 focus:ring-rose-500 resize-none"></textarea>
+                                                <div v-if="processingJustifications[order.id]" class="absolute right-3 top-1/2 -translate-y-1/2">
+                                                    <ArrowPathIcon class="h-4 w-4 text-rose-500 animate-spin" />
+                                                </div>
+                                                <div v-else-if="order.activity_performed" class="absolute right-3 top-1/2 -translate-y-1/2">
+                                                    <CheckBadgeIcon class="h-4 w-4 text-emerald-500" />
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -826,6 +866,9 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                 </form>
             </div>
         </Modal>
+
+        <!-- INPUT OCULTO PARA EVIDENCIA -->
+        <input type="file" ref="evidenceFileInput" class="hidden" accept="image/*" @change="handleEvidenceFileChange" />
     </AuthenticatedLayout>
 </template>
 
