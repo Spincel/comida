@@ -44,7 +44,7 @@ const activeTimers = ref({});
 const authorizedUserIds = ref({}); 
 const processingAuthorizations = ref({}); 
 const processingJustifications = ref({});
-const expandedHistorySessions = ref(new Set());
+const expandedHistorySessions = ref({});
 const authStatus = ref({});
 // --- BENTO V2.0 STATE ---
 const bentoTurno = ref('Comida');
@@ -211,10 +211,10 @@ const handleEvidenceFileChange = (e) => {
 };
 
 const toggleHistorySession = (sessionId) => {
-    if (expandedHistorySessions.value.has(sessionId)) {
-        expandedHistorySessions.value.delete(sessionId);
+    if (expandedHistorySessions.value[sessionId]) {
+        delete expandedHistorySessions.value[sessionId];
     } else {
-        expandedHistorySessions.value.add(sessionId);
+        expandedHistorySessions.value[sessionId] = true;
     }
 };
 
@@ -789,12 +789,12 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                                                     <div class="h-full bg-emerald-500 transition-all" :style="{ width: (session.justified_count / session.total_orders * 100) + '%' }"></div>
                                                 </div>
                                             </div>
-                                            <ChevronDownIcon class="h-5 w-5 text-slate-300 transition-transform duration-300" :class="{ 'rotate-180': expandedHistorySessions.has(session.id + session.date + session.meal_type) }" />
+                                            <ChevronDownIcon class="h-5 w-5 text-slate-300 transition-transform duration-300" :class="{ 'rotate-180': expandedHistorySessions[session.id + session.date + session.meal_type] }" />
                                         </div>
                                     </div>
 
                                     <!-- Detalle de Pedidos para Justificar -->
-                                    <div v-if="expandedHistorySessions.has(session.id + session.date + session.meal_type)" class="px-6 pb-6 pt-2 space-y-3 border-t-2 border-slate-100 dark:border-gray-800/50 bg-white/50 dark:bg-gray-900/50">
+                                    <div v-if="expandedHistorySessions[session.id + session.date + session.meal_type]" class="px-6 pb-6 pt-2 space-y-3 border-t-2 border-slate-100 dark:border-gray-800/50 bg-white/50 dark:bg-gray-900/50">
                                         <div v-for="order in session.orders" :key="order.id" class="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-gray-800/50 border border-slate-100 dark:border-gray-800 group/order">
                                             <div class="flex items-center gap-3 w-full sm:w-1/3">
                                                 <img :src="order.avatar_url" class="h-8 w-8 rounded-full border-2 border-white dark:border-gray-700 shadow-sm" />
