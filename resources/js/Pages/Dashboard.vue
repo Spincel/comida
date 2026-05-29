@@ -19,7 +19,8 @@ import {
     ChevronRightIcon, TrashIcon, XMarkIcon, CalendarDaysIcon, ListBulletIcon, ChatBubbleLeftRightIcon,
     BuildingStorefrontIcon, InformationCircleIcon, ClipboardDocumentCheckIcon, DocumentIcon, BuildingOfficeIcon,
     WrenchScrewdriverIcon, DocumentChartBarIcon, ExclamationTriangleIcon, TableCellsIcon, PhotoIcon, ArrowLeftIcon,
-    UserPlusIcon, ArrowPathIcon, ShieldCheckIcon, MoonIcon, SunIcon, ChevronDownIcon, PowerIcon, UsersIcon
+    UserPlusIcon, ArrowPathIcon, ShieldCheckIcon, MoonIcon, SunIcon, ChevronDownIcon, PowerIcon, UsersIcon,
+    MagnifyingGlassIcon, SwatchIcon
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
@@ -749,7 +750,7 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                                     <p class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Registros Recientes del Área</p>
                                 </div>
                             </div>
-                            <Link :href="route('orders.justification')" class="px-6 py-2.5 bg-white/20 hover:bg-white/30 rounded-xl text-[10px] font-black uppercase shadow-lg transition-all flex items-center gap-2">
+                            <Link :href="route('justification.index')" class="px-6 py-2.5 bg-white/20 hover:bg-white/30 rounded-xl text-[10px] font-black uppercase shadow-lg transition-all flex items-center gap-2">
                                 <CalendarDaysIcon class="h-4 w-4" />
                                 Ver Todo
                             </Link>
