@@ -787,11 +787,15 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                         </div>
                     </div>
 
-                    <!-- VISTA COMENSAL -->
-                    <div v-else-if="user.role === 'diner' || !activeAuthSession" class="bg-white dark:bg-gray-900 rounded-[3.5rem] p-16 shadow-xl border border-indigo-100 dark:border-gray-800 text-center">
+                    <!-- VISTA COMENSAL / SIN SESIÓN ACTIVA -->
+                    <div v-else-if="sidebarMode === 'auth' || user.role === 'diner' || !activeAuthSession" class="bg-white dark:bg-gray-900 rounded-[3.5rem] p-16 shadow-xl border border-indigo-100 dark:border-gray-800 text-center">
                         <div class="h-24 w-24 bg-indigo-50 dark:bg-indigo-950/30 rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 shadow-inner"><UserGroupIcon class="h-12 w-12 text-indigo-500" /></div>
                         <h5 class="text-4xl font-black text-indigo-900 dark:text-white uppercase tracking-tighter leading-none mb-6">Gestión de Comedor</h5>
                         <p class="text-sm font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest leading-relaxed max-w-2xl mx-auto">Tu Gerente de Área es responsable de gestionar los platillos hoy.</p>
+                    </div>
+
+                    <div v-else class="text-center p-20">
+                        <p class="text-slate-400 uppercase font-black tracking-widest text-[10px]">Selecciona una opción del panel lateral</p>
                     </div>
 
                 </div>
