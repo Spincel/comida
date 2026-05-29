@@ -19,7 +19,7 @@ import {
     ChevronRightIcon, TrashIcon, XMarkIcon, CalendarDaysIcon, ListBulletIcon, ChatBubbleLeftRightIcon,
     BuildingStorefrontIcon, InformationCircleIcon, ClipboardDocumentCheckIcon, DocumentIcon, BuildingOfficeIcon,
     WrenchScrewdriverIcon, DocumentChartBarIcon, ExclamationTriangleIcon, TableCellsIcon, PhotoIcon, ArrowLeftIcon,
-    UserPlusIcon, ArrowPathIcon, ShieldCheckIcon, MoonIcon, SunIcon, ChevronDownIcon, PowerIcon
+    UserPlusIcon, ArrowPathIcon, ShieldCheckIcon, MoonIcon, SunIcon, ChevronDownIcon, PowerIcon, UsersIcon
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
@@ -605,6 +605,7 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                             <button v-for="mode in [
                                 {id:'auth',l: operationMode === 'simple' ? 'Asignar' : 'Habilitar', s: operationMode === 'simple' ? 'Platillos' : 'Personal', i:UserIcon, c:'indigo'},
                                 {id:'menu',l:'Mi Menú', s:'Personal', i:BuildingStorefrontIcon, c:'orange', hideInSimple: true},
+                                {id:'plantilla',l:'Plantilla', s:'Mi Equipo', i:UsersIcon, c:'emerald'},
                                 {id:'justification',l:'Justificar', s:'Historial', i:PencilSquareIcon, c:'rose'}
                             ]" :key="mode.id" 
                             v-show="!(operationMode === 'simple' && mode.hideInSimple)"
@@ -688,6 +689,44 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                                             : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/20'">
                                     {{ teamOrders.every(m => !m.orders.some(o => o.meal_type === activeAuthSession.meal_type && o.status === 'submitted_by_user')) ? 'Pedido Confirmado' : 'Enviar Pedido del Equipo' }}
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VISTA PLANTILLA (EQUIPO) -->
+                    <div v-else-if="sidebarMode === 'plantilla'" class="bg-white dark:bg-gray-900 rounded-[3.5rem] border border-slate-100 dark:border-gray-800 shadow-xl overflow-hidden">
+                        <div class="px-10 py-8 bg-emerald-600 text-white flex justify-between items-center shadow-lg">
+                            <div class="flex items-center gap-8">
+                                <div class="h-16 w-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/20 shadow-inner"><UsersIcon class="h-8 w-8 text-white" /></div>
+                                <div>
+                                    <h5 class="text-3xl font-black uppercase tracking-tighter leading-none mb-2">Plantilla del Área</h5>
+                                    <p class="text-[10px] font-bold opacity-80 uppercase tracking-widest">{{ area?.name }}</p>
+                                </div>
+                            </div>
+                            <Link :href="route('team.index')" class="px-6 py-2.5 bg-white/20 hover:bg-white/30 rounded-xl text-[10px] font-black uppercase shadow-lg transition-all flex items-center gap-2">
+                                <PencilSquareIcon class="h-4 w-4" />
+                                Gestionar Plantilla
+                            </Link>
+                        </div>
+                        
+                        <div class="p-10">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                <div v-for="m in teamOrders" :key="'plantilla-' + m.id" 
+                                     class="flex items-center p-4 rounded-[2rem] border-2 border-slate-50 dark:border-gray-800 bg-slate-50/50 dark:bg-gray-800/50 transition-all hover:scale-[1.02] shadow-sm">
+                                    <img :src="m.avatar_url" class="h-12 w-12 rounded-2xl mr-4 border-2 border-white dark:border-gray-700 shadow-md object-cover" />
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-[10px] font-black uppercase truncate tracking-tight text-slate-800 dark:text-gray-200 leading-tight">{{ m.name }}</p>
+                                        <p class="text-[8px] font-bold text-emerald-500 uppercase tracking-widest mt-1">Activo</p>
+                                    </div>
+                                </div>
+
+                                <div @click="showQuickMemberModal = true" 
+                                     class="flex items-center justify-center p-4 rounded-[2rem] border-2 border-dashed border-slate-200 dark:border-gray-700 hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/10 transition-all cursor-pointer group shadow-sm">
+                                    <div class="h-10 w-10 rounded-xl bg-slate-100 dark:bg-gray-800 group-hover:bg-emerald-600 flex items-center justify-center text-slate-400 group-hover:text-white transition-all mr-4 shadow-inner">
+                                        <PlusIcon class="h-5 w-5" />
+                                    </div>
+                                    <p class="text-[9px] font-black uppercase text-slate-400 group-hover:text-emerald-600 tracking-widest">Alta Rápida</p>
+                                </div>
                             </div>
                         </div>
                     </div>
