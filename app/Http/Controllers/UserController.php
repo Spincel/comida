@@ -99,7 +99,12 @@ class UserController extends Controller
         $email = $request->email ?: Str::slug($firstName . '.' . $lastName) . '.' . rand(10, 99) . '@comedor.local';
         
         // AUTO-GENERATE Employee Number if missing
-        $employeeNumber = $request->employee_number ?: (User::max('employee_number') ?? 1000) + 1;
+        $employeeNumber = $request->employee_number;
+        if (!$employeeNumber) {
+            $maxEmployeeNumber = User::selectRaw('MAX(CAST(employee_number AS INTEGER)) as max_val')
+                ->value('max_val');
+            $employeeNumber = ($maxEmployeeNumber ?: 1000) + 1;
+        }
 
         $avatarPath = null;
         if ($request->hasFile('avatar')) {
