@@ -731,6 +731,62 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                         </div>
                     </div>
 
+                    <!-- VISTA JUSTIFICACIÓN (HISTORIAL RECIENTE) -->
+                    <div v-else-if="sidebarMode === 'justification'" class="bg-white dark:bg-gray-900 rounded-[3.5rem] border border-slate-100 dark:border-gray-800 shadow-xl overflow-hidden">
+                        <div class="px-10 py-8 bg-rose-600 text-white flex justify-between items-center shadow-lg">
+                            <div class="flex items-center gap-8">
+                                <div class="h-16 w-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/20 shadow-inner"><PencilSquareIcon class="h-8 w-8 text-white" /></div>
+                                <div>
+                                    <h5 class="text-3xl font-black uppercase tracking-tighter leading-none mb-2">Justificar Historial</h5>
+                                    <p class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Registros Recientes del Área</p>
+                                </div>
+                            </div>
+                            <Link :href="route('orders.justification')" class="px-6 py-2.5 bg-white/20 hover:bg-white/30 rounded-xl text-[10px] font-black uppercase shadow-lg transition-all flex items-center gap-2">
+                                <CalendarDaysIcon class="h-4 w-4" />
+                                Ver Todo el Historial
+                            </Link>
+                        </div>
+                        
+                        <div class="p-10">
+                            <div v-if="groupedHistory.length > 0" class="space-y-4">
+                                <div v-for="session in groupedHistory" :key="'history-' + session.id + session.date + session.meal_type" 
+                                     class="p-6 bg-slate-50/50 dark:bg-gray-800/50 rounded-[2.5rem] border-2 border-slate-50 dark:border-gray-800 transition-all hover:border-rose-200 dark:hover:border-rose-900 group">
+                                    <div class="flex flex-col md:flex-row md:items-center gap-6">
+                                        <div class="h-12 w-12 rounded-2xl bg-white dark:bg-gray-700 flex flex-col items-center justify-center shadow-sm border border-slate-100 dark:border-gray-600">
+                                            <span class="text-[8px] font-black text-rose-500 leading-none">{{ session.date.split('-')[2] }}</span>
+                                            <span class="text-[6px] font-bold text-slate-400 uppercase leading-none mt-1">{{ new Date(session.date).toLocaleString('es-ES', { month: 'short' }).replace('.', '') }}</span>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h6 class="text-xs font-black uppercase text-slate-800 dark:text-gray-200 tracking-tight">{{ session.provider_name }}</h6>
+                                            <div class="flex items-center gap-3 mt-1">
+                                                <span class="text-[8px] font-bold px-2 py-0.5 bg-indigo-100 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-lg uppercase tracking-widest">{{ session.meal_type }}</span>
+                                                <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">• {{ session.total_orders }} Pedidos</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-4">
+                                            <div class="text-right">
+                                                <p class="text-[8px] font-black uppercase text-slate-400 mb-1">Estatus Justificación</p>
+                                                <div class="flex items-center gap-2">
+                                                    <div class="h-1.5 w-24 bg-slate-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                                        <div class="h-full bg-emerald-500 transition-all" :style="{ width: (session.justified_count / session.total_orders * 100) + '%' }"></div>
+                                                    </div>
+                                                    <span class="text-[9px] font-black text-emerald-600 dark:text-emerald-400">{{ session.justified_count }}/{{ session.total_orders }}</span>
+                                                </div>
+                                            </div>
+                                            <Link :href="route('orders.justification')" class="h-10 w-10 rounded-xl bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 flex items-center justify-center text-slate-400 group-hover:text-rose-600 group-hover:border-rose-200 transition-all shadow-sm">
+                                                <ChevronRightIcon class="h-5 w-5" />
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-else class="text-center py-20 bg-slate-50/50 dark:bg-gray-800/30 rounded-[3rem] border-2 border-dashed border-slate-200 dark:border-gray-800">
+                                <ClockIcon class="h-12 w-12 text-slate-200 mx-auto mb-4" />
+                                <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest">No hay historial reciente para justificar</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- VISTA COMENSAL -->
                     <div v-else-if="user.role === 'diner' || !activeAuthSession" class="bg-white dark:bg-gray-900 rounded-[3.5rem] p-16 shadow-xl border border-indigo-100 dark:border-gray-800 text-center">
                         <div class="h-24 w-24 bg-indigo-50 dark:bg-indigo-950/30 rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 shadow-inner"><UserGroupIcon class="h-12 w-12 text-indigo-500" /></div>
