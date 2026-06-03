@@ -32,7 +32,7 @@ const props = defineProps({
     hideNav: { type: Boolean, default: false },
     bentoTitle: { type: String, default: 'SICOA.' },
     bentoSubtitle: { type: String, default: 'Sistema de Control de Alimentación' },
-    bentoTag: { type: String, default: 'Bento V2.0' }
+    bentoTag: { type: String, default: 'V2.1' }
 });
 
 const page = usePage();
