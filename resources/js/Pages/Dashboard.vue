@@ -566,7 +566,7 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                             <ClipboardDocumentListIcon class="h-6 w-6" />
                             <span class="text-[10px] font-black uppercase tracking-[0.2em]">📖 Historial</span>
                         </Link>
-                        <Link :href="route('admin.reports')" class="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-5 rounded-2xl border border-white/20 transition-all">
+                        <Link :href="user.role === 'area_manager' ? route('area.reports') : route('admin.reports')" class="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-5 rounded-2xl border border-white/20 transition-all">
                             <TableCellsIcon class="h-6 w-6" />
                             <span class="text-[10px] font-black uppercase tracking-[0.2em]">📊 Reportes</span>
                         </Link>
@@ -905,7 +905,7 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                                             <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Descarga reportes en PDF y Excel</p>
                                         </div>
                                     </div>
-                                    <Link :href="route('admin.reports')" class="px-10 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-indigo-500/20 transition-all active:scale-95">
+                                    <Link :href="user.role === 'area_manager' ? route('area.reports') : route('admin.reports')" class="px-10 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-indigo-500/20 transition-all active:scale-95">
                                         Módulo de Reportes
                                     </Link>
                                 </div>

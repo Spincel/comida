@@ -119,7 +119,7 @@ watch(() => page.props.flash?.success, (newMsg) => {
             <!-- BENTO TOP BAR (GLOBAL REUSABLE) -->
             <div class="flex flex-col md:flex-row justify-between items-center gap-4 bg-white/40 dark:bg-gray-900/40 backdrop-blur-md p-4 rounded-[2rem] border border-white/60 dark:border-white/10 shadow-sm transition-all z-50 sticky top-4">
                 <div class="flex items-center gap-4">
-                    <button @click="goBack" class="p-4 bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-700 rounded-2xl border border-white dark:border-gray-700 shadow-sm transition-all group shrink-0 flex items-center gap-3">
+                    <button v-if="!route().current('dashboard')" @click="goBack" class="p-4 bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-700 rounded-2xl border border-white dark:border-gray-700 shadow-sm transition-all group shrink-0 flex items-center gap-3">
                         <ArrowLeftIcon class="h-6 w-6 text-slate-400 group-hover:text-indigo-500 transition-colors" />
                         <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-indigo-500 transition-colors hidden sm:block">Atrás</span>
                     </button>
