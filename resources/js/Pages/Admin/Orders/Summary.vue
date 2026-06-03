@@ -1,16 +1,47 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import ExportChoiceModal from '@/Pages/Admin/Partials/ExportChoiceModal.vue';
 import { 
     ChevronLeftIcon, PrinterIcon, UsersIcon, ListBulletIcon, UserGroupIcon, 
     ViewColumnsIcon, ChatBubbleLeftRightIcon, ClipboardDocumentListIcon, BuildingStorefrontIcon,
-    InformationCircleIcon, CheckBadgeIcon
+    InformationCircleIcon, CheckBadgeIcon, PowerIcon
 } from '@heroicons/vue/24/outline';
 
-const props = defineProps({ provider: Object, date: String, mealType: String, ordersSummary: Array });
+const props = defineProps({ 
+    provider: Object, 
+    date: String, 
+    mealType: String, 
+    ordersSummary: Array,
+    sessionId: Number // Necesitamos pasar el ID de la sesión desde el controlador
+});
+
+// Auto-refresh logic (Polling)
+let refreshInterval = null;
+onMounted(() => {
+    refreshInterval = setInterval(() => {
+        router.reload({ preserveScroll: true });
+    }, 15000); // 15 seconds
+});
+
+onUnmounted(() => {
+    if (refreshInterval) clearInterval(refreshInterval);
+});
+
+const closeCurrentSession = () => {
+    if (confirm('¿Estás seguro de finalizar esta sesión de comida? Se cerrará el pedido para todas las áreas.')) {
+        router.patch(route('dashboard.sessions.deactivate', props.provider.id), {
+            date: props.date,
+            meal_type: props.mealType
+        }, {
+            onSuccess: () => {
+                router.visit(route('dashboard'));
+            }
+        });
+    }
+};
 
 const sendToWhatsApp = (area = null) => {
     let msg = `*SOLICITUD DE PEDIDO ${props.mealType.toUpperCase()} - ${props.date}*\n`;
@@ -69,8 +100,12 @@ const mealTypeTagColors = { 'Desayuno': 'bg-amber-100 text-amber-700', 'Comida':
                 <div class="flex items-center gap-4">
                     <div class="flex items-center gap-2"><span class="px-3 py-1 rounded-xl text-[10px] font-black uppercase border" :class="mealTypeTagColors[mealType]">{{ mealType }}</span><p class="text-sm font-bold text-slate-400 uppercase tracking-widest">{{ provider.name }}</p></div>
                 </div>
-                <div class="flex flex-wrap gap-3">
-                    <div class="flex bg-slate-100 dark:bg-gray-800 p-1.5 rounded-2xl border dark:border-gray-700"><button @click="viewMode = 'compact'" :class="viewMode === 'compact' ? 'bg-white dark:bg-gray-700 text-indigo-600 shadow-sm' : 'text-slate-400'" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">Compacto</button><button @click="viewMode = 'detailed'" :class="viewMode === 'detailed' ? 'bg-white dark:bg-gray-700 text-indigo-600 shadow-sm' : 'text-slate-400'" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">Detallado</button></div>
+                                <div class="flex flex-wrap gap-3">
+                                    <button @click="closeCurrentSession" class="bg-rose-600 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-500/20 flex items-center gap-2 animate-blink-danger">
+                                        <PowerIcon class="h-4 w-4" /> Finalizar Comida
+                                    </button>
+                                    <div class="flex bg-slate-100 dark:bg-gray-800 p-1.5 rounded-2xl border dark:border-gray-700">
+                <button @click="viewMode = 'compact'" :class="viewMode === 'compact' ? 'bg-white dark:bg-gray-700 text-indigo-600 shadow-sm' : 'text-slate-400'" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">Compacto</button><button @click="viewMode = 'detailed'" :class="viewMode === 'detailed' ? 'bg-white dark:bg-gray-700 text-indigo-600 shadow-sm' : 'text-slate-400'" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">Detallado</button></div>
                     <button @click="openExportModal()" class="bg-slate-900 dark:bg-indigo-600 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg flex items-center gap-2"><PrinterIcon class="h-4 w-4" /> Exportar</button>
                     <button @click="sendToWhatsApp()" class="bg-emerald-600 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg flex items-center gap-2"><ChatBubbleLeftRightIcon class="h-4 w-4" /> WhatsApp</button>
                 </div>

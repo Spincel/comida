@@ -1,3 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+  @keyframes blink-glow {
+    0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0px rgba(99, 102, 241, 0); }
+    50% { opacity: 0.8; transform: scale(1.02); box-shadow: 0 0 15px rgba(99, 102, 241, 0.5); }
+  }
+  .animate-blink {
+    animation: blink-glow 2s infinite;
+  }
+  
+  @keyframes blink-red {
+    0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0px rgba(239, 68, 68, 0); }
+    50% { opacity: 0.8; transform: scale(1.02); box-shadow: 0 0 20px rgba(239, 68, 68, 0.6); }
+  }
+  .animate-blink-danger {
+    animation: blink-red 1.5s infinite;
+  }
+}

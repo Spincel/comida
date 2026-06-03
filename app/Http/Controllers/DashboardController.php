@@ -894,11 +894,17 @@ class DashboardController extends Controller
             'total_area_orders' => $areaOrders->count(),
         ])->values()->sortBy('area_name')->values();
 
+        $session = ProviderDailyStatus::where('provider_id', $provider->id)
+            ->where('date', $date)
+            ->where('meal_type', $mealType)
+            ->first();
+
         return Inertia::render('Admin/Orders/Summary', [
             'provider' => $provider,
             'date' => $date,
             'mealType' => $mealType,
             'ordersSummary' => $summary,
+            'sessionId' => $session?->id,
             'reportConfig' => json_decode(SystemSetting::where('key', 'report_configuration')->first()?->value ?: '{}', true),
             'whatsappConfig' => json_decode(SystemSetting::where('key', 'whatsapp_configuration')->first()?->value ?: '{}', true),
         ]);

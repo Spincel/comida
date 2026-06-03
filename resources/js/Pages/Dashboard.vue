@@ -422,7 +422,7 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                     <div v-if="openSessions.length > 0" class="absolute top-8 right-8 z-10 flex flex-col gap-2 items-end">
                         <button v-for="session in openSessions" :key="'fin-' + session.id"
                                 @click="openDeactivateMenuModal(session, session.provider)" 
-                                class="bg-rose-600 hover:bg-rose-700 text-white px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-rose-600/20 flex items-center gap-3 transition-all hover:scale-105 active:scale-95 group">
+                                class="bg-rose-600 hover:bg-rose-700 text-white px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-rose-600/20 flex items-center gap-3 transition-all hover:scale-105 active:scale-95 group animate-blink-danger">
                             <PowerIcon class="h-3.5 w-3.5 group-hover:animate-pulse" stroke-width="3" />
                             <span>Finalizar {{ session.meal_type }}: <span class="opacity-60">{{ session.provider?.name }}</span></span>
                         </button>
@@ -531,7 +531,7 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                                             <div class="h-full bg-indigo-500" style="width: 100%"></div>
                                         </div>
                                         <Link :href="route('admin.orders.summary', { provider: session.provider_id, date: session.date, meal_type: session.meal_type })" 
-                                              class="text-[8px] font-black uppercase text-slate-400 hover:text-indigo-600 transition-colors whitespace-nowrap">
+                                              class="text-[8px] font-black uppercase text-white bg-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-all whitespace-nowrap animate-blink">
                                             Monitor →
                                         </Link>
                                     </div>
