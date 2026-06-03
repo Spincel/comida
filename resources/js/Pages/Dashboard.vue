@@ -246,7 +246,7 @@ watch(() => props.openSessions, (sessions) => {
 
 const activeSession = computed(() => props.openSessions?.find(s => s.id === selectedSessionId.value) || props.openSessions?.[0]);
 const activeDishSummary = computed(() => (props.dishSummaryToday?.find(s => s.meal_type === activeSession.value?.meal_type && s.provider_id === activeSession.value?.provider_id))?.dishes || []);
-const activeTotalOrders = computed(() => (props.dishSummaryToday?.find(s => s.meal_type === activeSession.value?.meal_type && s.provider_id === activeSession.value?.provider_id))?.total || 0);
+const activeTotalOrders = computed(() => props.totalOrdersToday || 0);
 const activeAuthSession = computed(() => props.openSessions?.find(s => s.id === selectedSessionForAuth.value) || props.openSessions?.[0]);
 
 const pendingSubmissionCount = computed(() => {
@@ -418,7 +418,7 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
             <div v-if="(user.role === 'admin' || user.role === 'acquisitions_manager') && activeTab === 'global'" class="lg:col-span-8 space-y-8">
                 
                 <!-- CARD CONTROL OPERATIVO -->
-                <div class="bg-white dark:bg-gray-900 rounded-[3.5rem] p-10 shadow-xl border border-slate-100 dark:border-gray-800 relative overflow-hidden">
+                <div class="bg-white dark:bg-gray-900 rounded-[3.5rem] p-10 shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-200 dark:border-gray-800 relative overflow-hidden">
                     <div v-if="openSessions.length > 0" class="absolute top-8 right-8 z-10 flex flex-col gap-2 items-end">
                         <button v-for="session in openSessions" :key="'fin-' + session.id"
                                 @click="openDeactivateMenuModal(session, session.provider)" 
@@ -540,7 +540,7 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                             <p v-else class="text-[9px] text-center text-slate-400 uppercase font-bold py-4">Sin turnos activos</p>
                         </div>
 
-                        <div class="bg-slate-50 dark:bg-gray-800 p-6 rounded-3xl border border-slate-100 dark:border-gray-700 flex justify-between items-center">
+                        <div class="bg-slate-50 dark:bg-gray-800/50 p-6 rounded-3xl border border-slate-200 dark:border-gray-700 flex justify-between items-center shadow-sm">
                             <p class="text-[11px] font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest">Comensales:</p>
                             <p class="text-sm font-black text-indigo-600 dark:text-indigo-400">
                                 {{ activeTotalOrders }} <span class="text-[10px] text-slate-400 uppercase">Matriculados</span>

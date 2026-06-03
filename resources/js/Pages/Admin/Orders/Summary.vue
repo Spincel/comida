@@ -4,6 +4,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref, onMounted, onUnmounted } from 'vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import ExportChoiceModal from '@/Pages/Admin/Partials/ExportChoiceModal.vue';
+import DeactivateMenuConfirmationModal from '@/Pages/Admin/Partials/DeactivateMenuConfirmationModal.vue';
 import { 
     ChevronLeftIcon, PrinterIcon, UsersIcon, ListBulletIcon, UserGroupIcon, 
     ViewColumnsIcon, ChatBubbleLeftRightIcon, ClipboardDocumentListIcon, BuildingStorefrontIcon,
@@ -30,17 +31,22 @@ onUnmounted(() => {
     if (refreshInterval) clearInterval(refreshInterval);
 });
 
+const showDeactivateModal = ref(false);
+
 const closeCurrentSession = () => {
-    if (confirm('¿Estás seguro de finalizar esta sesión de comida? Se cerrará el pedido para todas las áreas.')) {
-        router.patch(route('dashboard.sessions.deactivate', props.provider.id), {
-            date: props.date,
-            meal_type: props.mealType
-        }, {
-            onSuccess: () => {
-                router.visit(route('dashboard'));
-            }
-        });
-    }
+    showDeactivateModal.value = true;
+};
+
+const confirmDeactivation = () => {
+    showDeactivateModal.value = false;
+    router.patch(route('dashboard.providers.deactivate', props.provider.id), {
+        date: props.date,
+        meal_type: props.mealType
+    }, {
+        onSuccess: () => {
+            router.visit(route('dashboard'));
+        }
+    });
 };
 
 const sendToWhatsApp = (area = null) => {
@@ -118,7 +124,7 @@ const mealTypeTagColors = { 'Desayuno': 'bg-amber-100 text-amber-700', 'Comida':
             </div>
 
             <div class="lg:col-span-12 grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div v-for="area in ordersSummary" :key="area.area_id" class="bg-white dark:bg-gray-900 rounded-[3rem] shadow-sm border border-slate-100 dark:border-gray-800 overflow-hidden flex flex-col">
+                <div v-for="area in ordersSummary" :key="area.area_id" class="bg-white dark:bg-gray-900 rounded-[3rem] shadow-md shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-gray-800 overflow-hidden flex flex-col">
                     <div class="p-8 bg-slate-50/50 dark:bg-gray-800/50 flex justify-between items-center border-b dark:border-gray-800"><div class="flex items-center gap-4"><div class="h-10 w-10 bg-white dark:bg-gray-800 rounded-xl flex items-center justify-center border shadow-sm"><UserGroupIcon class="h-6 w-6 text-indigo-500" /></div><div><h4 class="font-black text-base text-slate-800 dark:text-white uppercase tracking-tight">{{ area.area_name }}</h4><p class="text-[9px] font-bold text-slate-400 uppercase">{{ area.total_area_orders }} pedidos</p></div></div><div class="flex gap-2"><button @click="openExportModal(area)" class="p-2.5 text-indigo-400 hover:text-indigo-600 transition-all"><PrinterIcon class="h-5 w-5" /></button><button @click="sendToWhatsApp(area)" class="p-2.5 text-emerald-400 hover:text-emerald-600 transition-all"><ChatBubbleLeftRightIcon class="h-5 w-5" /></button></div></div>
                     <div class="p-8 space-y-6">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3"><div v-for="p in area.platillos" :key="p.platillo_name" class="p-4 rounded-2xl bg-slate-50/50 dark:bg-gray-800/30 border dark:border-gray-800 flex justify-between items-center"><div class="min-w-0 mr-3"><p class="text-[10px] font-black text-slate-700 dark:text-gray-300 uppercase truncate">{{ p.platillo_name }}</p><p v-if="p.observations?.length" class="text-[8px] text-rose-500 font-bold uppercase">{{ p.observations.length }} Notas</p></div><span class="h-8 w-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-black text-xs">{{ p.total_count }}</span></div></div>
@@ -128,5 +134,12 @@ const mealTypeTagColors = { 'Desayuno': 'bg-amber-100 text-amber-700', 'Comida':
             </div>
         </div>
         <ExportChoiceModal :show="showExportModal" @close="showExportModal = false" @select="handleExport" />
+        <DeactivateMenuConfirmationModal 
+            :show="showDeactivateModal" 
+            :provider="provider" 
+            :todayOrdersByArea="ordersSummary.map(a => ({ area_name: a.area_name, total_items: a.total_area_orders, total_orders: a.total_area_orders }))"
+            @close="showDeactivateModal = false" 
+            @confirm="confirmDeactivation" 
+        />
     </AuthenticatedLayout>
 </template>
