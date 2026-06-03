@@ -24,7 +24,8 @@ import {
     DocumentChartBarIcon,
     CalendarDaysIcon,
     XMarkIcon,
-    CheckBadgeIcon
+    CheckBadgeIcon,
+    ArrowLeftIcon
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
@@ -37,6 +38,14 @@ const props = defineProps({
 const page = usePage();
 const visibleFlash = ref(null);
 let flashTimeout = null;
+
+const goBack = () => {
+    if (window.history.length > 1) {
+        window.history.back();
+    } else {
+        router.visit(route('dashboard'));
+    }
+};
 
 const user = computed(() => page.props.auth.user);
 const roleName = computed(() => ({ 
@@ -109,7 +118,11 @@ watch(() => page.props.flash?.success, (newMsg) => {
             
             <!-- BENTO TOP BAR (GLOBAL REUSABLE) -->
             <div class="flex flex-col md:flex-row justify-between items-center gap-4 bg-white/40 dark:bg-gray-900/40 backdrop-blur-md p-4 rounded-[2rem] border border-white/60 dark:border-white/10 shadow-sm transition-all z-50 sticky top-4">
-                <div class="flex items-center gap-6">
+                <div class="flex items-center gap-4">
+                    <button @click="goBack" class="p-4 bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-700 rounded-2xl border border-white dark:border-gray-700 shadow-sm transition-all group shrink-0 flex items-center gap-3">
+                        <ArrowLeftIcon class="h-6 w-6 text-slate-400 group-hover:text-indigo-500 transition-colors" />
+                        <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-indigo-500 transition-colors hidden sm:block">Atrás</span>
+                    </button>
                     <Link :href="route('dashboard')" class="bg-orange-500 p-3 rounded-2xl shadow-lg shadow-orange-500/20 hover:scale-105 transition-transform shrink-0">
                         <BuildingStorefrontIcon class="h-8 w-8 text-white" />
                     </Link>

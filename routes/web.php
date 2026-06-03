@@ -38,7 +38,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     })->name('admin.index');
 });
 
-Route::middleware(['auth', 'role:acquisitions_manager|admin'])->group(function () {
+Route::middleware(['auth', 'role:acquisitions_manager|admin|area_manager'])->group(function () {
     Route::get('admin/history', [DashboardController::class, 'showGlobalHistory'])->name('admin.history');
     Route::get('admin/reports', [DashboardController::class, 'showGlobalReports'])->name('admin.reports');
     Route::get('admin/reports/export', [DashboardController::class, 'exportGlobalReports'])->name('admin.reports.export');

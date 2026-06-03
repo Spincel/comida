@@ -233,8 +233,8 @@ class DashboardController extends Controller
 
             $props['groupedHistory'] = $groupedHistory->values()->take(15);
             
-            // PROP: Last 3 rated sessions for miniature display
-            $props['lastRatedSessions'] = $groupedHistory->values()->take(3);
+            // PROP: Last 3 rated sessions for miniature display (ONLY sessions that actually exist)
+            $props['lastRatedSessions'] = $groupedHistory->filter(fn($h) => !empty($h['id']))->values()->take(3);
             
             // Available Menus ONLY for authorized sessions (Diners) or Area Sessions (Managers)
             $visibleSessionIds = ($user->role === 'area_manager' || $user->role === 'admin' || $user->role === 'acquisitions_manager')

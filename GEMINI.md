@@ -92,3 +92,23 @@ Pasos seguros para desplegar en 172.30.4.132:
 
 ---
 **Desarrollado y Protegido por Spincelaestream - 3 Junio 2026**
+
+---
+
+## Refinamiento de UX y Corrección de Accesos (Miércoles 3 de Junio, 2026 - Sesión 2)
+
+### 1. Navegación Global Estándar
+- **Objetivo:** Mejorar la usabilidad permitiendo a los usuarios regresar fácilmente a la pantalla anterior.
+- **Cambios realizados:** Implementación de botón universal "Atrás" en `AuthenticatedLayout.vue` con soporte para historial de navegador y fallback al Dashboard.
+- **Resultado:** Navegación más fluida en todos los módulos del sistema.
+
+### 2. Estabilización de Permisos y Calificaciones
+- **Objetivo:** Resolver el error 403 en el módulo de reportes para adquisiciones y arreglar el sistema de estrellas.
+- **Cambios realizados:** 
+    - Ampliación de middleware de roles en `web.php` para incluir `acquisitions_manager` en rutas de reportes y calificaciones.
+    - Filtrado dinámico de sesiones en `DashboardController` para asegurar que solo sesiones activas con ID válido sean calificables.
+    - Corrección de visibilidad de reportes para el rol de Adquisiciones.
+- **Resultado:** Acceso autorizado completo para el personal de Adquisiciones y sistema de feedback operativo.
+
+---
+**Desarrollado y Protegido por Spincelaestream - 3 Junio 2026**
