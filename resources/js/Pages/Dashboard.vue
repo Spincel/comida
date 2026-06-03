@@ -193,6 +193,23 @@ const submitQuickMember = () => {
 };
 const simpleModeSelectedMember = ref(null);
 const evidenceFileInput = ref(null);
+
+// --- AUTO-REFRESH FOR ACQUISITIONS ---
+let refreshInterval = null;
+onMounted(() => {
+    if (user.role === 'acquisitions_manager' || user.role === 'admin') {
+        refreshInterval = setInterval(() => {
+            router.reload({ 
+                only: ['openSessions', 'totalOrdersToday', 'dishSummaryToday', 'teamOrders', 'pendingAuthorizations'],
+                preserveScroll: true 
+            });
+        }, 20000); 
+    }
+});
+
+onUnmounted(() => {
+    if (refreshInterval) clearInterval(refreshInterval);
+});
 const uploadingEvidenceSessionId = ref(null);
 
 const triggerEvidenceUpload = (sessionId) => {

@@ -176,11 +176,16 @@ class DashboardController extends Controller
             $props['myOrdersToday'] = $myOrdersToday->values();
 
             // Stats for the local panel (Dishes and Participation)
-            $props['dishSummaryToday'] = $teamOrders->groupBy('dailyMenu.name')->map(fn($group, $name) => [
+            // If Supervisor (Acquisitions/Admin), show GLOBAL stats. If Area Manager, show AREA stats.
+            $statsOrders = ($user->role === 'acquisitions_manager' || $user->role === 'admin')
+                ? Order::whereDate('created_at', $today)->where('status', '!=', 'cancelled')->get()
+                : $teamOrders;
+
+            $props['dishSummaryToday'] = $statsOrders->groupBy('dailyMenu.name')->map(fn($group, $name) => [
                 'platillo' => $name,
                 'total' => $group->count()
             ])->values();
-            $props['totalOrdersToday'] = $teamOrders->count();
+            $props['totalOrdersToday'] = $statsOrders->count();
 
             // Fetch order history grouped by session for the sidebar
             $recentOrdersQuery = Order::with(['dailyMenu.provider', 'user' => fn($q) => $q->withTrashed()])
