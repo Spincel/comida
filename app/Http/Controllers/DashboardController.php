@@ -175,15 +175,22 @@ class DashboardController extends Controller
             $myOrdersToday = $teamOrders->where('user_id', $user->id);
             $props['myOrdersToday'] = $myOrdersToday->values();
 
+            // Stats for the local panel (Dishes and Participation)
+            $props['dishSummaryToday'] = $teamOrders->groupBy('dailyMenu.name')->map(fn($group, $name) => [
+                'platillo' => $name,
+                'total' => $group->count()
+            ])->values();
+            $props['totalOrdersToday'] = $teamOrders->count();
+
             // Fetch order history grouped by session for the sidebar
-            $recentOrders = Order::with(['dailyMenu.provider', 'user' => fn($q) => $q->withTrashed()])
+            $recentOrdersQuery = Order::with(['dailyMenu.provider', 'user' => fn($q) => $q->withTrashed()])
                 ->where('status', '!=', 'cancelled')
                 ->whereHas('user', fn($q) => $q->withTrashed()->whereIn('area_id', $allMyAreaIds))
-                ->latest()
-                ->limit(100)
-                ->get();
+                ->latest();
+            
+            $recentOrders = $recentOrdersQuery->limit(100)->get();
 
-            $props['groupedHistory'] = $recentOrders->groupBy(function($o) {
+            $groupedHistory = $recentOrders->groupBy(function($o) {
                 // Group by actual day of order and provider/meal
                 return $o->created_at->toDateString() . '_' . $o->dailyMenu->provider_id . '_' . $o->meal_type;
             })->map(function($group) use ($user) {
@@ -196,10 +203,10 @@ class DashboardController extends Controller
                     ->where('meal_type', $first->meal_type)
                     ->first();
 
-                // NEW: Find area-specific evidence for THIS manager
-                $areaEvidence = null;
+                // NEW: Find area-specific evidence and rating for THIS manager
+                $areaStatus = null;
                 if ($session && $user->area_id) {
-                    $areaEvidence = \App\Models\AreaSessionStatus::where('provider_daily_status_id', $session->id)
+                    $areaStatus = \App\Models\AreaSessionStatus::where('provider_daily_status_id', $session->id)
                         ->where('area_id', $user->area_id)
                         ->first();
                 }
@@ -210,7 +217,8 @@ class DashboardController extends Controller
                     'provider_name' => $first->dailyMenu->provider->name,
                     'provider_id' => $first->dailyMenu->provider_id,
                     'meal_type' => $first->meal_type,
-                    'evidence_url' => $areaEvidence ? $areaEvidence->evidence_url : $session?->evidence_url,
+                    'evidence_url' => $areaStatus ? $areaStatus->evidence_url : $session?->evidence_url,
+                    'rating' => $areaStatus ? $areaStatus->rating : ($user->role === 'acquisitions_manager' ? $session?->rating : null),
                     'justified_count' => $group->whereNotNull('activity_performed')->where('activity_performed', '!=', '')->count(),
                     'total_orders' => $group->count(),
                     'orders' => $group->map(fn($o) => [
@@ -221,7 +229,12 @@ class DashboardController extends Controller
                         'activity_performed' => $o->activity_performed,
                     ])->values(),
                 ];
-            })->values()->take(15);
+            });
+
+            $props['groupedHistory'] = $groupedHistory->values()->take(15);
+            
+            // PROP: Last 3 rated sessions for miniature display
+            $props['lastRatedSessions'] = $groupedHistory->values()->take(3);
             
             // Available Menus ONLY for authorized sessions (Diners) or Area Sessions (Managers)
             $visibleSessionIds = ($user->role === 'area_manager' || $user->role === 'admin' || $user->role === 'acquisitions_manager')
@@ -257,16 +270,42 @@ class DashboardController extends Controller
             }
 
             // Override openSessions for Managers to show counts and compatibility flags
-            if ($user->role !== 'acquisitions_manager' && $user->role !== 'admin') {
-                $props['openSessions'] = $myAreaSessions->map(function($session) use ($allAreaAuthorizations) {
-                    $session->authorized_count = $allAreaAuthorizations->where('provider_daily_status_id', $session->id)->count();
-                    $session->is_open_for_my_area = true; // Compatibility with frontend computed props
-                    return $session;
-                })->values();
-            }
+            $props['openSessions'] = $myAreaSessions->map(function($session) use ($allAreaAuthorizations) {
+                $session->authorized_count = $allAreaAuthorizations->where('provider_daily_status_id', $session->id)->count();
+                $session->is_open_for_my_area = true; // Compatibility with frontend computed props
+                return $session;
+            })->values();
         }
 
         return Inertia::render('Dashboard', $props);
+    }
+
+    public function rateSession(Request $request, ProviderDailyStatus $session)
+    {
+        $user = $request->user();
+        $validated = $request->validate(['rating' => 'required|integer|min:1|max:5']);
+
+        if ($user->role === 'area_manager' && $user->area_id) {
+            \App\Models\AreaSessionStatus::updateOrCreate(
+                ['provider_daily_status_id' => $session->id, 'area_id' => $user->area_id],
+                ['rating' => $validated['rating']]
+            );
+        }
+
+        if ($user->role === 'acquisitions_manager' || $user->role === 'admin') {
+            $session->update(['rating' => $validated['rating']]);
+        }
+
+        // Recalculate average rating for the session
+        $avg = \App\Models\AreaSessionStatus::where('provider_daily_status_id', $session->id)
+            ->whereNotNull('rating')
+            ->avg('rating');
+        
+        if ($avg) {
+            $session->update(['rating' => $avg]);
+        }
+
+        return back()->with('success', 'Calificación registrada correctamente.');
     }
 
 

@@ -68,3 +68,27 @@ Pasos seguros para desplegar en 172.30.4.132:
 
 ---
 **Desarrollado y Protegido por Spincelaestream - 23 Marzo 2026**
+
+---
+
+## Actualización de Calidad y Analíticas (Miércoles 3 de Junio, 2026)
+
+### 1. Sistema de Calificación de Servicio (Star Rating)
+- **Objetivo:** Permitir que los Gerentes de Área y Administradores califiquen la calidad del servicio de los proveedores después de cada sesión.
+- **Cambios realizados:** 
+    - Nueva migración para añadir columnas `rating` en `orders`, `provider_daily_statuses` y `area_session_statuses`.
+    - Implementación de lógica de promediado automático en `DashboardController@rateSession`.
+    - Interfaz de estrellas interactiva en el Dashboard.
+- **Resultado:** Retroalimentación directa sobre la calidad de los alimentos por cada dependencia.
+
+### 2. Panel de Analíticas y Estadísticas (Dashboard 2.5)
+- **Objetivo:** Visualizar el comportamiento de consumo y participación por área.
+- **Cambios realizados:** 
+    - Nueva vista de "Estadísticas" en el panel lateral de Gerentes.
+    - Gráficos de barras para participación semanal.
+    - Top 3 de platillos más solicitados por área.
+    - Resumen dinámico de consumo del día.
+- **Resultado:** Mejora en la toma de decisiones basada en datos históricos de consumo.
+
+---
+**Desarrollado y Protegido por Spincelaestream - 3 Junio 2026**

@@ -110,6 +110,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('justification', [DashboardController::class, 'showJustificationPage'])->name('justification.index');
     Route::put('orders/{order}/justification', [OrderController::class, 'updateOwnJustification'])->name('orders.updateJustification');
     Route::post('sessions/{session}/evidence', [DashboardController::class, 'uploadEvidence'])->name('sessions.uploadEvidence');
+    Route::post('sessions/{session}/rate', [DashboardController::class, 'rateSession'])->name('sessions.rate');
     
     // Team Management for Area Managers
     Route::get('team', [UserController::class, 'indexTeam'])->name('team.index')->middleware('role:area_manager|admin');

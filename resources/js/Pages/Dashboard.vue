@@ -20,8 +20,9 @@ import {
     BuildingStorefrontIcon, InformationCircleIcon, ClipboardDocumentCheckIcon, DocumentIcon, BuildingOfficeIcon,
     WrenchScrewdriverIcon, DocumentChartBarIcon, ExclamationTriangleIcon, TableCellsIcon, PhotoIcon, ArrowLeftIcon,
     UserPlusIcon, ArrowPathIcon, ShieldCheckIcon, MoonIcon, SunIcon, ChevronDownIcon, PowerIcon, UsersIcon,
-    MagnifyingGlassIcon, SwatchIcon
+    MagnifyingGlassIcon, SwatchIcon, ChartBarIcon, StarIcon as StarOutlineIcon
 } from '@heroicons/vue/24/outline';
+import { StarIcon } from '@heroicons/vue/24/solid';
 
 const props = defineProps({
     auth: Object, userRole: String, providers: Array, areas: Array, submittedAreasToday: Array,
@@ -29,7 +30,8 @@ const props = defineProps({
     allOpenSessionsToday: Array, allSessionsToday: Array, myOrdersToday: Array, availableMenus: Array,
     orderHistory: Array, pendingAuthorizations: Array, teamOrders: Array, area: Object,
     activeMealTypes: Array, historicalSessions: Array, operationMode: { type: String, default: 'complete' },
-    groupedHistory: { type: Array, default: () => [] }
+    groupedHistory: { type: Array, default: () => [] },
+    lastRatedSessions: { type: Array, default: () => [] }
 });
 
 const user = props.auth.user;
@@ -156,6 +158,15 @@ const saveActivity = (orderId, activity) => {
         },
         onError: () => {
             processingJustifications.value[orderId] = false;
+        }
+    });
+};
+
+const rateSession = (sessionId, rating) => {
+    router.post(route('sessions.rate', sessionId), { rating }, { 
+        preserveScroll: true,
+        onSuccess: () => {
+            // Success flash will be shown by AuthenticatedLayout
         }
     });
 };
@@ -559,6 +570,10 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                             <TableCellsIcon class="h-6 w-6" />
                             <span class="text-[10px] font-black uppercase tracking-[0.2em]">📊 Reportes</span>
                         </Link>
+                        <Link :href="route('daily.summary')" class="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-5 rounded-2xl border border-white/20 transition-all">
+                            <ChartBarIcon class="h-6 w-6" />
+                            <span class="text-[10px] font-black uppercase tracking-[0.2em]">📈 Estadísticas</span>
+                        </Link>
                         <div class="border-t border-white/10 my-2"></div>
                         <Link :href="route('providers.index')" class="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-5 rounded-2xl border border-white/20 transition-all">
                             <BuildingStorefrontIcon class="h-6 w-6" />
@@ -603,8 +618,8 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                 </div>
             </div>
 
-            <!-- SECCIÓN GERENTE DE ÁREA / DINER (RESTORED) -->
-            <div v-if="(user.role === 'area_manager' || (user.role === 'admin' && activeTab === 'my-area') || user.role === 'diner')" 
+            <!-- SECCIÓN GERENTE DE ÁREA / ACQUISITIONS / DINER -->
+            <div v-if="(user.role === 'area_manager' || user.role === 'acquisitions_manager' || (user.role === 'admin' && activeTab === 'my-area') || user.role === 'diner')" 
                  class="lg:col-span-12 grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
                 
                 <div v-if="user.role !== 'diner'" class="md:col-span-3 space-y-6">
@@ -615,7 +630,8 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                                 {id:'auth',l: operationMode === 'simple' ? 'Asignar' : 'Habilitar', s: operationMode === 'simple' ? 'Platillos' : 'Personal', i:UserIcon, c:'indigo'},
                                 {id:'menu',l:'Mi Menú', s:'Personal', i:BuildingStorefrontIcon, c:'orange', hideInSimple: true},
                                 {id:'plantilla',l:'Plantilla', s:'Mi Equipo', i:UsersIcon, c:'emerald'},
-                                {id:'justification',l:'Justificar', s:'Historial', i:PencilSquareIcon, c:'rose'}
+                                {id:'justification',l:'Justificar', s:'Historial', i:PencilSquareIcon, c:'rose'},
+                                {id:'analytics',l:'Estadísticas', s:'Mi Área', i:ChartBarIcon, c:'indigo'}
                             ]" :key="mode.id" 
                             v-show="!(operationMode === 'simple' && mode.hideInSimple)"
                             @click="sidebarMode = mode.id" 
@@ -824,6 +840,100 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                             <div v-else class="text-center py-20 bg-slate-50/50 dark:bg-gray-800/30 rounded-[3rem] border-2 border-dashed border-slate-200 dark:border-gray-800">
                                 <ClockIcon class="h-12 w-12 text-slate-200 mx-auto mb-4" />
                                 <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest">No hay historial reciente para justificar</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- VISTA ANALÍTICAS (HISTORIAL POR ÁREA) -->
+                    <div v-else-if="sidebarMode === 'analytics'" class="bg-white dark:bg-gray-900 rounded-[3.5rem] border border-slate-100 dark:border-gray-800 shadow-xl overflow-hidden">
+                        <div class="px-10 py-8 bg-indigo-600 text-white flex justify-between items-center shadow-lg">
+                            <div class="flex items-center gap-8">
+                                <div class="h-16 w-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/20 shadow-inner"><ChartBarIcon class="h-8 w-8 text-white" /></div>
+                                <div>
+                                    <h5 class="text-3xl font-black uppercase tracking-tighter leading-none mb-2">Estadísticas del Área</h5>
+                                    <p class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Desempeño y Preferencias</p>
+                                </div>
+                            </div>
+                            <Link :href="route('area.history')" class="px-6 py-2.5 bg-white/20 hover:bg-white/30 rounded-xl text-[10px] font-black uppercase shadow-lg transition-all flex items-center gap-2">
+                                <ListBulletIcon class="h-4 w-4" />
+                                Ver Historial Completo
+                            </Link>
+                        </div>
+                        
+                        <div class="p-10">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                <!-- Participación Reciente -->
+                                <div class="space-y-6">
+                                    <div class="flex items-center gap-4 mb-4">
+                                        <div class="h-10 w-10 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center"><ArrowTrendingUpIcon class="h-5 w-5 text-indigo-600" /></div>
+                                        <h6 class="font-black text-xs uppercase tracking-widest text-slate-800 dark:text-gray-200">Participación en la Semana</h6>
+                                    </div>
+                                    <div class="flex items-end justify-between h-32 gap-3 px-2">
+                                        <div v-for="day in (groupedHistory.slice(0, 7).reverse())" :key="'chart-' + day.date" class="flex-1 flex flex-col items-center gap-2">
+                                            <div class="w-full bg-indigo-500 rounded-lg transition-all duration-500 hover:bg-indigo-400 shadow-sm" 
+                                                 :style="{ height: (day.total_orders / (Math.max(...groupedHistory.map(h => h.total_orders)) || 1) * 100) + '%' }"></div>
+                                            <span class="text-[7px] font-black uppercase text-slate-400">{{ new Date(day.date).toLocaleString('es-ES', { weekday: 'short' }).replace('.', '') }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Preferencias / Platillos -->
+                                <div class="space-y-6">
+                                    <div class="flex items-center gap-4 mb-4">
+                                        <div class="h-10 w-10 bg-rose-50 dark:bg-rose-900/30 rounded-xl flex items-center justify-center"><HeartIcon class="h-5 w-5 text-rose-600" /></div>
+                                        <h6 class="font-black text-xs uppercase tracking-widest text-slate-800 dark:text-gray-200">Platillos más pedidos</h6>
+                                    </div>
+                                    <div class="space-y-4">
+                                        <div v-for="stat in (props.dishSummaryToday || []).slice(0, 3)" :key="'dish-stat-'+stat.platillo" class="space-y-1">
+                                            <div class="flex justify-between items-center"><span class="text-[9px] font-black uppercase text-slate-400 truncate pr-4">{{ stat.platillo || 'Sin nombre' }}</span><span class="text-[9px] font-black text-indigo-600">{{ stat.total }} p</span></div>
+                                            <div class="h-1.5 w-full bg-slate-50 dark:bg-gray-800 rounded-full overflow-hidden"><div class="h-full bg-rose-500 rounded-full" :style="{ width: (stat.total / (props.totalOrdersToday || 1) * 100) + '%' }"></div></div>
+                                        </div>
+                                        <div v-if="!(props.dishSummaryToday || []).length" class="py-10 text-center bg-slate-50 dark:bg-gray-800/50 rounded-2xl border-2 border-dashed border-slate-100 dark:border-gray-700">
+                                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Sin datos de hoy</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Botón de Acción y Calificaciones -->
+                            <div class="mt-12 bg-slate-50 dark:bg-gray-800/50 p-8 rounded-[2.5rem] border border-slate-100 dark:border-gray-800 space-y-8">
+                                <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                                    <div class="flex items-center gap-6">
+                                        <div class="h-14 w-14 bg-white dark:bg-gray-700 rounded-2xl flex items-center justify-center shadow-sm"><DocumentChartBarIcon class="h-7 w-7 text-indigo-500" /></div>
+                                        <div>
+                                            <p class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tighter">Análisis de Operación</p>
+                                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Descarga reportes en PDF y Excel</p>
+                                        </div>
+                                    </div>
+                                    <Link :href="route('admin.reports')" class="px-10 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-indigo-500/20 transition-all active:scale-95">
+                                        Módulo de Reportes
+                                    </Link>
+                                </div>
+
+                                <div v-if="lastRatedSessions.length > 0" class="pt-8 border-t border-slate-200 dark:border-gray-700">
+                                    <h6 class="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-6 px-2">Calificar últimas sesiones</h6>
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                        <div v-for="sess in lastRatedSessions" :key="'rate-'+sess.id" class="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm group/rate">
+                                            <div class="flex justify-between items-start mb-3">
+                                                <div>
+                                                    <p class="text-[8px] font-black text-slate-800 dark:text-gray-200 uppercase truncate max-w-[80px]">{{ sess.provider_name }}</p>
+                                                    <p class="text-[7px] font-bold text-slate-400 uppercase">{{ new Date(sess.date + 'T12:00:00').toLocaleDateString('es-ES', { day:'2-digit', month: 'short' }) }}</p>
+                                                </div>
+                                                <span class="text-[7px] font-black px-1.5 py-0.5 bg-indigo-50 dark:bg-indigo-950 text-indigo-500 rounded uppercase">{{ sess.meal_type }}</span>
+                                            </div>
+                                            <div class="flex gap-1">
+                                                <template v-for="i in 5" :key="sess.id+'-star-'+i">
+                                                    <StarIcon v-if="i <= (sess.rating || 0)"
+                                                              @click="rateSession(sess.id, i)"
+                                                              class="h-4 w-4 cursor-pointer text-amber-400 transition-all hover:scale-125" />
+                                                    <StarOutlineIcon v-else
+                                                              @click="rateSession(sess.id, i)"
+                                                              class="h-4 w-4 cursor-pointer text-slate-300 dark:text-gray-600 transition-all hover:scale-125 hover:text-amber-200" />
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
