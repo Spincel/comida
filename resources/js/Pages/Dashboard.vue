@@ -361,28 +361,48 @@ const openSimpleModeSelector = (member) => {
         return;
     }
     simpleModeSelectedMember.value = member;
-    const existing = member.orders?.find(o => o.meal_type === activeAuthSession.value.meal_type);
+    
+    // 1. Filtrar los menús disponibles para la sesión activa actual
+    const mType = activeAuthSession.value?.meal_type;
+    const pId = activeAuthSession.value?.provider_id;
+    
+    let available = props.availableMenus?.filter(m => 
+        m.meal_type === mType && (!pId || m.provider_id === pId)
+    ) || [];
+    
+    if (available.length === 0) {
+        available = props.availableMenus?.filter(m => m.meal_type === mType) || [];
+    }
+    
+    menusForSelection.value = available;
+
+    // 2. Buscar si el integrante ya tenía un pedido previo registrado
+    const existing = member.orders?.find(o => o.meal_type === mType);
     if (existing) {
+        // Verificar si el platillo previo existe en el menú del proveedor actual
+        const matchedMenu = available.find(m => m.id === existing.daily_menu_id);
+        const resolvedMenu = matchedMenu || (available.length === 1 ? available[0] : null);
+        
         editingOrder.value = { 
             id: existing.id, 
             user_id: member.id, 
             user_name: member.name, 
-            daily_menu_id: existing.daily_menu_id, 
-            preferences: existing.preferences, 
-            meal_type: existing.meal_type 
+            daily_menu_id: resolvedMenu ? resolvedMenu.id : (available.length === 1 ? available[0].id : null), 
+            preferences: existing.preferences || '', 
+            meal_type: existing.meal_type,
+            daily_menu: resolvedMenu || (available.length === 1 ? available[0] : null)
         };
-        const menu = props.availableMenus?.find(m => m.id === existing.daily_menu_id);
-        selectedMenuForOrder.value = menu || { name: existing.platillo, provider: { name: '?' } };
-        menusForSelection.value = props.availableMenus?.filter(m => m.meal_type === existing.meal_type);
+        selectedMenuForOrder.value = resolvedMenu;
     } else {
+        const defaultMenu = available.length === 1 ? available[0] : null;
         editingOrder.value = { 
             user_id: member.id, 
             user_name: member.name, 
-            meal_type: activeAuthSession.value.meal_type,
-            daily_menu_id: null 
+            meal_type: mType,
+            daily_menu_id: defaultMenu ? defaultMenu.id : null,
+            daily_menu: defaultMenu
         };
-        selectedMenuForOrder.value = null;
-        menusForSelection.value = props.availableMenus?.filter(m => m.meal_type === activeAuthSession.value.meal_type);
+        selectedMenuForOrder.value = defaultMenu;
     }
     showPlaceOrderModal.value = true;
 };
@@ -425,10 +445,27 @@ const removeAreaFromSession = (session, areaId) => {
 
 // --- Diner Logic ---
 const showPlaceOrderModal = ref(false), selectedMenuForOrder = ref(null), editingOrder = ref(null), menusForSelection = ref([]);
-const showDeleteOrderConfirmation = ref(false), orderToDeleteId = ref(null);
+const openPlaceOrderModal = (menu) => { 
+    selectedMenuForOrder.value = menu; 
+    editingOrder.value = null; 
+    const available = props.availableMenus?.filter(m => m.meal_type === menu.meal_type && m.provider_id === menu.provider_id) || [];
+    menusForSelection.value = available.length > 0 ? available : [menu]; 
+    showPlaceOrderModal.value = true; 
+};
 
-const openPlaceOrderModal = (menu) => { selectedMenuForOrder.value = menu; editingOrder.value = null; menusForSelection.value = [menu]; showPlaceOrderModal.value = true; };
-const openEditOrderModal = (order) => { editingOrder.value = order; menusForSelection.value = props.availableMenus.filter(m => m.meal_type === order.meal_type); selectedMenuForOrder.value = order.daily_menu; showPlaceOrderModal.value = true; };
+const openEditOrderModal = (order) => { 
+    editingOrder.value = order; 
+    const available = props.availableMenus?.filter(m => m.meal_type === order.meal_type) || [];
+    menusForSelection.value = available; 
+    const matchedMenu = available.find(m => m.id === order.daily_menu_id);
+    const resolvedMenu = matchedMenu || (available.length === 1 ? available[0] : order.daily_menu);
+    selectedMenuForOrder.value = resolvedMenu; 
+    if (resolvedMenu) {
+        editingOrder.value.daily_menu_id = resolvedMenu.id;
+        editingOrder.value.daily_menu = resolvedMenu;
+    }
+    showPlaceOrderModal.value = true; 
+};
 
 const deleteOrder = (orderId) => {
     orderToDeleteId.value = orderId;

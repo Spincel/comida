@@ -38,28 +38,59 @@ const currentMenu = ref(null);
 
 watch(() => props.show, (isVisible) => {
     if (isVisible) {
-        if (props.existingOrder) {
-            form.daily_menu_id = props.existingOrder.daily_menu_id;
-            form.preferences = props.existingOrder.preferences || '';
-            form.meal_type = props.existingOrder.meal_type;
-            form.target_user_id = props.existingOrder.user_id || null; // NEW
-            currentMenu.value = props.existingOrder.daily_menu;
-            step.value = props.availableOptions.length > 1 ? 'list' : 'details';
-        } else if (props.menu) {
-            form.daily_menu_id = props.menu.id;
-            form.preferences = '';
-            form.meal_type = props.menu.meal_type;
-            form.target_user_id = null;
-            currentMenu.value = props.menu;
-            step.value = 'details';
-        } else if (props.availableOptions.length > 0) {
-            // Case for Simple Mode when clicking a name with no order
+        // Reset errors
+        form.clearErrors();
+
+        // 1. Determine meal_type
+        form.meal_type = props.existingOrder?.meal_type 
+            || props.menu?.meal_type 
+            || props.availableOptions[0]?.meal_type 
+            || 'Comida';
+
+        // 2. Determine target user & preferences
+        form.preferences = props.existingOrder?.preferences || '';
+        form.target_user_id = props.existingOrder?.user_id || null;
+
+        // 3. Robustly resolve matched dish from currently available options
+        let matchedDish = null;
+
+        // Check if existing order's daily_menu_id exists in current options
+        if (props.existingOrder?.daily_menu_id) {
+            matchedDish = props.availableOptions.find(o => o.id === props.existingOrder.daily_menu_id);
+        }
+
+        // Check if single menu passed as prop
+        if (!matchedDish && props.menu?.id) {
+            matchedDish = props.availableOptions.find(o => o.id === props.menu.id) || props.menu;
+        }
+
+        // Check if existingOrder passed a full daily_menu object
+        if (!matchedDish && props.existingOrder?.daily_menu?.id) {
+            matchedDish = props.availableOptions.find(o => o.id === props.existingOrder.daily_menu.id);
+        }
+
+        // 4. If only 1 dish is available in the current provider/menu, auto-select it!
+        if (!matchedDish && props.availableOptions.length === 1) {
+            matchedDish = props.availableOptions[0];
+        }
+
+        if (matchedDish) {
+            form.daily_menu_id = matchedDish.id;
+            form.meal_type = matchedDish.meal_type || form.meal_type;
+            currentMenu.value = matchedDish;
+            // If user clicked directly on a single dish or there's only 1 option, go to details.
+            // If there are multiple options and it was an existing order without explicit menu, show list or details.
+            step.value = (props.availableOptions.length > 1 && !props.menu && !props.existingOrder?.daily_menu_id) ? 'list' : 'details';
+        } else if (props.availableOptions.length > 1) {
+            // Multiple options available but no match: user must choose from list
             form.daily_menu_id = null;
-            form.preferences = '';
-            form.meal_type = props.availableOptions[0].meal_type;
-            form.target_user_id = props.existingOrder?.user_id || null; // Accessing from the shell object we passed
             currentMenu.value = null;
             step.value = 'list';
+        } else if (props.availableOptions.length === 0) {
+            // Fallback
+            form.daily_menu_id = props.existingOrder?.daily_menu_id || props.menu?.id || null;
+            currentMenu.value = props.menu || props.existingOrder?.daily_menu || null;
+            step.value = 'details';
         }
     }
 });
@@ -225,18 +256,40 @@ const submit = () => {
                             <span class="text-[9px] font-black uppercase tracking-widest bg-white/20 text-oro-200 px-3 py-1 rounded-lg border border-white/20 flex items-center gap-1.5">
                                 <span>✓</span> <span>Platillo Seleccionado</span>
                             </span>
-                            <span class="text-[10px] font-bold text-oro-200/90 flex items-center gap-1">
-                                <span>👨‍🍳</span> {{ currentMenu.provider?.name }}
-                            </span>
+                            <div class="flex items-center gap-3">
+                                <span class="text-[10px] font-bold text-oro-200/90 flex items-center gap-1">
+                                    <span>👨‍🍳</span> {{ currentMenu.provider?.name || 'Proveedor' }}
+                                </span>
+                                <button v-if="availableOptions.length > 1" 
+                                        type="button" 
+                                        @click="step = 'list'"
+                                        class="px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-oro-200 text-[9px] font-black uppercase tracking-widest border border-oro-400/30 transition-all cursor-pointer">
+                                    Cambiar ➔
+                                </button>
+                            </div>
                         </div>
                         <div class="flex items-center gap-4 mt-2">
                             <span class="text-4xl">{{ getDishEmoji(currentMenu.name, currentMenu.meal_type) }}</span>
                             <div>
                                 <p class="font-black text-2xl uppercase tracking-tight leading-none text-white">{{ currentMenu.name }}</p>
-                                <p class="text-xs text-oro-100/90 italic leading-snug mt-1.5">{{ currentMenu.description }}</p>
+                                <p class="text-xs text-oro-100/90 italic leading-snug mt-1.5">{{ currentMenu.description || 'Sin descripción adicional' }}</p>
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- ALERTA SI NO HAY PLATILLO SELECCIONADO AÚN -->
+                <div v-else-if="availableOptions.length > 0" class="p-6 rounded-[2rem] bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-300 dark:border-amber-700/60 text-amber-900 dark:text-amber-200 flex flex-col sm:flex-row items-center justify-between gap-4 animate-pop">
+                    <div class="flex items-center gap-3">
+                        <span class="text-3xl">⚠️</span>
+                        <div>
+                            <p class="text-xs font-black uppercase tracking-wider">No has seleccionado un platillo</p>
+                            <p class="text-[10px] font-medium text-amber-700 dark:text-amber-300">Por favor elige una de las opciones del catálogo del nuevo proveedor.</p>
+                        </div>
+                    </div>
+                    <button type="button" @click="step = 'list'" class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-black uppercase tracking-widest shadow-sm cursor-pointer whitespace-nowrap">
+                        Elegir Platillo ➔
+                    </button>
                 </div>
 
                 <div>
