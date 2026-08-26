@@ -20,9 +20,10 @@ const threshold = 95; // Percentage to reach for confirmation
 const isConfirmed = computed(() => sliderValue.value >= threshold);
 
 const areaColors = [
-    'bg-blue-100 text-blue-800', 'bg-green-100 text-green-800', 'bg-yellow-100 text-yellow-800',
-    'bg-indigo-100 text-indigo-800', 'bg-purple-100 text-purple-800', 'bg-pink-100 text-pink-800',
-    'bg-gray-100 text-gray-800', 'bg-cyan-100 text-cyan-800'
+    'bg-tinto-50 dark:bg-tinto-950/80 text-tinto-800 dark:text-oro-300 border-tinto-200 dark:border-tinto-800',
+    'bg-oro-50 dark:bg-oro-950/80 text-oro-900 dark:text-oro-300 border-oro-200 dark:border-oro-800',
+    'bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+    'bg-slate-100 dark:bg-gray-800 text-slate-700 dark:text-gray-300 border-slate-200 dark:border-gray-700'
 ];
 
 const getAreaColor = (index) => {
@@ -48,35 +49,45 @@ const close = () => {
 
 <template>
     <Modal :show="show" @close="close">
-        <div class="p-6">
-            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
-                Confirmar Desactivación de Menú
-            </h2>
+        <div class="p-8 dark:bg-gray-900 rounded-[2.5rem]">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="h-12 w-12 rounded-2xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center border border-rose-200 dark:border-rose-800">
+                    <span class="text-xl">🛑</span>
+                </div>
+                <div>
+                    <h2 class="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tight">
+                        Finalizar Turno de Servicio
+                    </h2>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Cierre operativo de comedor
+                    </p>
+                </div>
+            </div>
 
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Estás a punto de cerrar los pedidos para **{{ provider?.name }}** para hoy. Esta acción bloqueará la capacidad de los comensales para realizar nuevos pedidos.
+            <p class="text-xs text-slate-600 dark:text-gray-300 mb-6 font-medium leading-relaxed">
+                Estás a punto de cerrar y finalizar el turno de pedidos para <strong class="text-tinto-800 dark:text-oro-300 font-bold uppercase">{{ provider?.name }}</strong>. Esta acción bloqueará la recepción de nuevos pedidos para este turno.
             </p>
 
-            <div v-if="todayOrdersByArea && todayOrdersByArea.length > 0" class="mb-6 p-4 border rounded-lg bg-gray-50 dark:bg-gray-700">
-                <h3 class="font-semibold text-gray-800 dark:text-gray-200 mb-3">Pedidos Registrados para Hoy:</h3>
+            <div v-if="todayOrdersByArea && todayOrdersByArea.length > 0" class="mb-6 p-5 border border-slate-200/80 dark:border-gray-800 rounded-2xl bg-slate-50/70 dark:bg-gray-800/50">
+                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Raciones Registradas por Área:</h3>
                 <div class="flex flex-wrap gap-2">
                     <span v-for="(orderSummary, index) in todayOrdersByArea" :key="orderSummary.area_id"
-                          class="px-3 py-1 rounded-full text-xs font-semibold"
+                          class="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase border shadow-sm"
                           :class="getAreaColor(index)">
-                        {{ orderSummary.area_name }}: {{ orderSummary.total_items }} platillos ({{ orderSummary.total_orders }} pedidos)
+                        {{ orderSummary.area_name }}: {{ orderSummary.total_items }} raciones
                     </span>
                 </div>
             </div>
-            <div v-else class="mb-6 p-4 border rounded-lg bg-gray-50 dark:bg-gray-700">
-                <p class="text-sm text-gray-600 dark:text-gray-400">
-                    No se han registrado pedidos para **{{ provider?.name }}** para hoy.
+            <div v-else class="mb-6 p-5 border border-slate-200/80 dark:border-gray-800 rounded-2xl bg-slate-50/70 dark:bg-gray-800/50">
+                <p class="text-xs text-slate-500 dark:text-gray-400">
+                    No se registraron pedidos en este turno para {{ provider?.name }}.
                 </p>
             </div>
 
             <div class="mb-6">
-                <InputLabel value="Desliza para Confirmar" class="mb-2" />
-                <div class="relative w-full bg-red-100 rounded-full h-10 flex items-center justify-start overflow-hidden">
-                    <div class="absolute left-0 top-0 h-full bg-red-500 rounded-full transition-all duration-75" :style="{ width: `${sliderValue}%` }"></div>
+                <InputLabel value="Desliza para Confirmar Cierre" class="mb-2 text-[10px] font-black uppercase tracking-widest text-slate-400" />
+                <div class="relative w-full bg-rose-100 dark:bg-rose-950/50 rounded-2xl h-12 flex items-center justify-start overflow-hidden border border-rose-200 dark:border-rose-800">
+                    <div class="absolute left-0 top-0 h-full bg-gradient-to-r from-rose-600 to-rose-500 rounded-2xl transition-all duration-75" :style="{ width: `${sliderValue}%` }"></div>
                     <input
                         type="range"
                         min="0"
@@ -87,22 +98,25 @@ const close = () => {
                         class="absolute w-full h-full appearance-none cursor-pointer bg-transparent z-10"
                         :class="{ 'opacity-0': isConfirmed }"
                     >
-                    <span class="absolute left-0 right-0 text-center text-sm font-semibold text-red-800 z-0 select-none">
-                        Desliza para confirmar
+                    <span class="absolute left-0 right-0 text-center text-xs font-black uppercase tracking-widest text-rose-800 dark:text-rose-200 z-0 select-none">
+                        Desliza para finalizar turno ➔
                     </span>
-                    <span v-if="isConfirmed" class="absolute left-0 right-0 text-center text-sm font-bold text-white z-0 select-none">
-                        Confirmado
+                    <span v-if="isConfirmed" class="absolute left-0 right-0 text-center text-xs font-black uppercase tracking-widest text-white z-0 select-none">
+                        ✓ Turno Finalizado
                     </span>
                 </div>
             </div>
 
             <div class="flex justify-end gap-3 mt-6">
-                <SecondaryButton @click="close">
+                <SecondaryButton @click="close" class="rounded-xl px-5 py-3 text-[10px] font-black uppercase tracking-widest cursor-pointer">
                     Cancelar
                 </SecondaryButton>
-                <PrimaryButton @click="handleConfirm" :disabled="!isConfirmed" :class="{ 'opacity-25': !isConfirmed }">
-                    Desactivar Menú
-                </PrimaryButton>
+                <button @click="handleConfirm" 
+                        :disabled="!isConfirmed" 
+                        :class="{ 'opacity-30 cursor-not-allowed': !isConfirmed, 'cursor-pointer hover:scale-105 active:scale-95': isConfirmed }"
+                        class="bg-gradient-to-r from-rose-700 to-rose-600 text-white rounded-xl px-6 py-3 text-[10px] font-black uppercase tracking-widest shadow-md transition-all">
+                    Finalizar Ahora
+                </button>
             </div>
         </div>
     </Modal>
