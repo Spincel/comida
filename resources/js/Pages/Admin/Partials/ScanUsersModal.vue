@@ -313,13 +313,13 @@ const handleConfirmImport = () => {
             <!-- HEADER -->
             <div class="flex items-center justify-between pb-6 mb-6 border-b border-slate-100 dark:border-gray-800">
                 <div class="flex items-center gap-4">
-                    <div class="p-3.5 bg-gradient-to-tr from-indigo-600 to-purple-600 rounded-2xl text-white shadow-lg shadow-indigo-500/20">
+                    <div class="p-3.5 bg-gradient-to-tr from-tinto-900 via-tinto-800 to-tinto-700 rounded-2xl text-oro-300 border border-oro-500/40 shadow-tinto-sm">
                         <SparklesIcon class="h-6 w-6 animate-pulse" />
                     </div>
                     <div>
                         <h2 class="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tight flex items-center gap-2">
                             Importar Plantilla con IA
-                            <span class="bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[9px] font-black px-2.5 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800 tracking-widest">
+                            <span class="bg-tinto-50 dark:bg-tinto-950 text-tinto-800 dark:text-oro-300 text-[9px] font-black px-2.5 py-0.5 rounded-full border border-tinto-200 dark:border-tinto-800 tracking-widest">
                                 OCR & DIRECTORIOS WEB
                             </span>
                         </h2>
@@ -347,13 +347,13 @@ const handleConfirmImport = () => {
                 <div class="flex items-center gap-3 bg-slate-100 dark:bg-gray-800/60 p-1.5 rounded-2xl border border-slate-200 dark:border-gray-700 max-w-md mx-auto">
                     <button type="button" @click="importMode = 'file'"
                             class="flex-1 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 cursor-pointer"
-                            :class="importMode === 'file' ? 'bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-400 shadow-md scale-[1.02]' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'">
+                            :class="importMode === 'file' ? 'bg-white dark:bg-gray-900 text-tinto-800 dark:text-oro-400 shadow-md scale-[1.02]' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'">
                         <DocumentArrowUpIcon class="h-4 w-4" />
                         <span>Subir Archivo</span>
                     </button>
                     <button type="button" @click="importMode = 'url'"
                             class="flex-1 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 cursor-pointer"
-                            :class="importMode === 'url' ? 'bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-400 shadow-md scale-[1.02]' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'">
+                            :class="importMode === 'url' ? 'bg-white dark:bg-gray-900 text-tinto-800 dark:text-oro-400 shadow-md scale-[1.02]' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'">
                         <GlobeAltIcon class="h-4 w-4" />
                         <span>Enlace Web / URL</span>
                     </button>
@@ -363,13 +363,13 @@ const handleConfirmImport = () => {
                 <div v-if="importMode === 'file'" class="space-y-6">
                     <div @click="selectFile" 
                          class="border-3 border-dashed rounded-[2.5rem] p-10 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-4 group"
-                         :class="currentFile ? 'border-indigo-400 bg-indigo-50/30 dark:bg-indigo-950/10' : 'border-slate-200 dark:border-gray-700 hover:border-indigo-400 hover:bg-slate-50/60 dark:hover:bg-gray-800/30'">
+                         :class="currentFile ? 'border-tinto-400 bg-tinto-50/30 dark:bg-tinto-950/20' : 'border-slate-200 dark:border-gray-700 hover:border-tinto-400 hover:bg-slate-50/60 dark:hover:bg-gray-800/30'">
                         
                         <input type="file" ref="fileInput" @change="handleFileChange" accept="image/*,.pdf,.csv,.xlsx,.xls,.doc,.docx,.txt" class="hidden" />
 
                         <!-- PREVIEW OR EMPTY -->
                         <template v-if="!currentFile">
-                            <div class="p-5 rounded-3xl bg-slate-100 dark:bg-gray-800 group-hover:scale-110 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-950/40 transition-all text-slate-400 group-hover:text-indigo-600">
+                            <div class="p-5 rounded-3xl bg-slate-100 dark:bg-gray-800 group-hover:scale-110 group-hover:bg-tinto-50 dark:group-hover:bg-tinto-950/40 transition-all text-slate-400 group-hover:text-tinto-700">
                                 <DocumentArrowUpIcon class="h-12 w-12 stroke-1" />
                             </div>
                             <div>
@@ -387,10 +387,10 @@ const handleConfirmImport = () => {
 
                         <!-- SELECTED FILE PREVIEW -->
                         <template v-else>
-                            <div v-if="previewImage" class="relative max-h-48 rounded-2xl overflow-hidden shadow-md border-2 border-indigo-200 dark:border-indigo-900">
+                            <div v-if="previewImage" class="relative max-h-48 rounded-2xl overflow-hidden shadow-md border-2 border-tinto-200 dark:border-tinto-900">
                                 <img :src="previewImage" class="object-contain max-h-48 max-w-full" />
                             </div>
-                            <div v-else class="p-6 rounded-3xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400">
+                            <div v-else class="p-6 rounded-3xl bg-tinto-50 dark:bg-tinto-950/40 text-tinto-700 dark:text-oro-400">
                                 <DocumentArrowUpIcon class="h-14 w-14 mx-auto" />
                             </div>
 
@@ -402,7 +402,7 @@ const handleConfirmImport = () => {
                                     {{ formatFileSize(currentFile.size) }} • {{ currentFile.type || 'Documento' }}
                                 </p>
                                 <div class="flex items-center justify-center gap-3 mt-3">
-                                    <button type="button" @click.stop="selectFile" class="text-[10px] font-black uppercase text-indigo-600 dark:text-indigo-400 hover:underline">
+                                    <button type="button" @click.stop="selectFile" class="text-[10px] font-black uppercase text-tinto-700 dark:text-oro-400 hover:underline">
                                         Cambiar archivo
                                     </button>
                                     <span class="text-slate-300">•</span>
@@ -422,8 +422,8 @@ const handleConfirmImport = () => {
                         <button @click="startScan" 
                                 :disabled="!currentFile"
                                 type="button"
-                                class="px-8 py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 bg-[length:200%_auto] text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
-                            <SparklesIcon class="h-5 w-5" />
+                                class="px-8 py-4 bg-gradient-to-r from-tinto-900 via-tinto-800 to-tinto-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest border border-oro-400/40 shadow-tinto-sm hover:scale-105 active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
+                            <SparklesIcon class="h-5 w-5 text-oro-300" />
                             <span>Analizar Documento con IA</span>
                         </button>
                     </div>
@@ -433,7 +433,7 @@ const handleConfirmImport = () => {
                 <div v-else-if="importMode === 'url'" class="space-y-6">
                     <div class="bg-slate-50 dark:bg-gray-800/50 p-8 rounded-[2.5rem] border border-slate-200 dark:border-gray-700 space-y-6">
                         <div class="flex items-center gap-4">
-                            <div class="p-3 bg-indigo-100 dark:bg-indigo-900/60 rounded-2xl text-indigo-600 dark:text-indigo-400">
+                            <div class="p-3 bg-tinto-50 dark:bg-tinto-950/60 rounded-2xl text-tinto-800 dark:text-oro-400 border border-tinto-200 dark:border-tinto-800">
                                 <GlobeAltIcon class="h-6 w-6" />
                             </div>
                             <div>
@@ -453,7 +453,7 @@ const handleConfirmImport = () => {
                             <div class="relative">
                                 <LinkIcon class="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                                 <input type="url" v-model="webUrl" placeholder="https://congresonayarit.gob.mx/directorio-de-funcionarios/"
-                                       class="w-full pl-12 pr-6 py-4 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-2xl text-xs font-bold text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 shadow-sm" />
+                                       class="w-full pl-12 pr-6 py-4 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-2xl text-xs font-bold text-slate-800 dark:text-white focus:ring-2 focus:ring-tinto-700 shadow-sm" />
                             </div>
                         </div>
 
@@ -464,7 +464,7 @@ const handleConfirmImport = () => {
                             </p>
                             <button type="button" 
                                     @click="webUrl = 'https://congresonayarit.gob.mx/directorio-de-funcionarios/'"
-                                    class="p-3 px-4 rounded-xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:border-indigo-400 transition-all flex items-center gap-2 shadow-sm cursor-pointer">
+                                    class="p-3 px-4 rounded-xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 text-[11px] font-bold text-tinto-800 dark:text-oro-400 hover:border-tinto-300 dark:hover:border-oro-600 transition-all flex items-center gap-2 shadow-sm cursor-pointer">
                                 <span>🏛️ Directorio Oficial: Congreso del Estado de Nayarit</span>
                             </button>
                         </div>
@@ -478,8 +478,8 @@ const handleConfirmImport = () => {
                         <button @click="startUrlScan" 
                                 :disabled="!webUrl"
                                 type="button"
-                                class="px-8 py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 bg-[length:200%_auto] text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
-                            <SparklesIcon class="h-5 w-5" />
+                                class="px-8 py-4 bg-gradient-to-r from-tinto-900 via-tinto-800 to-tinto-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest border border-oro-400/40 shadow-tinto-sm hover:scale-105 active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
+                            <SparklesIcon class="h-5 w-5 text-oro-300" />
                             <span>Extraer Directorio Web con IA</span>
                         </button>
                     </div>
@@ -488,21 +488,21 @@ const handleConfirmImport = () => {
                 <!-- TIPS / INFO CARDS -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="p-4 bg-slate-50 dark:bg-gray-800/60 rounded-2xl border border-slate-100 dark:border-gray-800 flex items-start gap-3">
-                        <BuildingOfficeIcon class="h-5 w-5 text-indigo-500 shrink-0 mt-0.5" />
+                        <BuildingOfficeIcon class="h-5 w-5 text-tinto-700 dark:text-oro-400 shrink-0 mt-0.5" />
                         <div>
                             <p class="text-[11px] font-black text-slate-700 dark:text-gray-200 uppercase">Detección de Áreas</p>
                             <p class="text-[10px] text-slate-400 mt-0.5 leading-snug">Identifica departamentos y los vincula automáticamente con el catálogo existente o crea nuevas áreas.</p>
                         </div>
                     </div>
                     <div class="p-4 bg-slate-50 dark:bg-gray-800/60 rounded-2xl border border-slate-100 dark:border-gray-800 flex items-start gap-3">
-                        <UsersIcon class="h-5 w-5 text-purple-500 shrink-0 mt-0.5" />
+                        <UsersIcon class="h-5 w-5 text-oro-600 dark:text-oro-400 shrink-0 mt-0.5" />
                         <div>
                             <p class="text-[11px] font-black text-slate-700 dark:text-gray-200 uppercase">Nombres y Apellidos</p>
                             <p class="text-[10px] text-slate-400 mt-0.5 leading-snug">Limpia títulos académicos y desglosa nombres de pila, apellido paterno y materno.</p>
                         </div>
                     </div>
                     <div class="p-4 bg-slate-50 dark:bg-gray-800/60 rounded-2xl border border-slate-100 dark:border-gray-800 flex items-start gap-3">
-                        <SparklesIcon class="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                        <SparklesIcon class="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                         <div>
                             <p class="text-[11px] font-black text-slate-700 dark:text-gray-200 uppercase">Revisión Previa</p>
                             <p class="text-[10px] text-slate-400 mt-0.5 leading-snug">Podrás editar, filtrar y revisar toda la lista antes de guardar cualquier cambio.</p>
@@ -515,10 +515,10 @@ const handleConfirmImport = () => {
             <!-- PASO 2: ESCANEANDO CON IA -->
             <div v-else-if="step === 'scanning'" class="py-16 text-center space-y-8">
                 <div class="relative w-24 h-24 mx-auto">
-                    <div class="absolute inset-0 rounded-full border-4 border-indigo-100 dark:border-indigo-950"></div>
-                    <div class="absolute inset-0 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin"></div>
+                    <div class="absolute inset-0 rounded-full border-4 border-tinto-100 dark:border-tinto-950"></div>
+                    <div class="absolute inset-0 rounded-full border-4 border-tinto-700 border-t-transparent animate-spin"></div>
                     <div class="absolute inset-0 flex items-center justify-center">
-                        <SparklesIcon class="h-10 w-10 text-indigo-600 animate-pulse" />
+                        <SparklesIcon class="h-10 w-10 text-oro-500 animate-pulse" />
                     </div>
                 </div>
 
@@ -526,7 +526,7 @@ const handleConfirmImport = () => {
                     <h3 class="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tight">
                         Procesando Directorio con IA
                     </h3>
-                    <p class="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mt-2 animate-pulse">
+                    <p class="text-xs font-bold text-tinto-700 dark:text-oro-400 uppercase tracking-widest mt-2 animate-pulse">
                         {{ currentScanMessage }}
                     </p>
                 </div>
@@ -534,7 +534,7 @@ const handleConfirmImport = () => {
                 <!-- PROGRESS BAR -->
                 <div class="max-w-md mx-auto">
                     <div class="h-3 w-full bg-slate-100 dark:bg-gray-800 rounded-full overflow-hidden p-0.5 border border-slate-200 dark:border-gray-700">
-                        <div class="h-full bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full transition-all duration-500" :style="{ width: `${scanProgress}%` }"></div>
+                        <div class="h-full bg-gradient-to-r from-tinto-800 via-oro-500 to-tinto-800 rounded-full transition-all duration-500" :style="{ width: `${scanProgress}%` }"></div>
                     </div>
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-3">
                         {{ scanProgress }}% completado
@@ -547,28 +547,28 @@ const handleConfirmImport = () => {
                 
                 <!-- SUMMARY STATS -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="p-5 bg-indigo-50 dark:bg-indigo-950/30 rounded-3xl border border-indigo-100 dark:border-indigo-900/50 flex items-center justify-between">
+                    <div class="p-5 bg-tinto-50 dark:bg-tinto-950/30 rounded-3xl border border-tinto-100 dark:border-tinto-900/50 flex items-center justify-between">
                         <div>
-                            <p class="text-[10px] font-black uppercase tracking-widest text-indigo-400">Total Detectados</p>
-                            <p class="text-2xl font-black text-indigo-700 dark:text-indigo-300 mt-1">{{ scannedUsers.length }}</p>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-tinto-700 dark:text-tinto-300">Total Detectados</p>
+                            <p class="text-2xl font-black text-tinto-900 dark:text-tinto-200 mt-1">{{ scannedUsers.length }}</p>
                         </div>
-                        <UsersIcon class="h-8 w-8 text-indigo-500 opacity-60" />
+                        <UsersIcon class="h-8 w-8 text-tinto-600 opacity-60" />
                     </div>
                     
-                    <div class="p-5 bg-purple-50 dark:bg-purple-950/30 rounded-3xl border border-purple-100 dark:border-purple-900/50 flex items-center justify-between">
+                    <div class="p-5 bg-oro-50 dark:bg-oro-950/30 rounded-3xl border border-oro-100 dark:border-oro-900/50 flex items-center justify-between">
                         <div>
-                            <p class="text-[10px] font-black uppercase tracking-widest text-purple-400">Áreas Identificadas</p>
-                            <p class="text-2xl font-black text-purple-700 dark:text-purple-300 mt-1">{{ Object.keys(uniqueDetectedAreas).length }}</p>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-oro-700 dark:text-oro-300">Áreas Identificadas</p>
+                            <p class="text-2xl font-black text-oro-900 dark:text-oro-200 mt-1">{{ Object.keys(uniqueDetectedAreas).length }}</p>
                         </div>
-                        <BuildingOfficeIcon class="h-8 w-8 text-purple-500 opacity-60" />
+                        <BuildingOfficeIcon class="h-8 w-8 text-oro-600 opacity-60" />
                     </div>
 
                     <div class="p-5 bg-emerald-50 dark:bg-emerald-950/30 rounded-3xl border border-emerald-100 dark:border-emerald-900/50 flex items-center justify-between">
                         <div>
-                            <p class="text-[10px] font-black uppercase tracking-widest text-emerald-500">Listos a Importar</p>
-                            <p class="text-2xl font-black text-emerald-700 dark:text-emerald-300 mt-1">{{ selectedCount }} / {{ scannedUsers.length }}</p>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Listos a Importar</p>
+                            <p class="text-2xl font-black text-emerald-800 dark:text-emerald-300 mt-1">{{ selectedCount }} / {{ scannedUsers.length }}</p>
                         </div>
-                        <CheckBadgeIcon class="h-8 w-8 text-emerald-500 opacity-60" />
+                        <CheckBadgeIcon class="h-8 w-8 text-emerald-600 opacity-60" />
                     </div>
                 </div>
 
@@ -585,13 +585,13 @@ const handleConfirmImport = () => {
                         <div class="relative flex-1 md:w-64">
                             <MagnifyingGlassIcon class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                             <input type="text" v-model="searchFilter" placeholder="Filtrar detectados..." 
-                                   class="w-full pl-9 pr-4 py-2 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl text-xs font-semibold focus:ring-indigo-500" />
+                                   class="w-full pl-9 pr-4 py-2 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl text-xs font-semibold focus:ring-tinto-700" />
                         </div>
 
                         <div class="flex items-center gap-2 shrink-0">
                             <KeyIcon class="h-4 w-4 text-slate-400" />
                             <input type="text" v-model="defaultPassword" placeholder="Contraseña default" title="Contraseña por defecto para usuarios importados"
-                                   class="w-36 py-2 px-3 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl text-xs font-bold text-slate-700 dark:text-gray-200 focus:ring-indigo-500" />
+                                   class="w-36 py-2 px-3 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl text-xs font-bold text-slate-700 dark:text-gray-200 focus:ring-tinto-700" />
                         </div>
                     </div>
                 </div>
@@ -614,7 +614,7 @@ const handleConfirmImport = () => {
                         </thead>
                         <tbody class="divide-y divide-slate-100 dark:divide-gray-800">
                             <tr v-for="(u, idx) in filteredScannedUsers" :key="u.id" 
-                                class="hover:bg-indigo-50/30 dark:hover:bg-indigo-950/20 transition-all"
+                                class="hover:bg-tinto-50/30 dark:hover:bg-tinto-950/20 transition-all"
                                 :class="{ 'opacity-50 bg-slate-50/50': !u.selected }">
                                 
                                 <td class="p-3.5 text-center">
@@ -640,7 +640,7 @@ const handleConfirmImport = () => {
                                             <option :value="null">➕ Crear: "{{ u.area_name }}"</option>
                                             <option v-for="a in areas" :key="a.id" :value="a.id">{{ a.name }}</option>
                                         </select>
-                                        <p v-if="!u.area_id" class="text-[9px] text-amber-600 dark:text-amber-400 font-bold uppercase">
+                                        <p v-if="!u.area_id" class="text-[9px] text-oro-700 dark:text-oro-400 font-bold uppercase">
                                             Se creará nueva área
                                         </p>
                                     </div>
@@ -693,7 +693,7 @@ const handleConfirmImport = () => {
                         <button @click="handleConfirmImport" 
                                 :disabled="selectedCount === 0 || isSubmittingImport"
                                 type="button"
-                                class="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-emerald-600/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
+                                class="px-8 py-4 bg-gradient-to-r from-nayarit-800 via-nayarit-700 to-nayarit-800 text-white rounded-2xl text-xs font-black uppercase tracking-widest border border-emerald-400/30 shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
                             <UserPlusIcon class="h-5 w-5" :class="{ 'animate-spin': isSubmittingImport }" />
                             <span>Confirmar e Importar {{ selectedCount }} Usuarios</span>
                         </button>

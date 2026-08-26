@@ -4,18 +4,36 @@
 
 @layer utilities {
   @keyframes blink-glow {
-    0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0px rgba(99, 102, 241, 0); }
-    50% { opacity: 0.8; transform: scale(1.02); box-shadow: 0 0 15px rgba(99, 102, 241, 0.5); }
+    0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0px rgba(120, 24, 42, 0); }
+    50% { opacity: 0.8; transform: scale(1.02); box-shadow: 0 0 15px rgba(120, 24, 42, 0.4); }
   }
   .animate-blink {
     animation: blink-glow 2s infinite;
   }
   
   @keyframes blink-red {
-    0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0px rgba(239, 68, 68, 0); }
-    50% { opacity: 0.8; transform: scale(1.02); box-shadow: 0 0 20px rgba(239, 68, 68, 0.6); }
+    0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0px rgba(225, 29, 72, 0); }
+    50% { opacity: 0.8; transform: scale(1.02); box-shadow: 0 0 20px rgba(225, 29, 72, 0.5); }
   }
   .animate-blink-danger {
     animation: blink-red 1.5s infinite;
+  }
+
+  @keyframes gradient-move {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient-move 4s ease infinite;
+  }
+
+  .bg-congreso-gradient {
+    background: linear-gradient(135deg, #78182a 0%, #9a223a 50%, #78182a 100%);
+  }
+
+  .bg-oro-gradient {
+    background: linear-gradient(135deg, #c5a059 0%, #dfbf7a 50%, #c5a059 100%);
   }
 }

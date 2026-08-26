@@ -509,27 +509,27 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
     <AuthenticatedLayout>
         
         <!-- PESTAÑAS DE VISTA RÁPIDA (PARA ADQUISICIONES Y ADMINISTRADORES) -->
-        <div v-if="user.role === 'admin' || user.role === 'acquisitions_manager'" class="flex flex-wrap items-center justify-between gap-4 bg-white/80 dark:bg-gray-900/60 backdrop-blur-md p-3 rounded-[2.5rem] border border-slate-200 dark:border-gray-800 shadow-sm mb-8">
+        <div v-if="user.role === 'admin' || user.role === 'acquisitions_manager'" class="flex flex-wrap items-center justify-between gap-4 bg-white/80 dark:bg-gray-900/60 backdrop-blur-md p-3 rounded-[2.5rem] border border-slate-200/80 dark:border-gray-800 shadow-[0_4px_20px_-4px_rgba(120,24,42,0.06)] dark:shadow-none mb-8">
             <div class="flex items-center gap-3">
                 <button @click="activeTab = 'global'" 
                         type="button"
                         class="px-6 py-3.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2.5 shadow-sm active:scale-95 cursor-pointer"
-                        :class="activeTab === 'global' ? 'bg-indigo-600 text-white shadow-indigo-600/30 scale-105' : 'bg-slate-100 dark:bg-gray-800 text-slate-500 hover:text-slate-900 dark:hover:text-white'">
-                    <ClockIcon class="h-4 w-4" />
+                        :class="activeTab === 'global' ? 'bg-gradient-to-r from-tinto-900 via-tinto-800 to-tinto-900 text-white shadow-tinto-sm border border-oro-400/40 scale-105' : 'bg-slate-100 dark:bg-gray-800 text-slate-500 hover:text-slate-900 dark:hover:text-white'">
+                    <ClockIcon class="h-4 w-4 text-oro-400" />
                     <span>Control Operativo Global</span>
                 </button>
 
                 <button @click="activeTab = 'my-area'" 
                         type="button"
                         class="px-6 py-3.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2.5 shadow-sm active:scale-95 cursor-pointer"
-                        :class="activeTab === 'my-area' ? 'bg-emerald-600 text-white shadow-emerald-600/30 scale-105' : 'bg-slate-100 dark:bg-gray-800 text-slate-500 hover:text-slate-900 dark:hover:text-white'">
-                    <UserIcon class="h-4 w-4" />
+                        :class="activeTab === 'my-area' ? 'bg-gradient-to-r from-nayarit-800 via-nayarit-700 to-nayarit-800 text-white shadow-lg border border-emerald-400/40 scale-105' : 'bg-slate-100 dark:bg-gray-800 text-slate-500 hover:text-slate-900 dark:hover:text-white'">
+                    <UserIcon class="h-4 w-4 text-emerald-300" />
                     <span>Gestión Comedor: <span class="opacity-90 font-black">{{ area?.name || 'Mi Área' }}</span></span>
                 </button>
             </div>
 
             <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-4 hidden md:block">
-                Vista Activa: <span class="font-black" :class="activeTab === 'global' ? 'text-indigo-600 dark:text-indigo-400' : 'text-emerald-600 dark:text-emerald-400'">{{ activeTab === 'global' ? 'Apertura y Cierre de Turnos' : 'Gestión de Comida - ' + (area?.name || 'Mi Área') }}</span>
+                Vista Activa: <span class="font-black" :class="activeTab === 'global' ? 'text-tinto-700 dark:text-oro-400' : 'text-nayarit-700 dark:text-emerald-400'">{{ activeTab === 'global' ? 'Apertura y Cierre de Turnos' : 'Gestión de Comida - ' + (area?.name || 'Mi Área') }}</span>
             </div>
         </div>
 
@@ -540,18 +540,20 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
             <div v-if="(user.role === 'admin' || user.role === 'acquisitions_manager') && activeTab === 'global'" class="lg:col-span-8 space-y-8">
                 
                 <!-- CARD CONTROL OPERATIVO -->
-                <div class="bg-white dark:bg-gray-900 rounded-[3.5rem] p-10 shadow-xl shadow-slate-200/40 dark:shadow-none border border-slate-200 dark:border-gray-800 relative overflow-hidden">
+                <div class="bg-white dark:bg-gray-900 rounded-[3.5rem] p-10 shadow-[0_10px_35px_-5px_rgba(120,24,42,0.06)] dark:shadow-none border border-slate-200/80 dark:border-gray-800 relative overflow-hidden">
                     <div v-if="openSessions.length > 0" class="absolute top-8 right-8 z-10 flex flex-col gap-2 items-end">
                         <button v-for="session in openSessions" :key="'fin-' + session.id"
                                 @click="openDeactivateMenuModal(session, session.provider)" 
-                                class="bg-rose-600 hover:bg-rose-700 text-white px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-rose-600/20 flex items-center gap-3 transition-all hover:scale-105 active:scale-95 group animate-blink-danger">
-                            <PowerIcon class="h-3.5 w-3.5 group-hover:animate-pulse" stroke-width="3" />
-                            <span>Finalizar {{ session.meal_type }}: <span class="opacity-60">{{ session.provider?.name }}</span></span>
+                                class="bg-gradient-to-r from-rose-700 to-rose-600 hover:from-rose-800 hover:to-rose-700 text-white px-6 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-rose-900/30 flex items-center gap-3 transition-all hover:scale-105 active:scale-95 group animate-blink-danger cursor-pointer">
+                            <PowerIcon class="h-3.5 w-3.5 group-hover:animate-pulse text-rose-200" stroke-width="3" />
+                            <span>Finalizar {{ session.meal_type }}: <span class="opacity-80">{{ session.provider?.name }}</span></span>
                         </button>
                     </div>
 
                     <div class="flex items-center gap-4 mb-2">
-                        <ClockIcon class="h-6 w-6 text-orange-500" />
+                        <div class="p-2.5 bg-tinto-50 dark:bg-tinto-950/60 rounded-2xl text-tinto-800 dark:text-oro-400 border border-tinto-200 dark:border-tinto-800">
+                            <ClockIcon class="h-6 w-6" />
+                        </div>
                         <h2 class="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Control Operativo: Sesiones SICOA</h2>
                     </div>
                     <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-10">Apertura y monitorización en tiempo real.</p>
@@ -562,15 +564,15 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                             <p class="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-widest mb-4 ml-2">1. Turno del Servicio:</p>
                             <div class="flex gap-3">
                                 <button v-for="t in ['Desayuno', 'Comida', 'Cena']" :key="t" @click="bentoTurno = t"
-                                        class="flex-1 py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border-2"
-                                        :class="bentoTurno === t ? 'bg-indigo-600 text-white border-indigo-600 shadow-xl scale-105' : 'bg-white dark:bg-gray-800 text-slate-400 border-slate-100 dark:border-gray-700 hover:border-slate-200 dark:hover:border-gray-600'">
+                                        class="flex-1 py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border-2 cursor-pointer"
+                                        :class="bentoTurno === t ? 'bg-gradient-to-tr from-tinto-900 via-tinto-800 to-tinto-700 text-white border-tinto-800 shadow-tinto-sm scale-105' : 'bg-white dark:bg-gray-800 text-slate-400 border-slate-100 dark:border-gray-700 hover:border-slate-200 dark:hover:border-gray-600'">
                                     {{ t }}
                                 </button>
                             </div>
                         </div>
                         <div>
                             <p class="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-widest mb-4 ml-2">2. Proveedor / Catering:</p>
-                            <select v-model="bentoProviderId" class="w-full bg-slate-50 dark:bg-gray-800 border-slate-100 dark:border-gray-700 rounded-2xl py-4 px-6 text-[11px] font-black uppercase text-slate-600 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-inner">
+                            <select v-model="bentoProviderId" class="w-full bg-slate-50 dark:bg-gray-800 border-slate-200 dark:border-gray-700 rounded-2xl py-4 px-6 text-[11px] font-black uppercase text-slate-700 dark:text-gray-200 focus:ring-tinto-600 focus:border-tinto-600 transition-all shadow-inner">
                                 <option v-for="p in providers" :key="p.id" :value="p.id">{{ p.name }}</option>
                             </select>
                         </div>
@@ -582,8 +584,8 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                             <div class="flex items-center gap-3">
                                 <p class="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-widest ml-2">3. Habilitar Áreas:</p>
                                 <div class="flex bg-slate-100 dark:bg-gray-800 p-1 rounded-xl border dark:border-gray-700">
-                                    <button @click="selectAllAreas" class="px-3 py-1 text-[8px] font-black uppercase text-indigo-600 dark:text-indigo-400 hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-all">Todas</button>
-                                    <button @click="deselectAllAreas" class="px-3 py-1 text-[8px] font-black uppercase text-slate-400 hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-all">Ninguna</button>
+                                    <button @click="selectAllAreas" class="px-3 py-1 text-[8px] font-black uppercase text-tinto-700 dark:text-oro-400 hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-all cursor-pointer">Todas</button>
+                                    <button @click="deselectAllAreas" class="px-3 py-1 text-[8px] font-black uppercase text-slate-400 hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-all cursor-pointer">Ninguna</button>
                                 </div>
                             </div>
                             
@@ -591,19 +593,19 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                             <div class="relative w-full md:w-64">
                                 <MagnifyingGlassIcon class="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                                 <input type="text" v-model="areaSearchTerm" placeholder="Buscar área..." 
-                                       class="w-full pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-gray-800 border-slate-100 dark:border-gray-700 rounded-xl text-[10px] font-bold uppercase focus:ring-indigo-500 shadow-inner" />
+                                       class="w-full pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-gray-800 border-slate-200 dark:border-gray-700 rounded-xl text-[10px] font-bold uppercase focus:ring-tinto-600 shadow-inner" />
                             </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 max-h-[320px] overflow-y-auto pr-2 custom-scrollbar">
                             <div v-for="areaS in filteredBentoAreas" :key="areaS.id" @click="toggleBentoArea(areaS.id)"
                                  class="p-4 rounded-2xl border-2 transition-all cursor-pointer flex justify-between items-center group shadow-sm"
-                                 :class="bentoSelectedAreas.includes(areaS.id) ? 'bg-indigo-50 dark:bg-indigo-950/20 border-indigo-500' : 'bg-slate-50 dark:bg-gray-800 border-transparent dark:hover:border-gray-700 hover:border-slate-200'">
+                                 :class="bentoSelectedAreas.includes(areaS.id) ? 'bg-tinto-50/80 dark:bg-tinto-950/40 border-tinto-700 dark:border-tinto-600' : 'bg-slate-50 dark:bg-gray-800 border-transparent dark:hover:border-gray-700 hover:border-slate-200'">
                                 <div class="flex items-center gap-3">
-                                    <div class="h-2 w-2 rounded-full" :class="bentoSelectedAreas.includes(areaS.id) ? 'bg-indigo-600 animate-pulse' : 'bg-slate-300 dark:bg-gray-700'"></div>
-                                    <span class="text-[10px] font-black uppercase text-slate-700 dark:text-gray-300 truncate max-w-[120px]">{{ areaS.name }}</span>
+                                    <div class="h-2.5 w-2.5 rounded-full" :class="bentoSelectedAreas.includes(areaS.id) ? 'bg-tinto-700 dark:bg-oro-400 animate-pulse' : 'bg-slate-300 dark:bg-gray-700'"></div>
+                                    <span class="text-[10px] font-black uppercase text-slate-800 dark:text-gray-200 truncate max-w-[120px]">{{ areaS.name }}</span>
                                 </div>
-                                <span class="bg-white dark:bg-gray-900 border dark:border-gray-700 text-slate-400 text-[8px] font-black px-2 py-1 rounded-lg shadow-sm group-hover:text-indigo-600 transition-colors">
+                                <span class="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 text-slate-500 dark:text-slate-400 text-[8px] font-black px-2 py-1 rounded-lg shadow-sm group-hover:text-tinto-700 dark:group-hover:text-oro-400 transition-colors">
                                     {{ areaS.user_count || 0 }} p
                                 </span>
                             </div>
@@ -620,40 +622,42 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
 
             <!-- RIGHT COLUMN: STATS (ADMIN/ADQ) -->
             <div v-if="(user.role === 'admin' || user.role === 'acquisitions_manager') && activeTab === 'global'" class="lg:col-span-4 space-y-8">
-                <div class="bg-white dark:bg-gray-900 rounded-[3rem] p-10 shadow-xl border border-slate-100 dark:border-gray-800">
+                <div class="bg-white dark:bg-gray-900 rounded-[3rem] p-10 shadow-[0_10px_35px_-5px_rgba(120,24,42,0.06)] dark:shadow-none border border-slate-200/80 dark:border-gray-800">
                     <div class="flex items-center gap-4 mb-2">
-                        <ShieldCheckIcon class="h-6 w-6 text-orange-500" />
+                        <div class="p-2.5 bg-oro-50 dark:bg-oro-950/60 rounded-2xl text-oro-700 dark:text-oro-400 border border-oro-200 dark:border-oro-800">
+                            <ShieldCheckIcon class="h-6 w-6" />
+                        </div>
                         <h3 class="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Auditoría & Control</h3>
                     </div>
                     <p class="text-[10px] font-bold text-slate-400 leading-relaxed uppercase tracking-widest mb-8">Estado de cumplimiento de raciones.</p>
 
                     <div class="space-y-4">
-                        <div class="bg-slate-50 dark:bg-gray-800 p-6 rounded-3xl border border-slate-100 dark:border-gray-700">
+                        <div class="bg-slate-50 dark:bg-gray-800/70 p-6 rounded-3xl border border-slate-200 dark:border-gray-700">
                             <div class="flex justify-between items-center mb-6">
-                                <p class="text-[11px] font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest">Estado Operativo</p>
+                                <p class="text-[11px] font-black text-slate-600 dark:text-gray-300 uppercase tracking-widest">Estado Operativo</p>
                                 <div class="flex items-center gap-2">
-                                    <span class="text-xs font-black uppercase" :class="openSessions.length > 0 ? 'text-emerald-500' : 'text-orange-500'">{{ openSessions.length > 0 ? 'EN LÍNEA' : 'PASIVO' }}</span>
-                                    <div class="h-2 w-2 rounded-full" :class="openSessions.length > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-orange-500'"></div>
+                                    <span class="text-xs font-black uppercase" :class="openSessions.length > 0 ? 'text-nayarit-700 dark:text-emerald-400' : 'text-oro-600 dark:text-oro-400'">{{ openSessions.length > 0 ? 'EN LÍNEA' : 'PASIVO' }}</span>
+                                    <div class="h-2 w-2 rounded-full" :class="openSessions.length > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-oro-500'"></div>
                                 </div>
                             </div>
                             
                             <!-- MINI LISTA DE SESIONES ACTIVAS (SUTIL) -->
                             <div v-if="openSessions.length > 0" class="space-y-3">
                                 <div v-for="session in openSessions" :key="'mini-' + session.id" 
-                                     class="p-4 bg-white dark:bg-gray-900 rounded-2xl border border-slate-100 dark:border-gray-800 shadow-sm group">
+                                     class="p-4 bg-white dark:bg-gray-900 rounded-2xl border border-slate-200 dark:border-gray-800 shadow-sm group">
                                     <div class="flex justify-between items-start mb-2">
                                         <div class="flex-1 min-w-0">
                                             <p class="text-[10px] font-black text-slate-800 dark:text-white uppercase truncate">{{ session.provider?.name }}</p>
-                                            <span class="text-[7px] font-black uppercase text-indigo-500">{{ session.meal_type }}</span>
+                                            <span class="text-[8px] font-black uppercase text-tinto-700 dark:text-oro-400">{{ session.meal_type }}</span>
                                         </div>
-                                        <p class="text-xs font-black tabular-nums text-indigo-600 shrink-0">{{ activeTimers[session.id] || '00:00:00' }}</p>
+                                        <p class="text-xs font-black tabular-nums text-tinto-700 dark:text-oro-400 shrink-0">{{ activeTimers[session.id] || '00:00:00' }}</p>
                                     </div>
                                     <div class="flex justify-between items-center mt-3">
                                         <div class="h-1 flex-1 bg-slate-100 dark:bg-gray-800 rounded-full overflow-hidden mr-4">
-                                            <div class="h-full bg-indigo-500" style="width: 100%"></div>
+                                            <div class="h-full bg-gradient-to-r from-tinto-700 to-oro-500" style="width: 100%"></div>
                                         </div>
                                         <Link :href="route('admin.orders.summary', { provider: session.provider_id, date: session.date, meal_type: session.meal_type })" 
-                                              class="text-[8px] font-black uppercase text-white bg-indigo-600 px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-all whitespace-nowrap animate-blink">
+                                              class="text-[8px] font-black uppercase text-white bg-tinto-800 hover:bg-tinto-900 px-3 py-1.5 rounded-lg border border-oro-400/40 shadow-sm transition-all whitespace-nowrap animate-blink">
                                             Monitor →
                                         </Link>
                                     </div>
@@ -664,19 +668,19 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
 
                         <div class="bg-slate-50 dark:bg-gray-800/50 p-6 rounded-3xl border border-slate-200 dark:border-gray-700 flex justify-between items-center shadow-sm">
                             <p class="text-[11px] font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest">Comensales:</p>
-                            <p class="text-sm font-black text-indigo-600 dark:text-indigo-400">
+                            <p class="text-sm font-black text-tinto-800 dark:text-oro-300">
                                 {{ activeTotalOrders }} <span class="text-[10px] text-slate-400 uppercase">Matriculados</span>
                             </p>
                         </div>
                     </div>
 
-                    <!-- BOTÓN INICIAR SESIÓN (MOVIDO A AUDITORÍA) -->
+                    <!-- BOTÓN INICIAR SESIÓN -->
                     <div class="mt-8">
                         <button @click="submitBentoActivation" 
                                 :disabled="isSyncingAreas"
-                                class="w-full py-6 rounded-[2rem] bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-600 bg-[length:200%_auto] animate-gradient text-white text-[11px] font-black uppercase tracking-[0.3em] shadow-2xl shadow-indigo-500/40 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-4 disabled:opacity-50">
-                            <ArrowPathIcon class="h-5 w-5" :class="{ 'animate-spin': isSyncingAreas }" />
-                            {{ currentActiveBentoSession ? 'Actualizar Áreas del Turno' : 'Iniciar Buffet & Turno' }}
+                                class="w-full py-6 rounded-[2rem] bg-gradient-to-r from-tinto-900 via-tinto-800 to-tinto-900 text-white text-[11px] font-black uppercase tracking-[0.3em] border border-oro-400/40 shadow-tinto hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-4 disabled:opacity-50 cursor-pointer">
+                            <ArrowPathIcon class="h-5 w-5 text-oro-300" :class="{ 'animate-spin': isSyncingAreas }" />
+                            <span>{{ currentActiveBentoSession ? 'Actualizar Áreas del Turno' : 'Iniciar Buffet & Turno' }}</span>
                         </button>
                     </div>
                 </div>
@@ -687,25 +691,25 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                  class="lg:col-span-12 grid grid-cols-1 md:grid-cols-12 gap-8 items-start animate-fade-in">
                 
                 <div v-if="user.role !== 'diner'" class="md:col-span-3 space-y-6">
-                    <div class="bg-white dark:bg-gray-900 rounded-[2.5rem] p-6 shadow-xl border border-slate-100 dark:border-gray-800 sticky top-24">
+                    <div class="bg-white dark:bg-gray-900 rounded-[2.5rem] p-6 shadow-[0_10px_35px_-5px_rgba(120,24,42,0.06)] dark:shadow-none border border-slate-200/80 dark:border-gray-800 sticky top-24">
                         <h4 class="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 mb-8 px-4">Panel Local</h4>
                         <div class="space-y-3">
                             <button v-for="mode in [
-                                {id:'auth',l: operationMode === 'simple' ? 'Asignar' : 'Habilitar', s: operationMode === 'simple' ? 'Platillos' : 'Personal', i:UserIcon, c:'indigo'},
-                                {id:'menu',l:'Mi Menú', s:'Personal', i:BuildingStorefrontIcon, c:'orange', hideInSimple: true},
-                                {id:'plantilla',l:'Plantilla', s:'Mi Equipo', i:UsersIcon, c:'emerald'},
-                                {id:'justification',l:'Justificar', s:'Historial', i:PencilSquareIcon, c:'rose'},
-                                {id:'analytics',l:'Estadísticas', s:'Mi Área', i:ChartBarIcon, c:'indigo'}
+                                {id:'auth',l: operationMode === 'simple' ? 'Asignar' : 'Habilitar', s: operationMode === 'simple' ? 'Platillos' : 'Personal', i:UserIcon, c:'tinto'},
+                                {id:'menu',l:'Mi Menú', s:'Personal', i:BuildingStorefrontIcon, c:'oro', hideInSimple: true},
+                                {id:'plantilla',l:'Plantilla', s:'Mi Equipo', i:UsersIcon, c:'nayarit'},
+                                {id:'justification',l:'Justificar', s:'Historial', i:PencilSquareIcon, c:'tinto'},
+                                {id:'analytics',l:'Estadísticas', s:'Mi Área', i:ChartBarIcon, c:'tinto'}
                             ]" :key="mode.id" 
                             v-show="!(operationMode === 'simple' && mode.hideInSimple)"
                             @click="sidebarMode = mode.id" 
-                            class="w-full p-4 rounded-2xl border-2 transition-all flex items-center gap-4 text-left group relative overflow-hidden active:scale-95" 
-                            :class="[ sidebarMode === mode.id ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/20 shadow-md scale-[1.02]' : 'border-transparent hover:bg-slate-50 dark:hover:bg-gray-800' ]">
-                                <div class="h-12 w-12 rounded-xl flex items-center justify-center transition-all shadow-sm" :class="sidebarMode === mode.id ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-gray-800 text-slate-400'">
+                            class="w-full p-4 rounded-2xl border-2 transition-all flex items-center gap-4 text-left group relative overflow-hidden active:scale-95 cursor-pointer" 
+                            :class="[ sidebarMode === mode.id ? 'border-tinto-700 dark:border-oro-500 bg-tinto-50/70 dark:bg-tinto-950/40 shadow-sm scale-[1.02]' : 'border-transparent hover:bg-slate-50 dark:hover:bg-gray-800' ]">
+                                <div class="h-12 w-12 rounded-xl flex items-center justify-center transition-all shadow-sm" :class="sidebarMode === mode.id ? 'bg-gradient-to-tr from-tinto-900 to-tinto-800 text-oro-300' : 'bg-slate-100 dark:bg-gray-800 text-slate-400'">
                                     <component :is="mode.i" class="h-6 w-6" />
                                 </div>
                                 <div class="flex-1">
-                                    <p class="text-[13px] font-black uppercase tracking-tight" :class="sidebarMode === mode.id ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500'">{{ mode.l }}</p>
+                                    <p class="text-[13px] font-black uppercase tracking-tight" :class="sidebarMode === mode.id ? 'text-tinto-800 dark:text-oro-300' : 'text-slate-500'">{{ mode.l }}</p>
                                     <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{{ mode.s }}</p>
                                 </div>
                             </button>

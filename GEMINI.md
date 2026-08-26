@@ -230,8 +230,26 @@ Pasos seguros para desplegar en 172.30.4.132:
         - Al extraer la información, se muestra la tabla interactiva de revisión previa con todos los funcionarios y sus correos listos para confirmar con un solo clic.
 - **Resultado:** Integración directa con el portal web institucional del Congreso, permitiendo poblar la base de datos con funcionarios reales, sus áreas de adscripción y correos oficiales en segundos.
 
+### 11. Identidad Visual Institucional del H. Congreso de Nayarit (Vino Tinto & Oro Ceremonial)
+- **Solicitud:** Implementar una imagen y paleta de colores institucional acorde a la identidad oficial del H. Congreso del Estado de Nayarit (XXXIV Legislatura) tanto en Modo Claro como en Modo Oscuro, mejorando colores, degradados, contrastes y sombras sin alterar la estructura ni el orden de los componentes.
+- **Punto de Respaldo Seguro:** Se creó el tag Git `checkpoint-institucional-base` previo a los cambios para permitir retornar en cualquier momento.
+- **Solución Implementada:**
+    - **Configuración de Tailwind (`tailwind.config.js` & `app.css`):**
+        - Se integraron las escalas cromáticas oficiales:
+            - **`tinto` (Vino Tinto / Guinda Legislativo):** Tonos desde `#fdf2f4` hasta `#78182a` / `#5a1420` (Poder Legislativo y solemnidad).
+            - **`oro` (Dorado Ceremonial / Escudo):** Tonos desde `#fbf9f1` hasta `#c5a059` / `#ad8342`.
+            - **`nayarit` (Verde Escudo Nayarit):** `#166534` para estados activos y confirmaciones.
+        - Se crearon utilidades de sombras elegantes: `shadow-tinto-sm`, `shadow-tinto`, `shadow-oro-sm` y degradados `.bg-congreso-gradient`.
+    - **Adaptación en Componentes Principales:**
+        - **Barra de Navegación Global (`AuthenticatedLayout.vue`):** Logo institucional en Vino Tinto y Oro, indicador de "Hora Local Nayarit", badges y menú de herramientas estilizados. Fondo claro marfil suave (`#faf9f6`) y oscuro obsidiana (`#0b0f19`).
+        - **Panel Operativo Bento (`Dashboard.vue`):** Pestañas de vista rápida ("Control Operativo Global" en tinto/oro y "Gestión Comedor" en verde institucional), botones de turno (Desayuno, Comida, Cena), selector de áreas y botón de "Iniciar Buffet & Turno" con gradiente Vino Tinto y bisel dorado.
+        - **Módulo de Usuarios & Modal IA (`Users/Index.vue` & `ScanUsersModal.vue`):** Botones de importación con IA en Tinto/Oro, botón de nuevo registro en Oro cálido, tablas con badges de roles institucionales.
+        - **Portal de Pedidos para Personal (`AreaOrder.vue`):** Banner superior con sello republicano Vino Tinto, acentos dorados y estados activos en Verde Nayarit.
+- **Resultado:** Apariencia visual distinguida, solemne y oficial para la XXXIV Legislatura del H. Congreso del Estado de Nayarit, manteniendo total fluidez y legibilidad tanto de día como de noche.
+
 ---
 **Desarrollado y Protegido por Spincelaestream - 26 Agosto 2026**
+
 
 
 

@@ -105,40 +105,40 @@ const deleteUser = (id) => { if (confirm('¿Eliminar usuario?')) router.delete(r
 
 const roleLabels = { admin: 'Administrador', acquisitions_manager: 'Adquisiciones', area_manager: 'Gerente de Área', diner: 'Comensal' };
 const roleColors = { 
-    admin: 'bg-indigo-100 text-indigo-700', 
-    acquisitions_manager: 'bg-emerald-100 text-emerald-700', 
-    area_manager: 'bg-amber-100 text-amber-700', 
-    diner: 'bg-slate-100 text-slate-500' 
+    admin: 'bg-tinto-50 dark:bg-tinto-950/80 text-tinto-800 dark:text-oro-300 border-tinto-200 dark:border-tinto-800', 
+    acquisitions_manager: 'bg-oro-50 dark:bg-oro-950/80 text-oro-900 dark:text-oro-300 border-oro-200 dark:border-oro-800', 
+    area_manager: 'bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800', 
+    diner: 'bg-slate-100 dark:bg-gray-800 text-slate-600 dark:text-gray-400 border-slate-200 dark:border-gray-700' 
 };
-const areaColors = ['bg-blue-100 text-blue-700', 'bg-emerald-100 text-emerald-700', 'bg-rose-100 text-rose-700', 'bg-amber-100 text-amber-700'];
+const areaColors = ['bg-tinto-50 text-tinto-800', 'bg-oro-50 text-oro-900', 'bg-emerald-50 text-emerald-800', 'bg-slate-100 text-slate-700'];
 const getAreaColor = (id) => id ? areaColors[id % areaColors.length] : 'bg-slate-50 text-slate-400';
 </script>
 
 <template>
-    <Head title="Usuarios V2.0" />
+    <Head title="Usuarios SICOA" />
 
     <AuthenticatedLayout bento-tag="Usuarios">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <!-- SEARCH & FILTERS -->
             <div class="lg:col-span-12">
-                <div class="bg-white dark:bg-gray-900 p-8 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-gray-800 space-y-6">
+                <div class="bg-white dark:bg-gray-900 p-8 rounded-[2.5rem] shadow-[0_10px_35px_-5px_rgba(120,24,42,0.06)] dark:shadow-none border border-slate-200/80 dark:border-gray-800 space-y-6">
                     <div class="flex flex-col md:flex-row justify-between items-center gap-6">
                         <div class="relative flex-1 w-full">
-                            <MagnifyingGlassIcon class="absolute left-5 top-1/2 -translate-y-1/2 h-6 w-6 text-indigo-500" />
+                            <MagnifyingGlassIcon class="absolute left-5 top-1/2 -translate-y-1/2 h-6 w-6 text-tinto-700 dark:text-oro-400" />
                             <input type="text" v-model="search" placeholder="Buscar usuarios, correos, áreas..." 
-                                   class="w-full pl-14 pr-6 py-4 bg-slate-50 dark:bg-gray-800 border-none rounded-2xl text-sm focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white shadow-inner" />
+                                   class="w-full pl-14 pr-6 py-4 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-2 focus:ring-tinto-700 transition-all dark:text-white shadow-inner font-medium" />
                         </div>
                         <div class="flex items-center gap-3 shrink-0">
                             <button @click="showScanModal = true" 
                                     type="button"
-                                    class="bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 bg-[length:200%_auto] text-white px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2.5 shadow-xl shadow-purple-500/20 hover:scale-105 active:scale-95 transition-all cursor-pointer">
-                                <SparklesIcon class="h-4 w-4 animate-pulse" />
+                                    class="bg-gradient-to-r from-tinto-900 via-tinto-800 to-tinto-900 text-white px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2.5 shadow-tinto-sm border border-oro-400/40 hover:scale-105 active:scale-95 transition-all cursor-pointer">
+                                <SparklesIcon class="h-4 w-4 text-oro-300 animate-pulse" />
                                 <span>Importar con IA</span>
                             </button>
 
                             <button @click="openCreateModal" 
                                     type="button"
-                                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center shadow-xl shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95 shrink-0 cursor-pointer">
+                                    class="bg-gradient-to-r from-oro-600 via-oro-500 to-oro-600 hover:from-oro-700 hover:to-oro-600 text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center shadow-oro-sm border border-oro-400/30 transition-all hover:scale-105 active:scale-95 shrink-0 cursor-pointer">
                                 <PlusIcon class="h-4 w-4 mr-2" stroke-width="4" /> Nuevo Registro
                             </button>
                         </div>
@@ -148,15 +148,15 @@ const getAreaColor = (id) => id ? areaColors[id % areaColors.length] : 'bg-slate
                         <div class="flex-1 relative">
                             <label class="ml-4 mb-2 text-[10px] font-black uppercase text-slate-400 tracking-widest block">Filtrar por Área</label>
                             <input type="text" v-model="areaSearch" @focus="showAreaResults = true" placeholder="Buscar área..."
-                                   class="w-full pl-6 pr-10 py-4 bg-slate-50 dark:bg-gray-800 border-none rounded-2xl text-xs font-bold uppercase focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all shadow-inner" />
-                            <div v-if="showAreaResults" class="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 border rounded-2xl shadow-2xl max-h-60 overflow-y-auto custom-scrollbar">
-                                <div @click="selectAreaFilter(null)" class="p-3 hover:bg-slate-50 cursor-pointer text-[10px] font-black uppercase text-slate-400">Ver Todas</div>
-                                <div v-for="a in filteredAreaOptions" :key="a.id" @click="selectAreaFilter(a)" class="p-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer border-b last:border-0"><p class="text-[10px] font-bold text-slate-700 dark:text-gray-200 uppercase">{{ a.full_path }}</p></div>
+                                   class="w-full pl-6 pr-10 py-4 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-2xl text-xs font-bold uppercase focus:ring-2 focus:ring-tinto-700 dark:text-white transition-all shadow-inner" />
+                            <div v-if="showAreaResults" class="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-2xl shadow-2xl max-h-60 overflow-y-auto custom-scrollbar">
+                                <div @click="selectAreaFilter(null)" class="p-3 hover:bg-slate-50 dark:hover:bg-gray-700 cursor-pointer text-[10px] font-black uppercase text-slate-400">Ver Todas</div>
+                                <div v-for="a in filteredAreaOptions" :key="a.id" @click="selectAreaFilter(a)" class="p-3 hover:bg-tinto-50 dark:hover:bg-tinto-950/40 cursor-pointer border-b dark:border-gray-700 last:border-0"><p class="text-[10px] font-bold text-slate-700 dark:text-gray-200 uppercase">{{ a.full_path }}</p></div>
                             </div>
                         </div>
                         <div class="flex-1">
                             <label class="ml-4 mb-2 text-[10px] font-black uppercase text-slate-400 tracking-widest block">Filtrar por Rol</label>
-                            <select v-model="roleFilter" class="w-full px-6 py-4 bg-slate-50 dark:bg-gray-800 border-none rounded-2xl text-xs font-bold uppercase focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all shadow-inner appearance-none">
+                            <select v-model="roleFilter" class="w-full px-6 py-4 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-2xl text-xs font-bold uppercase focus:ring-2 focus:ring-tinto-700 dark:text-white transition-all shadow-inner appearance-none">
                                 <option value="">Cualquier Rol</option>
                                 <option v-for="(l, v) in roleLabels" :key="v" :value="v">{{ l }}</option>
                             </select>

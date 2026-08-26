@@ -165,26 +165,28 @@ const mealTypeTagColors = {
 <template>
     <Head :title="'Pedido de ' + session.meal_type + ' - ' + area.name" />
 
-    <div class="min-h-screen bg-slate-50 dark:bg-gray-950 text-slate-800 dark:text-gray-100 transition-colors duration-300 antialiased selection:bg-indigo-500 selection:text-white pb-20">
+    <div class="min-h-screen bg-[#faf9f6] dark:bg-[#0b0f19] text-slate-800 dark:text-gray-100 transition-colors duration-300 antialiased selection:bg-tinto-700 selection:text-white pb-20 font-sans">
         
         <!-- HEADER PÚBLICO -->
         <header class="sticky top-0 z-30 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-slate-200/80 dark:border-gray-800 shadow-sm">
             <div class="max-w-4xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <ApplicationLogo class="h-10 w-10 fill-current text-indigo-600 dark:text-indigo-400" />
+                    <div class="p-2 bg-gradient-to-tr from-tinto-900 to-tinto-800 rounded-xl text-oro-300 border border-oro-500/30 shadow-sm">
+                        <BuildingStorefrontIcon class="h-6 w-6" />
+                    </div>
                     <div>
                         <div class="flex items-center gap-2">
                             <span class="text-sm font-black tracking-tight text-slate-900 dark:text-white uppercase">SICOA</span>
-                            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 uppercase">Pedido Directo</span>
+                            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-tinto-50 dark:bg-tinto-950 text-tinto-800 dark:text-oro-300 border border-tinto-200 dark:border-tinto-800 uppercase">Pedido Directo</span>
                         </div>
                         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ area.name }}</p>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <button @click="toggleDarkMode" class="p-2.5 rounded-xl bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-600 dark:text-gray-300 transition-all" title="Cambiar Tema">
-                        <SunIcon v-if="isDark" class="h-4 w-4 text-amber-400" />
-                        <MoonIcon v-else class="h-4 w-4 text-indigo-600" />
+                    <button @click="toggleDarkMode" class="p-2.5 rounded-xl bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-600 dark:text-gray-300 transition-all cursor-pointer" title="Cambiar Tema">
+                        <SunIcon v-if="isDark" class="h-4 w-4 text-oro-400" />
+                        <MoonIcon v-else class="h-4 w-4 text-tinto-700" />
                     </button>
                 </div>
             </div>
@@ -193,27 +195,27 @@ const mealTypeTagColors = {
         <main class="max-w-4xl mx-auto px-4 sm:px-6 pt-8">
             
             <!-- TARJETA CONTEXTUAL DE TURNO -->
-            <div class="bg-gradient-to-br from-indigo-900 via-indigo-800 to-slate-900 text-white rounded-[2.5rem] p-6 sm:p-8 shadow-2xl shadow-indigo-950/20 relative overflow-hidden mb-8 border border-white/10">
-                <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
+            <div class="bg-gradient-to-br from-tinto-950 via-tinto-900 to-slate-950 text-white rounded-[2.5rem] p-6 sm:p-8 shadow-[0_15px_35px_-5px_rgba(120,24,42,0.3)] relative overflow-hidden mb-8 border border-oro-500/30">
+                <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-oro-500/10 rounded-full blur-2xl pointer-events-none"></div>
                 <div class="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                     <div>
                         <div class="flex flex-wrap items-center gap-2 mb-3">
                             <span class="px-3 py-1 rounded-xl text-[10px] font-black uppercase border shadow-sm" :class="mealTypeTagColors[session.meal_type] || 'bg-white/20 text-white'">
                                 {{ session.meal_type }}
                             </span>
-                            <span class="text-[10px] font-bold text-indigo-200 uppercase tracking-widest flex items-center gap-1.5">
-                                <ClockIcon class="h-3.5 w-3.5" /> {{ session.date }}
+                            <span class="text-[10px] font-bold text-oro-200 uppercase tracking-widest flex items-center gap-1.5">
+                                <ClockIcon class="h-3.5 w-3.5 text-oro-400" /> {{ session.date }}
                             </span>
                         </div>
-                        <h1 class="text-2xl sm:text-3xl font-black uppercase tracking-tight leading-none mb-2">
+                        <h1 class="text-2xl sm:text-3xl font-black uppercase tracking-tight leading-none mb-2 text-white">
                             {{ area.name }}
                         </h1>
-                        <p class="text-xs font-bold text-indigo-200 uppercase tracking-widest flex items-center gap-2">
-                            <BuildingStorefrontIcon class="h-4 w-4" /> Proveedor: <span class="text-white">{{ session.provider?.name }}</span>
+                        <p class="text-xs font-bold text-oro-200/80 uppercase tracking-widest flex items-center gap-2">
+                            <BuildingStorefrontIcon class="h-4 w-4 text-oro-400" /> Proveedor: <span class="text-white">{{ session.provider?.name }}</span>
                         </p>
                     </div>
 
-                    <div v-if="isOpen" class="flex items-center gap-2 px-4 py-2 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-[10px] font-black uppercase tracking-widest backdrop-blur-md">
+                    <div v-if="isOpen" class="flex items-center gap-2 px-4 py-2 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-black uppercase tracking-widest backdrop-blur-md">
                         <div class="h-2 w-2 rounded-full bg-emerald-400 animate-ping"></div>
                         <span>Turno Activo</span>
                     </div>
