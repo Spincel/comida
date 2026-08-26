@@ -5,7 +5,7 @@ import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import { Link, usePage, Head } from '@inertiajs/vue3';
+import { Link, usePage, Head, router } from '@inertiajs/vue3';
 import { 
     Bars3Icon, 
     SunIcon, 
@@ -46,6 +46,10 @@ const goBack = () => {
     } else {
         router.visit(route('dashboard'));
     }
+};
+
+const logout = () => {
+    router.post(route('logout'));
 };
 
 const user = computed(() => page.props.auth.user);
@@ -297,7 +301,7 @@ watch(() => page.props.flash?.success, (newMsg) => {
                             </template>
 
                             <div class="mt-2 border-t border-slate-100 dark:border-gray-800/80 pt-1">
-                                <DropdownLink :href="route('logout')" method="post" as="button" class="text-rose-600 dark:text-rose-400 hover:bg-rose-50/90 dark:hover:bg-rose-950/50 hover:text-rose-700">
+                                <DropdownLink :href="route('logout')" method="post" as="button" @click="logout" class="text-rose-600 dark:text-rose-400 hover:bg-rose-50/90 dark:hover:bg-rose-950/50 hover:text-rose-700">
                                     <div class="h-7 w-7 rounded-xl bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">🚪</div>
                                     <span class="font-black">Cerrar Sesión</span>
                                 </DropdownLink>
