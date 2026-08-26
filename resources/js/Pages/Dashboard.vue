@@ -614,13 +614,24 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                     <!-- PASO 3: ÁREAS -->
                     <div class="mb-12">
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                            <div class="flex items-center gap-3">
+                            <div class="flex flex-wrap items-center gap-3">
                                 <p class="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-widest ml-2 flex items-center gap-2">
                                     <span class="p-1 rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 text-[10px]">3</span> Habilitar Áreas del Congreso:
                                 </p>
                                 <div class="flex bg-slate-100 dark:bg-gray-800 p-1 rounded-xl border dark:border-gray-700">
                                     <button @click="selectAllAreas" class="px-3 py-1 text-[8px] font-black uppercase text-tinto-700 dark:text-oro-400 hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-all cursor-pointer">Todas</button>
                                     <button @click="deselectAllAreas" class="px-3 py-1 text-[8px] font-black uppercase text-slate-400 hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-all cursor-pointer">Ninguna</button>
+                                </div>
+                                
+                                <!-- AUTO-SYNC BADGE -->
+                                <div v-if="currentActiveBentoSession" class="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[9px] font-black text-emerald-800 dark:text-emerald-300">
+                                    <span v-if="isSyncingAreas" class="flex items-center gap-1 text-oro-600 dark:text-oro-400 animate-pulse">
+                                        <ArrowPathIcon class="h-3 w-3 animate-spin" /> Sincronizando...
+                                    </span>
+                                    <span v-else class="flex items-center gap-1.5">
+                                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                                        <span>Áreas sincronizadas en vivo</span>
+                                    </span>
                                 </div>
                             </div>
                             
@@ -730,14 +741,54 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                         </div>
                     </div>
 
-                    <!-- BOTÓN INICIAR SESIÓN -->
-                    <div class="mt-8">
-                        <button @click="submitBentoActivation" 
-                                :disabled="isSyncingAreas"
-                                class="w-full py-6 rounded-[2rem] bg-gradient-to-r from-tinto-900 via-tinto-800 to-tinto-900 text-white text-[11px] font-black uppercase tracking-[0.3em] border border-oro-400/40 shadow-tinto hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-4 disabled:opacity-50 cursor-pointer shine-effect">
-                            <ArrowPathIcon class="h-5 w-5 text-oro-300" :class="{ 'animate-spin': isSyncingAreas }" />
-                            <span>{{ currentActiveBentoSession ? 'Actualizar Áreas del Turno' : 'Iniciar Buffet & Turno' }}</span>
+                    <!-- ACCIONES OPERATIVAS CUANDO LA SESIÓN ESTÁ EN SERVICIO -->
+                    <div v-if="currentActiveBentoSession" class="mt-8 space-y-3.5">
+                        <!-- BANNER INFORMATIVO DE AUTOGUARDADO -->
+                        <div class="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/80 text-emerald-800 dark:text-emerald-300 flex items-center justify-between shadow-sm">
+                            <div class="flex items-center gap-2.5">
+                                <div class="relative flex items-center justify-center h-3 w-3 shrink-0">
+                                    <span class="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping"></span>
+                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                </div>
+                                <div>
+                                    <p class="text-[9px] font-black uppercase tracking-wider">Turno en Servicio Activo</p>
+                                    <p class="text-[8px] font-bold text-emerald-700 dark:text-emerald-400">
+                                        {{ bentoSelectedAreas.length }} áreas habilitadas • Autoguardado instantáneo
+                                    </p>
+                                </div>
+                            </div>
+                            <span class="text-base">✨</span>
+                        </div>
+
+                        <!-- BOTÓN MONITOR DE PEDIDOS EN VIVO -->
+                        <Link :href="route('admin.orders.summary', { provider: currentActiveBentoSession.provider_id, date: currentActiveBentoSession.date, meal_type: currentActiveBentoSession.meal_type })"
+                              class="w-full py-4.5 px-4 rounded-[2rem] bg-gradient-to-r from-tinto-900 via-tinto-800 to-tinto-900 text-white text-[11px] font-black uppercase tracking-[0.2em] border border-oro-400/40 shadow-tinto-sm hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2.5 cursor-pointer shine-effect group">
+                            <span class="text-base group-hover:scale-125 transition-transform">📊</span>
+                            <span>Ver Monitor de Pedidos en Vivo</span>
+                            <ChevronRightIcon class="h-4 w-4 text-oro-300 group-hover:translate-x-1 transition-transform" />
+                        </Link>
+
+                        <!-- BOTÓN FINALIZAR TURNO -->
+                        <button @click="openDeactivateMenuModal(currentActiveBentoSession, currentActiveBentoSession.provider)"
+                                type="button"
+                                class="w-full py-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-800 text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95">
+                            <PowerIcon class="h-4 w-4 text-rose-600" />
+                            <span>Finalizar y Cerrar Turno: {{ currentActiveBentoSession.meal_type }}</span>
                         </button>
+                    </div>
+
+                    <!-- BOTÓN ABRIR SESIÓN CUANDO EL TURNO NO ESTÁ ACTIVO -->
+                    <div v-else class="mt-8">
+                        <button @click="submitBentoActivation" 
+                                :disabled="isSyncingAreas || bentoSelectedAreas.length === 0"
+                                class="w-full py-6 rounded-[2rem] bg-gradient-to-r from-nayarit-800 via-emerald-700 to-emerald-600 text-white text-[11px] font-black uppercase tracking-[0.3em] border border-emerald-300/30 shadow-lg hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shine-effect">
+                            <span class="text-lg">🚀</span>
+                            <span>Iniciar Turno de {{ bentoTurno }}</span>
+                            <span class="px-2.5 py-1 rounded-lg bg-white/20 text-white text-[9px] font-black uppercase">{{ bentoSelectedAreas.length }} áreas</span>
+                        </button>
+                        <p v-if="bentoSelectedAreas.length === 0" class="text-[9px] font-bold text-center text-slate-400 uppercase tracking-widest mt-2.5">
+                            Selecciona al menos un área para abrir el turno
+                        </p>
                     </div>
                 </div>
             </div>
