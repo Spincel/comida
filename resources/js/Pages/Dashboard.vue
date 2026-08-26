@@ -500,7 +500,7 @@ const confirmSubmitAreaOrders = () => {
     });
     if (ids.length === 0) { showSubmitConfirmation.value = false; return; }
     router.post(route('orders.areaSubmit'), { order_ids: ids, meal_type: pendingSubmissionMealType.value }, { 
-        preserveScroll: true, onSuccess: () => { setTimeout(() => { showSubmitConfirmation.value = false; selectedOrderIds.value[pendingSubmissionMealType.value] = []; router.reload({ only: ['teamOrders', 'openSessions', 'dishSummaryToday'] }); }, 1000); } 
+        preserveScroll: true, onSuccess: () => { setTimeout(() => { showSubmitConfirmation.value = false; selectedOrderIds.value[pendingSubmissionMealType.value] = []; router.reload({ only: ['teamOrders', 'openSessions', 'dishSummaryToday'] }); }, 2800); } 
     }); 
 };
 

@@ -5,7 +5,8 @@ import { ChevronDoubleRightIcon } from '@heroicons/vue/24/outline';
 const props = defineProps({
     text: { type: String, default: 'Desliza para confirmar' },
     activeText: { type: String, default: '¡Confirmado!' },
-    colorClass: { type: String, default: 'bg-red-600' },
+    colorClass: { type: String, default: 'bg-emerald-600' },
+    icon: { type: String, default: '🍽️' },
 });
 
 const emit = defineEmits(['confirm']);
@@ -51,7 +52,7 @@ const confirmAction = () => {
     setTimeout(() => {
         isConfirmed.value = false;
         currentTranslate.value = 0;
-    }, 2000);
+    }, 2500);
 };
 
 onMounted(() => {
@@ -67,26 +68,55 @@ onUnmounted(() => {
 
 <template>
     <div ref="container" 
-         class="relative p-1 rounded-2xl h-14 w-full flex items-center overflow-hidden transition-all duration-300 select-none border-2 border-transparent"
-         :class="[isConfirmed ? 'bg-green-500' : 'bg-gray-100 dark:bg-gray-900 border-gray-200 dark:border-gray-700']"
+         class="relative p-1.5 rounded-3xl h-16 w-full flex items-center overflow-hidden transition-all duration-300 select-none border-2 shadow-inner"
+         :class="[
+            isConfirmed 
+                ? 'bg-gradient-to-r from-nayarit-800 via-emerald-600 to-emerald-500 border-emerald-400 shadow-emerald-900/20' 
+                : 'bg-slate-100 dark:bg-gray-900/90 border-slate-200/80 dark:border-gray-800'
+         ]"
          @mousemove="onDrag"
          @touchmove="onDrag">
         
-        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <span class="text-[10px] font-black uppercase tracking-[0.2em]"
-                  :class="isConfirmed ? 'text-white' : 'text-gray-400 dark:text-gray-600'">
+        <!-- Track Background Progress Fill -->
+        <div v-if="!isConfirmed && currentTranslate > 0"
+             class="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-emerald-500/30 to-oro-400/40 rounded-3xl pointer-events-none transition-all duration-75"
+             :style="{ width: `${currentTranslate + 56}px` }">
+        </div>
+
+        <!-- Center Text -->
+        <div class="absolute inset-0 flex items-center justify-center pointer-events-none px-12 text-center">
+            <span class="text-[11px] font-black uppercase tracking-[0.2em] transition-all flex items-center gap-2"
+                  :class="isConfirmed ? 'text-white scale-105 animate-pulse' : 'text-slate-500 dark:text-gray-400'">
+                <span v-if="isConfirmed" class="text-base">✨</span>
                 {{ isConfirmed ? activeText : text }}
+                <span v-if="isConfirmed" class="text-base">✨</span>
             </span>
         </div>
 
+        <!-- Draggable Knob / Handle -->
         <div ref="slider"
-             class="h-12 w-12 rounded-xl flex items-center justify-center cursor-grab active:cursor-grabbing transition-transform duration-75 shadow-lg z-10"
-             :class="[isConfirmed ? 'bg-white text-green-500' : colorClass + ' text-white']"
+             class="h-12 w-12 rounded-2xl flex items-center justify-center cursor-grab active:cursor-grabbing transition-transform duration-75 shadow-md z-10 select-none text-lg border border-white/20"
+             :class="[
+                isConfirmed 
+                    ? 'bg-white text-emerald-700 shadow-emerald-500/40 scale-105' 
+                    : `${colorClass} text-white shadow-tinto-sm hover:scale-105`
+             ]"
              :style="{ transform: `translateX(${currentTranslate}px)` }"
              @mousedown="startDrag"
              @touchstart="startDrag">
-            <ChevronDoubleRightIcon v-if="!isConfirmed" class="h-6 w-6 animate-pulse" />
-            <span v-else class="text-xl">✓</span>
+            <span v-if="!isConfirmed" class="transition-transform duration-150 transform hover:scale-125 select-none pointer-events-none">
+                {{ icon }}
+            </span>
+            <span v-else class="text-xl font-black text-emerald-600 animate-bounce">
+                ✓
+            </span>
         </div>
     </div>
 </template>
+
+<style scoped>
+@keyframes pulse-subtle {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.85; transform: scale(0.98); }
+}
+</style>
