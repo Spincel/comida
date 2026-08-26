@@ -274,12 +274,14 @@ class DashboardController extends Controller
                 $props['pendingAuthorizations'] = $myAreaSessions->filter(fn($s) => !in_array((int)$s->id, $userAuthorizations))->values();
             }
 
-            // Override openSessions for Managers to show counts and compatibility flags
-            $props['openSessions'] = $myAreaSessions->map(function($session) use ($allAreaAuthorizations) {
-                $session->authorized_count = $allAreaAuthorizations->where('provider_daily_status_id', $session->id)->count();
-                $session->is_open_for_my_area = true; // Compatibility with frontend computed props
-                return $session;
-            })->values();
+            // Override openSessions ONLY for Area Managers and Diners to restrict to their area
+            if ($user->role === 'area_manager' || $user->role === 'diner') {
+                $props['openSessions'] = $myAreaSessions->map(function($session) use ($allAreaAuthorizations) {
+                    $session->authorized_count = $allAreaAuthorizations->where('provider_daily_status_id', $session->id)->count();
+                    $session->is_open_for_my_area = true; // Compatibility with frontend computed props
+                    return $session;
+                })->values();
+            }
         }
 
         return Inertia::render('Dashboard', $props);
@@ -675,7 +677,7 @@ class DashboardController extends Controller
             'selected_area_ids' => ['required', 'array', 'min:1'],
             'selected_area_ids.*' => ['integer', 'exists:areas,id'],
             'meal_type' => ['required', 'string', 'max:50'],
-            'conflict_resolution' => ['nullable', 'string', 'in:merge,substitute,restart'], 
+            'conflict_resolution' => ['nullable', 'string', 'in:merge,substitute,restart,replace'], 
         ]);
 
         $mealType = $validated['meal_type'];
@@ -708,7 +710,7 @@ class DashboardController extends Controller
             $conflicts = array_intersect($newAreaIds, $otherAreaIds);
 
             if (count($conflicts) > 0) {
-                if ($request->conflict_resolution === 'substitute' || $request->conflict_resolution === 'restart') {
+                if ($request->conflict_resolution === 'substitute' || $request->conflict_resolution === 'restart' || $request->conflict_resolution === 'replace') {
                     $remainingAreas = array_values(array_diff($otherAreaIds, $conflicts));
                     $otherSession->update(['selected_area_ids' => $remainingAreas]);
                     
@@ -740,12 +742,30 @@ class DashboardController extends Controller
             ->first();
 
         $finalAreaIds = $newAreaIds;
-        if ($existingSession && $request->conflict_resolution === 'merge') {
+        if ($existingSession) {
             $currentAreaIds = is_array($existingSession->selected_area_ids) 
                 ? $existingSession->selected_area_ids 
                 : json_decode($existingSession->selected_area_ids, true);
             $currentAreaIds = array_map('intval', $currentAreaIds ?: []);
-            $finalAreaIds = array_values(array_unique(array_merge($currentAreaIds, $newAreaIds)));
+
+            if ($request->conflict_resolution === 'merge') {
+                $finalAreaIds = array_values(array_unique(array_merge($currentAreaIds, $newAreaIds)));
+            } else {
+                $finalAreaIds = $newAreaIds;
+            }
+
+            $removedAreas = array_diff($currentAreaIds, $finalAreaIds);
+            if (!empty($removedAreas)) {
+                SessionAuthorization::where('provider_daily_status_id', $existingSession->id)
+                    ->whereHas('user', fn($q) => $q->whereIn('area_id', $removedAreas))
+                    ->delete();
+
+                Order::where('meal_type', $mealType)
+                    ->whereDate('orders.created_at', $date)
+                    ->whereHas('dailyMenu', fn($q) => $q->where('provider_id', $provider->id))
+                    ->whereHas('user', fn($q) => $q->whereIn('area_id', $removedAreas))
+                    ->update(['status' => 'cancelled']);
+            }
         }
 
         ProviderDailyStatus::updateOrCreate(
@@ -836,15 +856,20 @@ class DashboardController extends Controller
     public function updateSessionAreas(Request $request, ProviderDailyStatus $session)
     {
         $validated = $request->validate([
-            'selected_area_ids' => 'required|array',
+            'selected_area_ids' => 'present|array',
             'selected_area_ids.*' => 'integer|exists:areas,id',
         ]);
 
-        $oldAreaIds = $session->selected_area_ids ?? [];
-        $newAreaIds = array_map('intval', $validated['selected_area_ids']);
+        $oldAreaIds = is_array($session->selected_area_ids) 
+            ? $session->selected_area_ids 
+            : json_decode($session->selected_area_ids, true);
+        $oldAreaIds = array_map('intval', $oldAreaIds ?: []);
+        $newAreaIds = array_map('intval', $validated['selected_area_ids'] ?? []);
         
         // Find areas being removed
         $removedAreaIds = array_diff($oldAreaIds, $newAreaIds);
+        // Find areas being added
+        $addedAreaIds = array_diff($newAreaIds, $oldAreaIds);
 
         if (!empty($removedAreaIds)) {
             // 1. Remove session authorizations for users in removed areas
@@ -857,16 +882,60 @@ class DashboardController extends Controller
             Order::where('meal_type', $session->meal_type)
                 ->whereDate('orders.created_at', $session->date)
                 ->whereHas('dailyMenu', function($q) use ($session) {
-                    $q->where('provider_id', $session->provider->id);
+                    $q->where('provider_id', $session->provider_id);
                 })
                 ->whereHas('user', function($q) use ($removedAreaIds) {
                     $q->whereIn('area_id', $removedAreaIds);
                 })->update(['status' => 'cancelled']);
         }
 
+        if (!empty($addedAreaIds)) {
+            // 1. Remove added areas from any other open session of the same date and meal_type
+            $conflictingSessions = ProviderDailyStatus::where('date', $session->date)
+                ->where('meal_type', $session->meal_type)
+                ->where('status', 'open')
+                ->where('id', '!=', $session->id)
+                ->get();
+
+            foreach ($conflictingSessions as $otherSession) {
+                $otherAreas = is_array($otherSession->selected_area_ids) ? $otherSession->selected_area_ids : json_decode($otherSession->selected_area_ids, true);
+                $otherAreas = array_map('intval', $otherAreas ?: []);
+                $conflicts = array_intersect($otherAreas, $addedAreaIds);
+
+                if (!empty($conflicts)) {
+                    $updatedOtherAreas = array_values(array_diff($otherAreas, $conflicts));
+                    $otherSession->update(['selected_area_ids' => $updatedOtherAreas]);
+
+                    SessionAuthorization::where('provider_daily_status_id', $otherSession->id)
+                        ->whereHas('user', fn($q) => $q->whereIn('area_id', $conflicts))
+                        ->delete();
+
+                    Order::where('meal_type', $session->meal_type)
+                        ->whereDate('orders.created_at', $session->date)
+                        ->whereHas('dailyMenu', fn($q) => $q->where('provider_id', $otherSession->provider_id))
+                        ->whereHas('user', fn($q) => $q->whereIn('area_id', $conflicts))
+                        ->update(['status' => 'cancelled']);
+                }
+            }
+
+            // 2. Auto-authorize managers of the newly added areas
+            $managers = \App\Models\User::whereIn('area_id', $addedAreaIds)
+                ->whereIn('role', ['area_manager', 'admin', 'acquisitions_manager'])
+                ->get();
+            
+            foreach ($managers as $manager) {
+                SessionAuthorization::updateOrCreate([
+                    'provider_daily_status_id' => $session->id,
+                    'user_id' => $manager->id,
+                ], [
+                    'authorized_by_user_id' => auth()->id()
+                ]);
+            }
+        }
+
         $session->update(['selected_area_ids' => $newAreaIds]);
         
-        return redirect()->route('dashboard')->with('success', 'Áreas actualizadas y datos de pedidos/autorizaciones limpiados.');
+        return redirect()->route('dashboard')->with('success', 'Áreas actualizadas correctamente.');
     }
 
     public function showOrderSummary(Provider $provider, string $date, Request $request, $meal_type = null)
@@ -910,6 +979,8 @@ class DashboardController extends Controller
             'mealType' => $mealType,
             'ordersSummary' => $summary,
             'sessionId' => $session?->id,
+            'sessionStatus' => $session?->status ?? 'closed',
+            'session' => $session,
             'reportConfig' => json_decode(SystemSetting::where('key', 'report_configuration')->first()?->value ?: '{}', true),
             'whatsappConfig' => json_decode(SystemSetting::where('key', 'whatsapp_configuration')->first()?->value ?: '{}', true),
         ]);

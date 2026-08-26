@@ -20,7 +20,7 @@ import {
     BuildingStorefrontIcon, InformationCircleIcon, ClipboardDocumentCheckIcon, DocumentIcon, BuildingOfficeIcon,
     WrenchScrewdriverIcon, DocumentChartBarIcon, ExclamationTriangleIcon, TableCellsIcon, PhotoIcon, ArrowLeftIcon,
     UserPlusIcon, ArrowPathIcon, ShieldCheckIcon, MoonIcon, SunIcon, ChevronDownIcon, PowerIcon, UsersIcon,
-    MagnifyingGlassIcon, SwatchIcon, ChartBarIcon, StarIcon as StarOutlineIcon
+    MagnifyingGlassIcon, SwatchIcon, ChartBarIcon, LinkIcon, StarIcon as StarOutlineIcon
 } from '@heroicons/vue/24/outline';
 import { StarIcon } from '@heroicons/vue/24/solid';
 
@@ -91,12 +91,41 @@ const filteredBentoAreas = computed(() => {
     return props.areas.filter(a => a.name.toLowerCase().includes(areaSearchTerm.value.toLowerCase()));
 });
 
+const currentActiveBentoSession = computed(() => {
+    return props.openSessions?.find(s => 
+        s.meal_type === bentoTurno.value && 
+        s.provider_id === bentoProviderId.value
+    );
+});
+
+const isSyncingAreas = ref(false);
+
+const syncSessionAreas = (newAreaIds) => {
+    if (!currentActiveBentoSession.value) return;
+    isSyncingAreas.value = true;
+    router.patch(route('dashboard.sessions.updateAreas', currentActiveBentoSession.value.id), {
+        selected_area_ids: newAreaIds
+    }, {
+        preserveScroll: true,
+        onFinish: () => {
+            isSyncingAreas.value = false;
+        }
+    });
+};
+
 const selectAllAreas = () => {
-    bentoSelectedAreas.value = props.areas.map(a => a.id);
+    const allIds = props.areas.map(a => a.id);
+    bentoSelectedAreas.value = allIds;
+    if (currentActiveBentoSession.value) {
+        syncSessionAreas(allIds);
+    }
 };
 
 const deselectAllAreas = () => {
     bentoSelectedAreas.value = [];
+    if (currentActiveBentoSession.value) {
+        syncSessionAreas([]);
+    }
 };
 
 onMounted(() => {
@@ -124,26 +153,77 @@ onMounted(() => {
 
 const toggleBentoArea = (areaId) => {
     const idx = bentoSelectedAreas.value.indexOf(areaId);
-    if (idx > -1) bentoSelectedAreas.value.splice(idx, 1);
-    else bentoSelectedAreas.value.push(areaId);
+    let newAreaIds = [...bentoSelectedAreas.value];
+    if (idx > -1) {
+        newAreaIds.splice(idx, 1);
+    } else {
+        newAreaIds.push(areaId);
+    }
+    bentoSelectedAreas.value = newAreaIds;
+
+    // Si la sesión para este turno y proveedor ya está abierta, sincronizar inmediatamente en backend
+    if (currentActiveBentoSession.value) {
+        syncSessionAreas(newAreaIds);
+    }
 };
 
 const submitBentoActivation = () => {
     if (!bentoProviderId.value) return alert('Por favor, selecciona un proveedor.');
     if (bentoSelectedAreas.value.length === 0) return alert('Debes seleccionar al menos un área de trabajo para habilitar el servicio.');
     
+    // Si la sesión ya está activa, sincronizar directamente
+    if (currentActiveBentoSession.value) {
+        syncSessionAreas(bentoSelectedAreas.value);
+        return;
+    }
+
     // Use local date YYYY-MM-DD to avoid timezone shifts at night
     const localDate = new Date().toLocaleDateString('en-CA'); 
 
+    isSyncingAreas.value = true;
     router.post(route('dashboard.providers.activate', bentoProviderId.value), {
         date: localDate,
         status: 'open',
         selected_area_ids: bentoSelectedAreas.value,
         meal_type: bentoTurno.value,
-        conflict_resolution: 'merge'
+        conflict_resolution: 'replace'
     }, {
         preserveScroll: true,
+        onError: (errors) => {
+            alert(errors.error || Object.values(errors)[0] || 'Error al activar el servicio');
+        },
+        onFinish: () => {
+            isSyncingAreas.value = false;
+        }
     });
+};
+
+// --- Compartir enlace de pedido para integrantes del área ---
+const copiedLink = ref(false);
+const copyAreaOrderLink = (session) => {
+    if (!session || !user.area_id) return;
+    const url = `${window.location.origin}/pedido/${session.id}/${user.area_id}`;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+            copiedLink.value = true;
+            setTimeout(() => { copiedLink.value = false; }, 3000);
+        }).catch(() => {
+            fallbackCopy(url);
+        });
+    } else {
+        fallbackCopy(url);
+    }
+};
+
+const fallbackCopy = (url) => {
+    const input = document.createElement('input');
+    input.value = url;
+    document.body.appendChild(input);
+    input.select();
+    document.execCommand('copy');
+    document.body.removeChild(input);
+    copiedLink.value = true;
+    setTimeout(() => { copiedLink.value = false; }, 3000);
 };
 
 // --- Justification Logic ---
@@ -428,6 +508,31 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
 
     <AuthenticatedLayout>
         
+        <!-- PESTAÑAS DE VISTA RÁPIDA (PARA ADQUISICIONES Y ADMINISTRADORES) -->
+        <div v-if="user.role === 'admin' || user.role === 'acquisitions_manager'" class="flex flex-wrap items-center justify-between gap-4 bg-white/80 dark:bg-gray-900/60 backdrop-blur-md p-3 rounded-[2.5rem] border border-slate-200 dark:border-gray-800 shadow-sm mb-8">
+            <div class="flex items-center gap-3">
+                <button @click="activeTab = 'global'" 
+                        type="button"
+                        class="px-6 py-3.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2.5 shadow-sm active:scale-95 cursor-pointer"
+                        :class="activeTab === 'global' ? 'bg-indigo-600 text-white shadow-indigo-600/30 scale-105' : 'bg-slate-100 dark:bg-gray-800 text-slate-500 hover:text-slate-900 dark:hover:text-white'">
+                    <ClockIcon class="h-4 w-4" />
+                    <span>Control Operativo Global</span>
+                </button>
+
+                <button @click="activeTab = 'my-area'" 
+                        type="button"
+                        class="px-6 py-3.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2.5 shadow-sm active:scale-95 cursor-pointer"
+                        :class="activeTab === 'my-area' ? 'bg-emerald-600 text-white shadow-emerald-600/30 scale-105' : 'bg-slate-100 dark:bg-gray-800 text-slate-500 hover:text-slate-900 dark:hover:text-white'">
+                    <UserIcon class="h-4 w-4" />
+                    <span>Gestión Comedor: <span class="opacity-90 font-black">{{ area?.name || 'Mi Área' }}</span></span>
+                </button>
+            </div>
+
+            <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-4 hidden md:block">
+                Vista Activa: <span class="font-black" :class="activeTab === 'global' ? 'text-indigo-600 dark:text-indigo-400' : 'text-emerald-600 dark:text-emerald-400'">{{ activeTab === 'global' ? 'Apertura y Cierre de Turnos' : 'Gestión de Comida - ' + (area?.name || 'Mi Área') }}</span>
+            </div>
+        </div>
+
         <!-- MAIN BENTO CONTENT -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
@@ -568,76 +673,18 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                     <!-- BOTÓN INICIAR SESIÓN (MOVIDO A AUDITORÍA) -->
                     <div class="mt-8">
                         <button @click="submitBentoActivation" 
-                                class="w-full py-6 rounded-[2rem] bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-600 bg-[length:200%_auto] animate-gradient text-white text-[11px] font-black uppercase tracking-[0.3em] shadow-2xl shadow-indigo-500/40 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-4">
-                            <ArrowPathIcon class="h-5 w-5" />
-                            Iniciar Buffet & Turno
+                                :disabled="isSyncingAreas"
+                                class="w-full py-6 rounded-[2rem] bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-600 bg-[length:200%_auto] animate-gradient text-white text-[11px] font-black uppercase tracking-[0.3em] shadow-2xl shadow-indigo-500/40 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-4 disabled:opacity-50">
+                            <ArrowPathIcon class="h-5 w-5" :class="{ 'animate-spin': isSyncingAreas }" />
+                            {{ currentActiveBentoSession ? 'Actualizar Áreas del Turno' : 'Iniciar Buffet & Turno' }}
                         </button>
-                    </div>
-                </div>
-                
-                <!-- QUICK ACTIONS -->
-                <div class="bg-indigo-600 rounded-[3rem] p-10 text-white shadow-2xl shadow-indigo-900/20">
-                    <h4 class="text-lg font-black uppercase tracking-tighter mb-8 ml-2">Herramientas</h4>
-                    <div class="grid grid-cols-1 gap-4">
-                        <Link :href="route('admin.history')" class="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-5 rounded-2xl border border-white/20 transition-all">
-                            <ClipboardDocumentListIcon class="h-6 w-6" />
-                            <span class="text-[10px] font-black uppercase tracking-[0.2em]">📖 Historial</span>
-                        </Link>
-                        <Link :href="user.role === 'area_manager' ? route('area.reports') : route('admin.reports')" class="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-5 rounded-2xl border border-white/20 transition-all">
-                            <TableCellsIcon class="h-6 w-6" />
-                            <span class="text-[10px] font-black uppercase tracking-[0.2em]">📊 Reportes</span>
-                        </Link>
-                        <Link :href="route('daily.summary')" class="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-5 rounded-2xl border border-white/20 transition-all">
-                            <ChartBarIcon class="h-6 w-6" />
-                            <span class="text-[10px] font-black uppercase tracking-[0.2em]">📈 Estadísticas</span>
-                        </Link>
-                        <div class="border-t border-white/10 my-2"></div>
-                        <Link :href="route('providers.index')" class="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-5 rounded-2xl border border-white/20 transition-all">
-                            <BuildingStorefrontIcon class="h-6 w-6" />
-                            <span class="text-[10px] font-black uppercase tracking-[0.2em]">🚚 Proveedores</span>
-                        </Link>
-                        <Link :href="route('areas.index')" class="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-5 rounded-2xl border border-white/20 transition-all">
-                            <BuildingOfficeIcon class="h-6 w-6" />
-                            <span class="text-[10px] font-black uppercase tracking-[0.2em]">🏢 Áreas</span>
-                        </Link>
-                        <Link :href="route('users.index')" class="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-5 rounded-2xl border border-white/20 transition-all">
-                            <UsersIcon class="h-6 w-6" />
-                            <span class="text-[10px] font-black uppercase tracking-[0.2em]">👥 Usuarios</span>
-                        </Link>
-
-                        <!-- ADMIN ONLY CONFIGURATION SECTION -->
-                        <template v-if="user.role === 'admin'">
-                            <div class="border-t border-white/10 my-4"></div>
-                            <h5 class="text-[10px] font-black uppercase opacity-60 tracking-[0.3em] mb-4 ml-4">Configuración del Sistema</h5>
-                            
-                            <Link :href="route('admin.settings.interface')" class="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-5 rounded-2xl border border-white/20 transition-all">
-                                <SwatchIcon class="h-6 w-6" />
-                                <span class="text-[10px] font-black uppercase tracking-[0.2em]">🎨 Interfaz y Logo</span>
-                            </Link>
-                            <Link :href="route('admin.settings.reports')" class="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-5 rounded-2xl border border-white/20 transition-all">
-                                <DocumentChartBarIcon class="h-6 w-6" />
-                                <span class="text-[10px] font-black uppercase tracking-[0.2em]">📄 Conf. Reportes</span>
-                            </Link>
-                            <Link :href="route('admin.settings.roles')" class="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-5 rounded-2xl border border-white/20 transition-all">
-                                <ShieldCheckIcon class="h-6 w-6" />
-                                <span class="text-[10px] font-black uppercase tracking-[0.2em]">🔐 Roles y Permisos</span>
-                            </Link>
-                            <Link :href="route('admin.utilities.data')" class="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-5 rounded-2xl border border-white/20 transition-all">
-                                <WrenchScrewdriverIcon class="h-6 w-6" />
-                                <span class="text-[10px] font-black uppercase tracking-[0.2em]">🛠️ Mantenimiento</span>
-                            </Link>
-                            <Link :href="route('admin.sessions.logs')" class="flex items-center gap-4 bg-white/10 hover:bg-white/20 p-5 rounded-2xl border border-white/20 transition-all">
-                                <ListBulletIcon class="h-6 w-6" />
-                                <span class="text-[10px] font-black uppercase tracking-[0.2em]">📜 Bitácora de Logs</span>
-                            </Link>
-                        </template>
                     </div>
                 </div>
             </div>
 
-            <!-- SECCIÓN GERENTE DE ÁREA / ACQUISITIONS / DINER -->
-            <div v-if="(user.role === 'area_manager' || user.role === 'acquisitions_manager' || (user.role === 'admin' && activeTab === 'my-area') || user.role === 'diner')" 
-                 class="lg:col-span-12 grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+            <!-- SECCIÓN GERENTE DE ÁREA / ACQUISITIONS (MY-AREA) / DINER -->
+            <div v-if="(user.role === 'area_manager' || ((user.role === 'acquisitions_manager' || user.role === 'admin') && activeTab === 'my-area') || user.role === 'diner')" 
+                 class="lg:col-span-12 grid grid-cols-1 md:grid-cols-12 gap-8 items-start animate-fade-in">
                 
                 <div v-if="user.role !== 'diner'" class="md:col-span-3 space-y-6">
                     <div class="bg-white dark:bg-gray-900 rounded-[2.5rem] p-6 shadow-xl border border-slate-100 dark:border-gray-800 sticky top-24">
@@ -680,9 +727,19 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                                     <p class="text-[10px] font-bold opacity-80 uppercase tracking-widest">{{ activeAuthSession.meal_type }} • {{ activeAuthSession.provider?.name }}</p>
                                 </div>
                             </div>
-                            <div v-if="operationMode === 'complete'" class="flex gap-3">
-                                <button @click="selectAllForAuth(activeAuthSession.id)" class="px-6 py-2.5 bg-white/20 hover:bg-white/30 rounded-xl text-[10px] font-black uppercase shadow-lg transition-all">Todos</button>
-                                <button @click="deselectAllForAuth(activeAuthSession.id)" class="px-6 py-2.5 bg-black/10 hover:bg-black/20 rounded-xl text-[10px] font-black uppercase shadow-lg transition-all">Ninguno</button>
+                            <div class="flex flex-wrap items-center gap-3">
+                                <!-- BOTÓN COPIAR LINK PÚBLICO DE PEDIDO -->
+                                <button @click="copyAreaOrderLink(activeAuthSession)" 
+                                        type="button"
+                                        class="px-4 py-2.5 bg-white/20 hover:bg-white/30 rounded-xl text-[10px] font-black uppercase shadow-lg transition-all flex items-center gap-2 border border-white/20 active:scale-95">
+                                    <LinkIcon class="h-4 w-4" />
+                                    <span>{{ copiedLink ? '¡Link Copiado!' : 'Copiar Link' }}</span>
+                                </button>
+
+                                <template v-if="operationMode === 'complete'">
+                                    <button @click="selectAllForAuth(activeAuthSession.id)" class="px-6 py-2.5 bg-white/20 hover:bg-white/30 rounded-xl text-[10px] font-black uppercase shadow-lg transition-all">Todos</button>
+                                    <button @click="deselectAllForAuth(activeAuthSession.id)" class="px-6 py-2.5 bg-black/10 hover:bg-black/20 rounded-xl text-[10px] font-black uppercase shadow-lg transition-all">Ninguno</button>
+                                </template>
                             </div>
                         </div>
                         

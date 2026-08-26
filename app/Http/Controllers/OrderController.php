@@ -5,8 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\DailyMenu;
 use App\Models\ProviderDailyStatus;
+use App\Models\Area;
+use App\Models\User;
+use App\Models\SessionAuthorization;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Inertia\Inertia;
 
 class OrderController extends Controller
 {
@@ -307,5 +311,164 @@ class OrderController extends Controller
         $order->delete();
 
         return back()->with('success', 'Pedido eliminado correctamente.');
+    }
+
+    /**
+     * Show the public order selection view for a specific area and session.
+     */
+    public function publicAreaOrder(ProviderDailyStatus $session, Area $area)
+    {
+        $today = Carbon::today()->toDateString();
+        $session->load('provider');
+
+        $sessionAreas = is_array($session->selected_area_ids) 
+            ? $session->selected_area_ids 
+            : json_decode($session->selected_area_ids, true);
+        $sessionAreas = array_map('intval', $sessionAreas ?: []);
+
+        $isAreaAllowed = in_array((int)$area->id, $sessionAreas);
+        $isOpen = $session->status === 'open' && $session->date === $today && $isAreaAllowed;
+
+        // Active team members for this area
+        $teamMembers = User::where('area_id', $area->id)
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get()
+            ->map(fn($u) => [
+                'id' => $u->id,
+                'name' => $u->name,
+                'avatar_url' => $u->avatar_url,
+            ]);
+
+        // Published dishes for this provider
+        $dishes = DailyMenu::where('provider_id', $session->provider_id)
+            ->where('status', 'published')
+            ->get()
+            ->map(fn($d) => [
+                'id' => $d->id,
+                'name' => $d->name,
+                'description' => $d->description,
+                'image_url' => $d->ai_source_image ? asset('storage/' . $d->ai_source_image) : null,
+            ]);
+
+        // Existing orders for this session & area
+        $existingOrders = Order::where('meal_type', $session->meal_type)
+            ->whereDate('created_at', $session->date)
+            ->whereIn('user_id', $teamMembers->pluck('id'))
+            ->where('status', '!=', 'cancelled')
+            ->with('dailyMenu')
+            ->get()
+            ->mapWithKeys(fn($o) => [
+                $o->user_id => [
+                    'id' => $o->id,
+                    'daily_menu_id' => $o->daily_menu_id,
+                    'dish_name' => $o->dailyMenu?->name,
+                    'preferences' => $o->preferences,
+                    'activity_performed' => $o->activity_performed,
+                    'status' => $o->status,
+                ]
+            ]);
+
+        return Inertia::render('Public/AreaOrder', [
+            'session' => [
+                'id' => $session->id,
+                'date' => $session->date,
+                'meal_type' => $session->meal_type,
+                'status' => $session->status,
+                'provider' => $session->provider,
+            ],
+            'area' => [
+                'id' => $area->id,
+                'name' => $area->name,
+            ],
+            'teamMembers' => $teamMembers,
+            'dishes' => $dishes,
+            'existingOrders' => $existingOrders,
+            'isOpen' => $isOpen,
+            'closeReason' => !$isOpen ? (!$isAreaAllowed ? 'Esta sesión no está habilitada para tu área.' : 'El turno de servicio se encuentra cerrado o no corresponde al día de hoy.') : null,
+        ]);
+    }
+
+    /**
+     * Store or update an order from the public area link.
+     */
+    public function storePublicAreaOrder(Request $request, ProviderDailyStatus $session, Area $area)
+    {
+        $validated = $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'daily_menu_id' => ['required', 'integer', 'exists:daily_menus,id'],
+            'preferences' => ['nullable', 'string', 'max:255'],
+            'activity_performed' => ['nullable', 'string', 'max:500'],
+        ], [
+            'user_id.required' => 'Por favor, selecciona tu nombre de la lista de comensales.',
+            'daily_menu_id.required' => 'Por favor, selecciona un platillo del menú.',
+        ]);
+
+        $today = Carbon::today()->toDateString();
+
+        // 1. Validate session is open today
+        if ($session->status !== 'open' || $session->date !== $today) {
+            return back()->withErrors(['error' => 'El turno de servicio se encuentra cerrado.']);
+        }
+
+        // 2. Validate area is enabled for this session
+        $sessionAreas = is_array($session->selected_area_ids) 
+            ? $session->selected_area_ids 
+            : json_decode($session->selected_area_ids, true);
+        $sessionAreas = array_map('intval', $sessionAreas ?: []);
+
+        if (!in_array((int)$area->id, $sessionAreas)) {
+            return back()->withErrors(['error' => 'Tu área no está autorizada para este turno.']);
+        }
+
+        // 3. Validate user belongs to this area
+        $user = User::findOrFail($validated['user_id']);
+        if ((int)$user->area_id !== (int)$area->id) {
+            return back()->withErrors(['error' => 'El usuario seleccionado no pertenece a esta área.']);
+        }
+
+        // 4. Validate menu belongs to provider
+        $dish = DailyMenu::findOrFail($validated['daily_menu_id']);
+        if ((int)$dish->provider_id !== (int)$session->provider_id) {
+            return back()->withErrors(['error' => 'El platillo no corresponde al proveedor de este turno.']);
+        }
+
+        // 5. Auto-authorize user for this session
+        SessionAuthorization::updateOrCreate([
+            'provider_daily_status_id' => $session->id,
+            'user_id' => $user->id,
+        ], [
+            'authorized_by_user_id' => null
+        ]);
+
+        // 6. Create or update the order
+        $existingOrder = Order::where('user_id', $user->id)
+            ->where('meal_type', $session->meal_type)
+            ->whereDate('created_at', $session->date)
+            ->first();
+
+        $activity = array_key_exists('activity_performed', $validated) && $validated['activity_performed'] !== null
+            ? $validated['activity_performed'] 
+            : ($existingOrder ? $existingOrder->activity_performed : null);
+
+        if ($existingOrder) {
+            $existingOrder->update([
+                'daily_menu_id' => $dish->id,
+                'preferences' => $validated['preferences'],
+                'activity_performed' => $activity,
+                'status' => 'submitted_by_user',
+            ]);
+        } else {
+            Order::create([
+                'user_id' => $user->id,
+                'daily_menu_id' => $dish->id,
+                'meal_type' => $session->meal_type,
+                'preferences' => $validated['preferences'],
+                'activity_performed' => $activity,
+                'status' => 'submitted_by_user',
+            ]);
+        }
+
+        return back()->with('success', "¡Excelente! Tu pedido de '{$dish->name}' ha sido registrado exitosamente para {$user->name}.");
     }
 }

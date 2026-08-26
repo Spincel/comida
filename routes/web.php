@@ -25,6 +25,10 @@ Route::get('/', function () {
 
 Route::get('/inicio', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard'); // Use DashboardController
 
+// Enlace público / directo para que los comensales del área elijan su platillo y justificación
+Route::get('pedido/{session}/{area}', [OrderController::class, 'publicAreaOrder'])->name('orders.publicAreaOrder');
+Route::post('pedido/{session}/{area}', [OrderController::class, 'storePublicAreaOrder'])->name('orders.storePublicAreaOrder');
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -42,6 +46,16 @@ Route::middleware(['auth', 'role:acquisitions_manager|admin|area_manager'])->gro
     Route::get('admin/history', [DashboardController::class, 'showGlobalHistory'])->name('admin.history');
     Route::get('admin/reports', [DashboardController::class, 'showGlobalReports'])->name('admin.reports');
     Route::get('admin/reports/export', [DashboardController::class, 'exportGlobalReports'])->name('admin.reports.export');
+
+    Route::post('users/scan-document', [UserController::class, 'scanDocument'])
+        ->name('users.scanDocument')
+        ->middleware('permission:users.manage');
+    Route::post('users/scan-url', [UserController::class, 'scanUrl'])
+        ->name('users.scanUrl')
+        ->middleware('permission:users.manage');
+    Route::post('users/batch-import', [UserController::class, 'batchImport'])
+        ->name('users.batchImport')
+        ->middleware('permission:users.manage');
 
     Route::resource('users', UserController::class)
         ->middleware('permission:users.manage');

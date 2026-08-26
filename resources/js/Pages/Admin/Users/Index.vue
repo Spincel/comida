@@ -8,10 +8,11 @@ import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import Pagination from '@/Components/Pagination.vue';
+import ScanUsersModal from '@/Pages/Admin/Partials/ScanUsersModal.vue';
 import { 
     PlusIcon, PencilSquareIcon, TrashIcon, BuildingOfficeIcon, EnvelopeIcon, XMarkIcon,
     IdentificationIcon, PhotoIcon, MagnifyingGlassIcon, FunnelIcon, UserIcon, UsersIcon,
-    CheckBadgeIcon
+    CheckBadgeIcon, SparklesIcon, DocumentArrowUpIcon
 } from '@heroicons/vue/24/outline';
 import { usePage } from '@inertiajs/vue3';
 
@@ -21,6 +22,8 @@ const props = defineProps({
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
+
+const showScanModal = ref(false);
 
 const search = ref(props.filters.search || '');
 const areaFilter = ref(props.filters.area_id || '');
@@ -125,9 +128,20 @@ const getAreaColor = (id) => id ? areaColors[id % areaColors.length] : 'bg-slate
                             <input type="text" v-model="search" placeholder="Buscar usuarios, correos, áreas..." 
                                    class="w-full pl-14 pr-6 py-4 bg-slate-50 dark:bg-gray-800 border-none rounded-2xl text-sm focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white shadow-inner" />
                         </div>
-                        <button @click="openCreateModal" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center shadow-xl shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95 shrink-0">
-                            <PlusIcon class="h-4 w-4 mr-2" stroke-width="4" /> Nuevo Registro
-                        </button>
+                        <div class="flex items-center gap-3 shrink-0">
+                            <button @click="showScanModal = true" 
+                                    type="button"
+                                    class="bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 bg-[length:200%_auto] text-white px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2.5 shadow-xl shadow-purple-500/20 hover:scale-105 active:scale-95 transition-all cursor-pointer">
+                                <SparklesIcon class="h-4 w-4 animate-pulse" />
+                                <span>Importar con IA</span>
+                            </button>
+
+                            <button @click="openCreateModal" 
+                                    type="button"
+                                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center shadow-xl shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95 shrink-0 cursor-pointer">
+                                <PlusIcon class="h-4 w-4 mr-2" stroke-width="4" /> Nuevo Registro
+                            </button>
+                        </div>
                     </div>
 
                     <div class="flex flex-col md:flex-row gap-6 relative z-40">
@@ -246,5 +260,11 @@ const getAreaColor = (id) => id ? areaColors[id % areaColors.length] : 'bg-slate
                 </form>
             </div>
         </Modal>
+
+        <!-- MODAL DE IMPORTACIÓN CON INTELIGENCIA ARTIFICIAL -->
+        <ScanUsersModal :show="showScanModal" 
+                        :areas="areas" 
+                        @close="showScanModal = false" 
+                        @users-imported="showScanModal = false" />
     </AuthenticatedLayout>
 </template>

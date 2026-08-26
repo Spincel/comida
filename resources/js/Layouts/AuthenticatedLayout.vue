@@ -25,7 +25,8 @@ import {
     CalendarDaysIcon,
     XMarkIcon,
     CheckBadgeIcon,
-    ArrowLeftIcon
+    ArrowLeftIcon,
+    Squares2X2Icon
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
@@ -152,7 +153,38 @@ watch(() => page.props.flash?.success, (newMsg) => {
 
                     <!-- USER PROFILE & THEME -->
                     <div class="flex items-center gap-4">
-                        <button @click="toggleDarkMode" class="p-3 rounded-2xl bg-white dark:bg-gray-800 border border-slate-100 dark:border-gray-700 text-slate-400 hover:text-indigo-600 transition-all shadow-sm">
+                        <!-- BOTÓN / MENÚ HERRAMIENTAS DEL SISTEMA -->
+                        <Dropdown v-if="user.role === 'admin' || user.role === 'acquisitions_manager' || user.role === 'area_manager'" align="right" width="64">
+                            <template #trigger>
+                                <button class="p-3 rounded-2xl bg-white dark:bg-gray-800 border border-slate-100 dark:border-gray-700 text-slate-500 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-200 dark:hover:border-indigo-800 transition-all shadow-sm flex items-center gap-2 group cursor-pointer" title="Herramientas del Sistema">
+                                    <Squares2X2Icon class="h-6 w-6 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform" />
+                                    <span class="text-[10px] font-black uppercase tracking-widest hidden xl:inline-block">Herramientas</span>
+                                    <ChevronDownIcon class="h-3.5 w-3.5 text-slate-400 ml-0.5" />
+                                </button>
+                            </template>
+                            <template #content>
+                                <div class="block px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b dark:border-gray-700">Operaciones y Reportes</div>
+                                <DropdownLink :href="route('admin.history')">📖 Historial Global</DropdownLink>
+                                <DropdownLink :href="user.role === 'area_manager' ? route('area.reports') : route('admin.reports')">📊 Reportes del Sistema</DropdownLink>
+                                <DropdownLink :href="route('daily.summary')">📈 Estadísticas Diarias</DropdownLink>
+
+                                <div class="block px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest border-t border-b dark:border-gray-700 mt-1">Gestión del Catálogo</div>
+                                <DropdownLink :href="route('providers.index')">🚚 Proveedores</DropdownLink>
+                                <DropdownLink :href="route('areas.index')">🏢 Áreas</DropdownLink>
+                                <DropdownLink :href="route('users.index')">👥 Usuarios</DropdownLink>
+
+                                <template v-if="user.role === 'admin'">
+                                    <div class="block px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest border-t border-b dark:border-gray-700 mt-1">Configuración del Sistema</div>
+                                    <DropdownLink :href="route('admin.settings.interface')">🎨 Interfaz y Logo</DropdownLink>
+                                    <DropdownLink :href="route('admin.settings.reports')">📄 Configurar Reportes</DropdownLink>
+                                    <DropdownLink :href="route('admin.settings.roles')">🔐 Roles y Permisos</DropdownLink>
+                                    <DropdownLink :href="route('admin.utilities.data')">🛠️ Mantenimiento BD</DropdownLink>
+                                    <DropdownLink :href="route('admin.sessions.logs')">📜 Auditoría de Logs</DropdownLink>
+                                </template>
+                            </template>
+                        </Dropdown>
+
+                        <button @click="toggleDarkMode" class="p-3 rounded-2xl bg-white dark:bg-gray-800 border border-slate-100 dark:border-gray-700 text-slate-400 hover:text-indigo-600 transition-all shadow-sm" title="Cambiar Tema">
                             <MoonIcon v-if="!isDarkMode" class="h-6 w-6" />
                             <SunIcon v-else class="h-6 w-6 text-yellow-500" />
                         </button>

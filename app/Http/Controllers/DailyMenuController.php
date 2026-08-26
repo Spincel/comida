@@ -241,8 +241,13 @@ class DailyMenuController extends Controller
             'timeout' => 60.0, // 60 seconds timeout
             'connect_timeout' => 10.0
         ]);
-        // Use gemini-flash-latest as it is available and has active quota
-        $geminiEndpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={$geminiApiKey}";
+
+        $candidateModels = [
+            'gemini-3.6-flash',
+            'gemini-3.7-flash',
+            'gemini-3.5-flash-lite',
+            'gemini-2.5-flash-lite'
+        ];
 
         $prompt = "Analiza esta imagen o PDF de un menú de comida. Extrae todos los platillos disponibles y sus descripciones.
         
@@ -265,67 +270,78 @@ class DailyMenuController extends Controller
         ]
         Si no hay una descripción clara, deja el campo 'description' vacío. No incluyas explicaciones adicionales, solo el JSON.";
 
-        try {
-            $response = $client->post($geminiEndpoint, [
-                'json' => [
-                    'contents' => [
-                        [
-                            'parts' => [
-                                ['text' => $prompt],
-                                [
-                                    'inlineData' => [
-                                        'mimeType' => $mimeType,
-                                        'data' => $fileContentBase64
+        $lastError = null;
+
+        foreach ($candidateModels as $model) {
+            $geminiEndpoint = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$geminiApiKey}";
+
+            try {
+                $response = $client->post($geminiEndpoint, [
+                    'json' => [
+                        'contents' => [
+                            [
+                                'parts' => [
+                                    ['text' => $prompt],
+                                    [
+                                        'inlineData' => [
+                                            'mimeType' => $mimeType,
+                                            'data' => $fileContentBase64
+                                        ]
                                     ]
                                 ]
                             ]
+                        ],
+                        'generationConfig' => [
+                            'responseMimeType' => 'application/json',
                         ]
-                    ],
-                    'generationConfig' => [
-                        'responseMimeType' => 'application/json',
                     ]
-                ]
-            ]);
+                ]);
 
-            $geminiResponse = json_decode($response->getBody()->getContents(), true);
+                $geminiResponse = json_decode($response->getBody()->getContents(), true);
 
-            // Extract the text part from Gemini's response
-            $geminiText = $geminiResponse['candidates'][0]['content']['parts'][0]['text'] ?? null;
+                // Extract the text part from Gemini's response
+                $geminiText = $geminiResponse['candidates'][0]['content']['parts'][0]['text'] ?? null;
 
-            if (!$geminiText) {
-                Log::error("Gemini empty response: " . json_encode($geminiResponse));
-                return response()->json(['error' => 'No se pudo obtener una respuesta válida de la IA.'], 500);
+                if (!$geminiText) {
+                    Log::warning("Gemini empty response with model {$model}: " . json_encode($geminiResponse));
+                    continue;
+                }
+
+                // Gemini sometimes wraps JSON in markdown code blocks even when asked for application/json
+                $geminiText = trim($geminiText);
+                if (str_starts_with($geminiText, '```json')) {
+                    $geminiText = preg_replace('/^```json\s*|```\s*$/', '', $geminiText);
+                } elseif (str_starts_with($geminiText, '```')) {
+                    $geminiText = preg_replace('/^```\s*|```\s*$/', '', $geminiText);
+                }
+                
+                $parsedMenu = json_decode($geminiText, true);
+
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    Log::error("Gemini JSON parse error: " . json_last_error_msg() . " Raw response: " . $geminiText);
+                    return response()->json([
+                        'error' => 'Error al procesar el formato del menú extraído.',
+                        'details' => 'La IA devolvió un formato no válido. Intenta con una imagen más clara.',
+                        'raw_response' => $geminiText
+                    ], 500);
+                }
+
+                return response()->json(['menu_items' => $parsedMenu]);
+
+            } catch (\GuzzleHttp\Exception\ClientException $e) {
+                $responseBody = $e->getResponse()->getBody()->getContents();
+                Log::warning("Gemini model {$model} failed: " . $e->getMessage() . " Response: " . $responseBody);
+                $lastError = $responseBody;
+            } catch (\Exception $e) {
+                Log::warning("Gemini model {$model} general error: " . $e->getMessage());
+                $lastError = $e->getMessage();
             }
-
-            // Gemini sometimes wraps JSON in markdown code blocks even when asked for application/json
-            $geminiText = trim($geminiText);
-            if (str_starts_with($geminiText, '```json')) {
-                $geminiText = preg_replace('/^```json\s*|```\s*$/', '', $geminiText);
-            } elseif (str_starts_with($geminiText, '```')) {
-                $geminiText = preg_replace('/^```\s*|```\s*$/', '', $geminiText);
-            }
-            
-            $parsedMenu = json_decode($geminiText, true);
-
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                Log::error("Gemini JSON parse error: " . json_last_error_msg() . " Raw response: " . $geminiText);
-                return response()->json([
-                    'error' => 'Error al procesar el formato del menú extraído.',
-                    'details' => 'La IA devolvió un formato no válido. Intenta con una imagen más clara.',
-                    'raw_response' => $geminiText
-                ], 500);
-            }
-
-            return response()->json(['menu_items' => $parsedMenu]);
-
-        } catch (\GuzzleHttp\Exception\ClientException $e) {
-            $responseBody = $e->getResponse()->getBody()->getContents();
-            Log::error("Gemini API Client Error: " . $e->getMessage() . " Response: " . $responseBody);
-            return response()->json(['error' => 'Error de conexión con el servicio de IA.', 'details' => $responseBody], 500);
-        } catch (\Exception $e) {
-            Log::error("Gemini API General Error: " . $e->getMessage());
-            return response()->json(['error' => 'Ocurrió un error inesperado al escanear el menú.', 'details' => $e->getMessage()], 500);
         }
+
+        return response()->json([
+            'error' => 'Ocurrió un error al procesar el menú con la IA.',
+            'details' => $lastError
+        ], 500);
     }
 
     /**
