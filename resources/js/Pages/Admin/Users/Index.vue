@@ -103,7 +103,12 @@ const submit = () => {
 const closeModal = () => { showModal.value = false; form.reset(); };
 const deleteUser = (id) => { if (confirm('¿Eliminar usuario?')) router.delete(route('users.destroy', id), { preserveScroll: true }); };
 
-const roleLabels = { admin: 'Administrador', acquisitions_manager: 'Adquisiciones', area_manager: 'Gerente de Área', diner: 'Comensal' };
+const roleLabels = { 
+    admin: '🛡️ Administrador', 
+    acquisitions_manager: '👨‍🍳 Adquisiciones', 
+    area_manager: '🏛️ Gerente de Área', 
+    diner: '👤 Comensal' 
+};
 const roleColors = { 
     admin: 'bg-tinto-50 dark:bg-tinto-950/80 text-tinto-800 dark:text-oro-300 border-tinto-200 dark:border-tinto-800', 
     acquisitions_manager: 'bg-oro-50 dark:bg-oro-950/80 text-oro-900 dark:text-oro-300 border-oro-200 dark:border-oro-800', 
@@ -131,20 +136,22 @@ const getAreaColor = (id) => id ? areaColors[id % areaColors.length] : 'bg-slate
                         <div class="flex items-center gap-3 shrink-0">
                             <button @click="showScanModal = true" 
                                     type="button"
-                                    class="bg-gradient-to-r from-tinto-900 via-tinto-800 to-tinto-900 text-white px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2.5 shadow-tinto-sm border border-oro-400/40 hover:scale-105 active:scale-95 transition-all cursor-pointer">
+                                    class="bg-gradient-to-r from-tinto-900 via-tinto-800 to-tinto-900 text-white px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2.5 shadow-tinto-sm border border-oro-400/40 hover:scale-105 active:scale-95 transition-all cursor-pointer shine-effect">
                                 <SparklesIcon class="h-4 w-4 text-oro-300 animate-pulse" />
                                 <span>Importar con IA</span>
                             </button>
 
                             <button @click="openCreateModal" 
                                     type="button"
-                                    class="bg-gradient-to-r from-oro-600 via-oro-500 to-oro-600 hover:from-oro-700 hover:to-oro-600 text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center shadow-oro-sm border border-oro-400/30 transition-all hover:scale-105 active:scale-95 shrink-0 cursor-pointer">
-                                <PlusIcon class="h-4 w-4 mr-2" stroke-width="4" /> Nuevo Registro
+                                    class="bg-gradient-to-r from-oro-600 to-oro-500 hover:from-oro-700 hover:to-oro-600 text-white px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2.5 shadow-oro-sm border border-oro-300/40 hover:scale-105 active:scale-95 transition-all cursor-pointer">
+                                <PlusIcon class="h-4 w-4" />
+                                <span>Nuevo Registro</span>
                             </button>
                         </div>
                     </div>
 
-                    <div class="flex flex-col md:flex-row gap-6 relative z-40">
+                    <!-- AREA SEARCHABLE COMBOBOX & ROLE FILTER -->
+                    <div class="flex flex-col md:flex-row gap-6 pt-4 border-t border-slate-100 dark:border-gray-800">
                         <div class="flex-1 relative">
                             <label class="ml-4 mb-2 text-[10px] font-black uppercase text-slate-400 tracking-widest block">Filtrar por Área</label>
                             <input type="text" v-model="areaSearch" @focus="showAreaResults = true" placeholder="Buscar área..."
@@ -178,13 +185,13 @@ const getAreaColor = (id) => id ? areaColors[id % areaColors.length] : 'bg-slate
                             </tr>
                         </thead>
                         <tbody class="divide-y border-slate-50 dark:divide-gray-800">
-                            <tr v-for="u in users.data" :key="u.id" class="hover:bg-indigo-50/20 dark:hover:bg-indigo-900/5 transition-all group">
+                            <tr v-for="u in users.data" :key="u.id" class="hover:bg-tinto-50/30 dark:hover:bg-tinto-950/20 transition-all group">
                                 <td class="p-6">
                                     <div class="flex items-center gap-4">
                                         <img :src="u.avatar_url" class="h-12 w-12 rounded-2xl border-2 border-white dark:border-gray-700 shadow-md object-cover group-hover:scale-110 transition-transform" />
                                         <div>
                                             <p class="font-black text-sm text-slate-800 dark:text-gray-200 uppercase tracking-tight">{{ u.name }}</p>
-                                            <p class="text-[9px] font-bold text-indigo-500 uppercase tracking-widest">#{{ u.employee_number || 'S/N' }}</p>
+                                            <p class="text-[9px] font-bold text-tinto-700 dark:text-oro-400 uppercase tracking-widest">#{{ u.employee_number || 'S/N' }}</p>
                                         </div>
                                     </div>
                                 </td>
@@ -198,14 +205,14 @@ const getAreaColor = (id) => id ? areaColors[id % areaColors.length] : 'bg-slate
                                 </td>
                                 <td class="p-6 text-right">
                                     <div class="flex justify-end gap-2">
-                                        <button @click="openEditModal(u)" class="p-2.5 bg-slate-50 dark:bg-gray-800 text-slate-400 hover:text-indigo-600 rounded-xl transition-all border border-transparent hover:border-indigo-100"><PencilSquareIcon class="h-5 w-5" /></button>
-                                        <button v-if="user.id !== u.id" @click="deleteUser(u.id)" class="p-2.5 bg-rose-50 dark:bg-rose-950/20 text-rose-300 hover:text-rose-600 rounded-xl transition-all border border-transparent hover:border-rose-100"><TrashIcon class="h-5 w-5" /></button>
+                                        <button @click="openEditModal(u)" class="p-2.5 bg-slate-50 dark:bg-gray-800 text-slate-400 hover:text-tinto-700 dark:hover:text-oro-400 rounded-xl transition-all border border-transparent hover:border-tinto-200 cursor-pointer"><PencilSquareIcon class="h-5 w-5" /></button>
+                                        <button v-if="user.id !== u.id" @click="deleteUser(u.id)" class="p-2.5 bg-rose-50 dark:bg-rose-950/20 text-rose-300 hover:text-rose-600 rounded-xl transition-all border border-transparent hover:border-rose-100 cursor-pointer"><TrashIcon class="h-5 w-5" /></button>
                                     </div>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
-                </div>
+                </div> 
                 <div class="mt-8"><Pagination :links="users.links" /></div>
             </div>
         </div>

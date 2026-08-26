@@ -444,6 +444,25 @@ const groupedAvailableMenus = computed(() => {
 });
 const hasMenus = computed(() => Object.keys(groupedAvailableMenus.value).length > 0);
 
+const getDishEmoji = (name, mealType) => {
+    if (!name) return '🍽️';
+    const n = name.toLowerCase();
+    if (n.includes('huevo') || n.includes('chilaquil') || n.includes('omelet') || n.includes('hot cake') || n.includes('waffle')) return '🍳';
+    if (n.includes('cafe') || n.includes('café') || n.includes('jugo') || n.includes('leche') || n.includes('avena')) return '☕';
+    if (n.includes('carne') || n.includes('res') || n.includes('arrachera') || n.includes('bistec') || n.includes('milanesa') || n.includes('costilla')) return '🥩';
+    if (n.includes('pollo') || n.includes('pechuga') || n.includes('alita') || n.includes('fajita')) return '🍗';
+    if (n.includes('pescado') || n.includes('camaron') || n.includes('camarón') || n.includes('atun') || n.includes('marisco')) return '🐟';
+    if (n.includes('taco') || n.includes('quesadilla') || n.includes('burrito') || n.includes('flauta') || n.includes('gordita')) return '🌮';
+    if (n.includes('pasta') || n.includes('espagueti') || n.includes('lasaña')) return '🍝';
+    if (n.includes('ensalada') || n.includes('vegetal') || n.includes('verdura') || n.includes('fruta')) return '🥗';
+    if (n.includes('sopa') || n.includes('caldo') || n.includes('crema') || n.includes('pozole') || n.includes('menudo')) return '🍲';
+    if (n.includes('hamburguesa') || n.includes('sandwich') || n.includes('torta')) return '🥪';
+    if (n.includes('postre') || n.includes('pastel') || n.includes('gelatina') || n.includes('flan')) return '🍰';
+    if (mealType === 'Desayuno') return '🥞';
+    if (mealType === 'Cena') return '🥪';
+    return '🍽️';
+};
+
 // --- Authorizations Logic ---
 watch(() => props.teamOrders, (newTeam) => { 
     if (!newTeam) return; 
@@ -561,20 +580,34 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                     <!-- PASOS DE CONFIGURACIÓN -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-10">
                         <div>
-                            <p class="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-widest mb-4 ml-2">1. Turno del Servicio:</p>
+                            <p class="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-widest mb-4 ml-2 flex items-center gap-2">
+                                <span class="p-1 rounded-md bg-tinto-100 dark:bg-tinto-900/60 text-tinto-800 text-[10px]">1</span> Turno del Servicio:
+                            </p>
                             <div class="flex gap-3">
-                                <button v-for="t in ['Desayuno', 'Comida', 'Cena']" :key="t" @click="bentoTurno = t"
-                                        class="flex-1 py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border-2 cursor-pointer"
-                                        :class="bentoTurno === t ? 'bg-gradient-to-tr from-tinto-900 via-tinto-800 to-tinto-700 text-white border-tinto-800 shadow-tinto-sm scale-105' : 'bg-white dark:bg-gray-800 text-slate-400 border-slate-100 dark:border-gray-700 hover:border-slate-200 dark:hover:border-gray-600'">
-                                    {{ t }}
+                                <button v-for="t in [
+                                    { key: 'Desayuno', icon: '🍳', label: 'Desayuno' },
+                                    { key: 'Comida', icon: '🍲', label: 'Comida' },
+                                    { key: 'Cena', icon: '🌙', label: 'Cena' }
+                                ]" :key="t.key" @click="bentoTurno = t.key"
+                                        class="flex-1 py-4 px-2 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border-2 flex items-center justify-center gap-2 group cursor-pointer"
+                                        :class="bentoTurno === t.key 
+                                            ? 'bg-gradient-to-tr from-tinto-900 via-tinto-800 to-tinto-700 text-white border-tinto-800 shadow-tinto-sm scale-105 shine-effect animate-pop' 
+                                            : 'bg-white dark:bg-gray-800 text-slate-400 border-slate-100 dark:border-gray-700 hover:border-slate-200 dark:hover:border-gray-600 hover:scale-[1.02]'">
+                                    <span class="text-base group-hover:scale-125 transition-transform" :class="{ 'animate-steam': bentoTurno === t.key && (t.key === 'Desayuno' || t.key === 'Comida') }">{{ t.icon }}</span>
+                                    <span>{{ t.label }}</span>
                                 </button>
                             </div>
                         </div>
                         <div>
-                            <p class="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-widest mb-4 ml-2">2. Proveedor / Catering:</p>
-                            <select v-model="bentoProviderId" class="w-full bg-slate-50 dark:bg-gray-800 border-slate-200 dark:border-gray-700 rounded-2xl py-4 px-6 text-[11px] font-black uppercase text-slate-700 dark:text-gray-200 focus:ring-tinto-600 focus:border-tinto-600 transition-all shadow-inner">
-                                <option v-for="p in providers" :key="p.id" :value="p.id">{{ p.name }}</option>
-                            </select>
+                            <p class="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-widest mb-4 ml-2 flex items-center gap-2">
+                                <span class="p-1 rounded-md bg-oro-100 dark:bg-oro-900/60 text-oro-800 text-[10px]">2</span> Proveedor / Banquetero:
+                            </p>
+                            <div class="relative">
+                                <select v-model="bentoProviderId" class="w-full bg-slate-50 dark:bg-gray-800 border-slate-200 dark:border-gray-700 rounded-2xl py-4 pl-12 pr-6 text-[11px] font-black uppercase text-slate-700 dark:text-gray-200 focus:ring-tinto-600 focus:border-tinto-600 transition-all shadow-inner">
+                                    <option v-for="p in providers" :key="p.id" :value="p.id">{{ p.name }}</option>
+                                </select>
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-base">👨‍🍳</span>
+                            </div>
                         </div>
                     </div>
 
@@ -582,7 +615,9 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                     <div class="mb-12">
                         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                             <div class="flex items-center gap-3">
-                                <p class="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-widest ml-2">3. Habilitar Áreas:</p>
+                                <p class="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-widest ml-2 flex items-center gap-2">
+                                    <span class="p-1 rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 text-[10px]">3</span> Habilitar Áreas del Congreso:
+                                </p>
                                 <div class="flex bg-slate-100 dark:bg-gray-800 p-1 rounded-xl border dark:border-gray-700">
                                     <button @click="selectAllAreas" class="px-3 py-1 text-[8px] font-black uppercase text-tinto-700 dark:text-oro-400 hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-all cursor-pointer">Todas</button>
                                     <button @click="deselectAllAreas" class="px-3 py-1 text-[8px] font-black uppercase text-slate-400 hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-all cursor-pointer">Ninguna</button>
@@ -599,9 +634,10 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
 
                         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 max-h-[320px] overflow-y-auto pr-2 custom-scrollbar">
                             <div v-for="areaS in filteredBentoAreas" :key="areaS.id" @click="toggleBentoArea(areaS.id)"
-                                 class="p-4 rounded-2xl border-2 transition-all cursor-pointer flex justify-between items-center group shadow-sm"
-                                 :class="bentoSelectedAreas.includes(areaS.id) ? 'bg-tinto-50/80 dark:bg-tinto-950/40 border-tinto-700 dark:border-tinto-600' : 'bg-slate-50 dark:bg-gray-800 border-transparent dark:hover:border-gray-700 hover:border-slate-200'">
+                                 class="p-4 rounded-2xl border-2 transition-all cursor-pointer flex justify-between items-center group shadow-sm hover:scale-[1.02]"
+                                 :class="bentoSelectedAreas.includes(areaS.id) ? 'bg-tinto-50/80 dark:bg-tinto-950/40 border-tinto-700 dark:border-tinto-600 selected-glow-tinto' : 'bg-slate-50 dark:bg-gray-800 border-transparent dark:hover:border-gray-700 hover:border-slate-200'">
                                 <div class="flex items-center gap-3">
+                                    <span class="text-sm">🏢</span>
                                     <div class="h-2.5 w-2.5 rounded-full" :class="bentoSelectedAreas.includes(areaS.id) ? 'bg-tinto-700 dark:bg-oro-400 animate-pulse' : 'bg-slate-300 dark:bg-gray-700'"></div>
                                     <span class="text-[10px] font-black uppercase text-slate-800 dark:text-gray-200 truncate max-w-[120px]">{{ areaS.name }}</span>
                                 </div>
@@ -634,10 +670,18 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                     <div class="space-y-4">
                         <div class="bg-slate-50 dark:bg-gray-800/70 p-6 rounded-3xl border border-slate-200 dark:border-gray-700">
                             <div class="flex justify-between items-center mb-6">
-                                <p class="text-[11px] font-black text-slate-600 dark:text-gray-300 uppercase tracking-widest">Estado Operativo</p>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs font-black uppercase" :class="openSessions.length > 0 ? 'text-nayarit-700 dark:text-emerald-400' : 'text-oro-600 dark:text-oro-400'">{{ openSessions.length > 0 ? 'EN LÍNEA' : 'PASIVO' }}</span>
-                                    <div class="h-2 w-2 rounded-full" :class="openSessions.length > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-oro-500'"></div>
+                                <p class="text-[11px] font-black text-slate-600 dark:text-gray-300 uppercase tracking-widest flex items-center gap-2">
+                                    <span>📡</span> Estado Operativo
+                                </p>
+                                <div class="flex items-center gap-2.5">
+                                    <span class="text-xs font-black uppercase tracking-wider" :class="openSessions.length > 0 ? 'text-nayarit-700 dark:text-emerald-400' : 'text-oro-600 dark:text-oro-400'">
+                                        {{ openSessions.length > 0 ? 'EN SERVICIO' : 'PASIVO' }}
+                                    </span>
+                                    <div v-if="openSessions.length > 0" class="relative flex items-center justify-center h-4 w-4">
+                                        <span class="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-radar"></span>
+                                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                                    </div>
+                                    <div v-else class="h-2.5 w-2.5 rounded-full bg-oro-500"></div>
                                 </div>
                             </div>
                             
@@ -647,29 +691,41 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                                      class="p-4 bg-white dark:bg-gray-900 rounded-2xl border border-slate-200 dark:border-gray-800 shadow-sm group">
                                     <div class="flex justify-between items-start mb-2">
                                         <div class="flex-1 min-w-0">
-                                            <p class="text-[10px] font-black text-slate-800 dark:text-white uppercase truncate">{{ session.provider?.name }}</p>
-                                            <span class="text-[8px] font-black uppercase text-tinto-700 dark:text-oro-400">{{ session.meal_type }}</span>
+                                            <p class="text-[10px] font-black text-slate-800 dark:text-white uppercase truncate flex items-center gap-1.5">
+                                                <span>👨‍🍳</span> {{ session.provider?.name }}
+                                            </p>
+                                            <span class="text-[8px] font-black uppercase text-tinto-700 dark:text-oro-400 flex items-center gap-1 mt-0.5">
+                                                <span>{{ session.meal_type === 'Desayuno' ? '🍳' : (session.meal_type === 'Comida' ? '🍲' : '🌙') }}</span>
+                                                {{ session.meal_type }}
+                                            </span>
                                         </div>
-                                        <p class="text-xs font-black tabular-nums text-tinto-700 dark:text-oro-400 shrink-0">{{ activeTimers[session.id] || '00:00:00' }}</p>
+                                        <div class="flex items-center gap-1.5 bg-tinto-50 dark:bg-tinto-950/60 px-2 py-1 rounded-lg border border-tinto-200 dark:border-tinto-800">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                                            <p class="text-xs font-black tabular-nums text-tinto-700 dark:text-oro-400 shrink-0">{{ activeTimers[session.id] || '00:00:00' }}</p>
+                                        </div>
                                     </div>
                                     <div class="flex justify-between items-center mt-3">
-                                        <div class="h-1 flex-1 bg-slate-100 dark:bg-gray-800 rounded-full overflow-hidden mr-4">
-                                            <div class="h-full bg-gradient-to-r from-tinto-700 to-oro-500" style="width: 100%"></div>
+                                        <div class="h-1.5 flex-1 bg-slate-100 dark:bg-gray-800 rounded-full overflow-hidden mr-4">
+                                            <div class="h-full bg-gradient-to-r from-tinto-700 via-oro-500 to-tinto-700 animate-gradient" style="width: 100%"></div>
                                         </div>
                                         <Link :href="route('admin.orders.summary', { provider: session.provider_id, date: session.date, meal_type: session.meal_type })" 
-                                              class="text-[8px] font-black uppercase text-white bg-tinto-800 hover:bg-tinto-900 px-3 py-1.5 rounded-lg border border-oro-400/40 shadow-sm transition-all whitespace-nowrap animate-blink">
-                                            Monitor →
+                                              class="text-[8px] font-black uppercase text-white bg-tinto-800 hover:bg-tinto-900 px-3 py-1.5 rounded-lg border border-oro-400/40 shadow-sm transition-all whitespace-nowrap animate-blink flex items-center gap-1">
+                                            <span>Monitor</span> <span>→</span>
                                         </Link>
                                     </div>
                                 </div>
                             </div>
-                            <p v-else class="text-[9px] text-center text-slate-400 uppercase font-bold py-4">Sin turnos activos</p>
+                            <p v-else class="text-[9px] text-center text-slate-400 uppercase font-bold py-4 flex items-center justify-center gap-1">
+                                <span>💤</span> Sin turnos activos en este momento
+                            </p>
                         </div>
 
                         <div class="bg-slate-50 dark:bg-gray-800/50 p-6 rounded-3xl border border-slate-200 dark:border-gray-700 flex justify-between items-center shadow-sm">
-                            <p class="text-[11px] font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest">Comensales:</p>
+                            <p class="text-[11px] font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                <span>👥</span> Comensales Matriculados:
+                            </p>
                             <p class="text-sm font-black text-tinto-800 dark:text-oro-300">
-                                {{ activeTotalOrders }} <span class="text-[10px] text-slate-400 uppercase">Matriculados</span>
+                                {{ activeTotalOrders }} <span class="text-[10px] text-slate-400 uppercase">Raciones</span>
                             </p>
                         </div>
                     </div>
@@ -678,7 +734,7 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                     <div class="mt-8">
                         <button @click="submitBentoActivation" 
                                 :disabled="isSyncingAreas"
-                                class="w-full py-6 rounded-[2rem] bg-gradient-to-r from-tinto-900 via-tinto-800 to-tinto-900 text-white text-[11px] font-black uppercase tracking-[0.3em] border border-oro-400/40 shadow-tinto hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-4 disabled:opacity-50 cursor-pointer">
+                                class="w-full py-6 rounded-[2rem] bg-gradient-to-r from-tinto-900 via-tinto-800 to-tinto-900 text-white text-[11px] font-black uppercase tracking-[0.3em] border border-oro-400/40 shadow-tinto hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-4 disabled:opacity-50 cursor-pointer shine-effect">
                             <ArrowPathIcon class="h-5 w-5 text-oro-300" :class="{ 'animate-spin': isSyncingAreas }" />
                             <span>{{ currentActiveBentoSession ? 'Actualizar Áreas del Turno' : 'Iniciar Buffet & Turno' }}</span>
                         </button>
@@ -748,49 +804,80 @@ const getProviderTheme = (id) => [ 'bg-indigo-600', 'bg-emerald-600', 'bg-rose-6
                         </div>
                         
                         <div class="p-10">
-                            <p class="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 mb-8 text-center">{{ operationMode === 'simple' ? 'Toca a un integrante para elegir su platillo:' : 'Toca el nombre para autorizar automáticamente:' }}</p>
+                            <p class="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 mb-8 text-center flex items-center justify-center gap-2">
+                                <span>✨</span>
+                                <span>{{ operationMode === 'simple' ? 'Toca a un integrante para elegir su platillo:' : 'Toca el nombre para autorizar automáticamente:' }}</span>
+                            </p>
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                 <div v-for="m in teamOrders" :key="'auth-' + activeAuthSession.id + '-' + m.id" @click="openSimpleModeSelector(m)" 
-                                     class="flex flex-col p-4 rounded-[2rem] border-2 transition-all cursor-pointer relative group shadow-sm hover:scale-[1.02]" 
-                                     :class="[ operationMode === 'simple' ? (m.orders.some(o => o.meal_type === activeAuthSession.meal_type) ? 'bg-indigo-50 dark:bg-indigo-950/20 border-indigo-500 shadow-indigo-100 dark:shadow-none' : 'bg-slate-50 dark:bg-gray-800 border-transparent opacity-80') : (authorizedUserIds[activeAuthSession.id]?.includes(m.id) ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-500 text-emerald-700 dark:text-emerald-400 shadow-emerald-500/10' : 'bg-slate-50 dark:bg-gray-800 border-transparent text-slate-400 dark:text-gray-500 opacity-60') ]">
-                                    <div class="flex items-center mb-3">
-                                        <img :src="m.avatar_url" class="h-8 w-8 rounded-full mr-3 border-2 border-white dark:border-gray-700 shadow-md object-cover transition-transform group-hover:scale-110" />
+                                     class="flex flex-col p-4 rounded-[2rem] border-2 transition-all cursor-pointer relative group shadow-sm hover:scale-[1.03] active:scale-95" 
+                                     :class="[ operationMode === 'simple' 
+                                         ? (m.orders.some(o => o.meal_type === activeAuthSession.meal_type) 
+                                             ? 'bg-tinto-50/70 dark:bg-tinto-950/30 border-tinto-700 dark:border-oro-500 selected-glow-tinto' 
+                                             : 'bg-slate-50 dark:bg-gray-800 border-transparent hover:border-slate-200 dark:hover:border-gray-700 opacity-90') 
+                                         : (authorizedUserIds[activeAuthSession.id]?.includes(m.id) 
+                                             ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-500 text-emerald-700 dark:text-emerald-400 selected-glow-verde' 
+                                             : 'bg-slate-50 dark:bg-gray-800 border-transparent text-slate-400 dark:text-gray-500 opacity-60') ]">
+                                    
+                                    <div class="flex items-center mb-2">
+                                        <div class="relative mr-3">
+                                            <img :src="m.avatar_url" class="h-9 w-9 rounded-full border-2 border-white dark:border-gray-700 shadow-md object-cover transition-transform group-hover:scale-110" />
+                                            <span v-if="m.orders.some(o => o.meal_type === activeAuthSession.meal_type)" 
+                                                  class="absolute -bottom-1 -right-1 text-xs animate-pop">
+                                                {{ getDishEmoji(m.orders.find(o => o.meal_type === activeAuthSession.meal_type)?.platillo, activeAuthSession.meal_type) }}
+                                            </span>
+                                        </div>
                                         <div class="flex-1 min-w-0">
-                                            <p class="text-[9px] font-black uppercase truncate tracking-tight text-slate-800 dark:text-gray-300 leading-tight">{{ m.name }}</p>
+                                            <p class="text-[10px] font-black uppercase truncate tracking-tight text-slate-800 dark:text-gray-200 leading-tight">{{ m.name }}</p>
                                         </div>
                                     </div>
-                                    <div v-if="m.orders.find(o => o.meal_type === activeAuthSession.meal_type)" class="mt-1 space-y-1 border-t pt-3 border-indigo-100 dark:border-indigo-900">
-                                        <p class="text-[8px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-tighter leading-none">{{ m.orders.find(o => o.meal_type === activeAuthSession.meal_type).platillo }}</p>
-                                        <p v-if="m.orders.find(o => o.meal_type === activeAuthSession.meal_type).preferences" class="text-[7px] font-bold text-rose-500 italic leading-none truncate">* {{ m.orders.find(o => o.meal_type === activeAuthSession.meal_type).preferences }}</p>
+                                    
+                                    <!-- DETALLE DEL PLATILLO SELECCIONADO CON ICONO -->
+                                    <div v-if="m.orders.find(o => o.meal_type === activeAuthSession.meal_type)" class="mt-1 space-y-1 border-t pt-2.5 border-tinto-100 dark:border-tinto-900/60 bg-white/60 dark:bg-gray-900/60 p-2 rounded-xl">
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="text-sm shrink-0">{{ getDishEmoji(m.orders.find(o => o.meal_type === activeAuthSession.meal_type).platillo, activeAuthSession.meal_type) }}</span>
+                                            <p class="text-[9px] font-black text-tinto-800 dark:text-oro-300 uppercase tracking-tighter leading-tight truncate">
+                                                {{ m.orders.find(o => o.meal_type === activeAuthSession.meal_type).platillo }}
+                                            </p>
+                                        </div>
+                                        <p v-if="m.orders.find(o => o.meal_type === activeAuthSession.meal_type).preferences" class="text-[8px] font-bold text-rose-500 italic leading-none truncate pl-5">
+                                            * {{ m.orders.find(o => o.meal_type === activeAuthSession.meal_type).preferences }}
+                                        </p>
                                     </div>
-                                    <div v-if="m.orders.find(o => o.meal_type === activeAuthSession.meal_type)" class="absolute -top-1 -right-1 flex gap-1">
+
+                                    <div v-if="m.orders.find(o => o.meal_type === activeAuthSession.meal_type)" class="absolute -top-1 -right-1 flex gap-1 animate-pop">
                                         <button v-if="m.orders.find(o => o.meal_type === activeAuthSession.meal_type).status !== 'submitted_by_manager'" @click.stop="deleteOrder(m.orders.find(o => o.meal_type === activeAuthSession.meal_type).id)" 
-                                                class="bg-white dark:bg-gray-800 text-rose-500 rounded-full p-1 shadow-lg border border-rose-100 dark:border-gray-900 hover:bg-rose-50 transition-all">
+                                                class="bg-white dark:bg-gray-800 text-rose-500 rounded-full p-1 shadow-lg border border-rose-100 dark:border-gray-900 hover:bg-rose-50 transition-all cursor-pointer" title="Quitar selección">
                                             <TrashIcon class="h-3 w-3" />
                                         </button>
                                         <div v-if="m.orders.find(o => o.meal_type === activeAuthSession.meal_type).status === 'submitted_by_manager'" 
-                                             class="bg-emerald-500 text-white rounded-full p-1 shadow-md border border-white dark:border-gray-700"><CheckBadgeIcon class="h-3.5 w-3.5" /></div>
-                                        <div v-else class="bg-indigo-600 text-white rounded-full p-1 shadow-md border border-white dark:border-gray-700"><CheckBadgeIcon class="h-3.5 w-3.5" /></div>
+                                             class="bg-emerald-600 text-white rounded-full p-1 shadow-md border border-white dark:border-gray-700 animate-pop">
+                                            <CheckBadgeIcon class="h-3.5 w-3.5" />
+                                        </div>
+                                        <div v-else class="bg-tinto-800 text-oro-300 rounded-full p-1 shadow-md border border-white dark:border-gray-700 animate-pop">
+                                            <CheckBadgeIcon class="h-3.5 w-3.5" />
+                                        </div>
                                     </div>
                                 </div>
 
                                 <div @click="showQuickMemberModal = true" 
-                                     class="flex flex-col items-center justify-center p-4 rounded-[2rem] border-2 border-dashed border-slate-200 dark:border-gray-700 hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/10 transition-all cursor-pointer group shadow-sm">
-                                    <div class="h-8 w-8 rounded-full bg-slate-100 dark:bg-gray-800 group-hover:bg-indigo-600 flex items-center justify-center text-slate-400 group-hover:text-white transition-all mb-2 shadow-inner">
+                                     class="flex flex-col items-center justify-center p-4 rounded-[2rem] border-2 border-dashed border-slate-200 dark:border-gray-700 hover:border-tinto-400 hover:bg-tinto-50/40 dark:hover:bg-tinto-950/20 transition-all cursor-pointer group shadow-sm">
+                                    <div class="h-8 w-8 rounded-full bg-slate-100 dark:bg-gray-800 group-hover:bg-tinto-800 flex items-center justify-center text-slate-400 group-hover:text-oro-300 transition-all mb-2 shadow-inner group-hover:rotate-90">
                                         <PlusIcon class="h-5 w-5" />
                                     </div>
-                                    <p class="text-[7px] font-black uppercase text-slate-400 group-hover:text-indigo-600 tracking-widest text-center">Nuevo<br/>Comensal</p>
+                                    <p class="text-[7px] font-black uppercase text-slate-400 group-hover:text-tinto-700 dark:group-hover:text-oro-400 tracking-widest text-center">Nuevo<br/>Comensal</p>
                                 </div>
                             </div>
 
-                            <div v-if="teamOrders.some(m => m.orders.some(o => o.meal_type === activeAuthSession.meal_type))" class="mt-12 p-8 bg-indigo-50/50 dark:bg-indigo-950/20 rounded-[2.5rem] border-2 border-dashed border-indigo-100 dark:border-indigo-900/30 flex flex-col items-center">
+                            <div v-if="teamOrders.some(m => m.orders.some(o => o.meal_type === activeAuthSession.meal_type))" class="mt-12 p-8 bg-tinto-50/50 dark:bg-tinto-950/20 rounded-[2.5rem] border-2 border-dashed border-tinto-100 dark:border-tinto-900/30 flex flex-col items-center">
                                 <button @click="pendingSubmissionMealType = activeAuthSession.meal_type; prepareAndSubmitBatch();" 
                                         :disabled="teamOrders.every(m => !m.orders.some(o => o.meal_type === activeAuthSession.meal_type && o.status === 'submitted_by_user'))"
-                                        class="px-16 py-5 rounded-[2rem] font-black uppercase text-[10px] tracking-[0.4em] shadow-xl transition-all"
+                                        class="px-16 py-5 rounded-[2rem] font-black uppercase text-[10px] tracking-[0.4em] shadow-xl transition-all cursor-pointer flex items-center gap-3"
                                         :class="teamOrders.every(m => !m.orders.some(o => o.meal_type === activeAuthSession.meal_type && o.status === 'submitted_by_user'))
-                                            ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 border-emerald-100'
-                                            : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/20'">
-                                    {{ teamOrders.every(m => !m.orders.some(o => o.meal_type === activeAuthSession.meal_type && o.status === 'submitted_by_user')) ? 'Pedido Confirmado' : 'Enviar Pedido del Equipo' }}
+                                            ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
+                                            : 'bg-gradient-to-r from-tinto-900 via-tinto-800 to-tinto-900 hover:from-tinto-950 hover:to-tinto-850 text-white border border-oro-400/40 shadow-tinto-sm hover:scale-105 active:scale-95 shine-effect'">
+                                    <CheckBadgeIcon class="h-4 w-4" :class="teamOrders.every(m => !m.orders.some(o => o.meal_type === activeAuthSession.meal_type && o.status === 'submitted_by_user')) ? 'text-emerald-500' : 'text-oro-300 animate-pulse'" />
+                                    <span>{{ teamOrders.every(m => !m.orders.some(o => o.meal_type === activeAuthSession.meal_type && o.status === 'submitted_by_user')) ? 'Pedido Confirmado' : 'Enviar Pedido del Equipo' }}</span>
                                 </button>
                             </div>
                         </div>

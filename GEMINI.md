@@ -245,7 +245,22 @@ Pasos seguros para desplegar en 172.30.4.132:
         - **Panel Operativo Bento (`Dashboard.vue`):** Pestañas de vista rápida ("Control Operativo Global" en tinto/oro y "Gestión Comedor" en verde institucional), botones de turno (Desayuno, Comida, Cena), selector de áreas y botón de "Iniciar Buffet & Turno" con gradiente Vino Tinto y bisel dorado.
         - **Módulo de Usuarios & Modal IA (`Users/Index.vue` & `ScanUsersModal.vue`):** Botones de importación con IA en Tinto/Oro, botón de nuevo registro en Oro cálido, tablas con badges de roles institucionales.
         - **Portal de Pedidos para Personal (`AreaOrder.vue`):** Banner superior con sello republicano Vino Tinto, acentos dorados y estados activos en Verde Nayarit.
-- **Resultado:** Apariencia visual distinguida, solemne y oficial para la XXXIV Legislatura del H. Congreso del Estado de Nayarit, manteniendo total fluidez y legibilidad tanto de día como de noche.
+### 12. Dinamismo, Micro-interacciones e Iconografía Gastronómica Viva
+- **Solicitud:** Incorporar dinamismo al sistema mediante efectos interactivos, animaciones elásticas, iconografía contextual y respuestas visuales vivas al seleccionar alimentos, iniciar turnos y autorizar raciones.
+- **Solución Implementada:**
+    - **Animaciones Keyframe & Utilidades (`app.css`):**
+        - `.animate-radar`: Efecto de onda concéntrica / radar expansivo para turnos activos en servicio.
+        - `.animate-steam`: Efecto de vapor ascendente sobre turnos de comida y desayuno.
+        - `.animate-pop`: Rebote elástico `cubic-bezier(0.34, 1.56, 0.64, 1)` al seleccionar platillos o integrantes.
+        - `.shine-effect`: Destello luminoso en bisel para botones y tarjetas seleccionadas.
+        - `.selected-glow-tinto`, `.selected-glow-oro`, `.selected-glow-verde`: Resplandores de alta fidelidad.
+    - **Motor de Iconografía Gastronómica Automática (`getDishEmoji`):**
+        - Identifica automáticamente el platillo (ej. 🍳 huevos/chilaquiles, 🥩 carnes/cortes, 🍗 pollo, 🐟 pescados/mariscos, 🌮 tacos/antojitos, 🍝 pastas, 🥗 ensaladas, 🍲 caldos/sopas, 🥪 sándwiches, ☕ café/bebidas, 🍰 postres) y renderiza su icono visual dinámico.
+    - **Paneles Vivos:**
+        - **Turnos:** Desayuno (🍳), Comida (🍲) y Cena (🌙) con vapor e iluminación al activarse.
+        - **Tarjetas de Comensales y Menú:** Micro-animación de entrada, badge animado de asignación y checks elásticos.
+        - **Modal y Portal de Pedidos:** Catálogo interactivo con escala al tacto/clic y feedback visual en tiempo real.
+- **Resultado:** Interfaz viva, dinámica e intuitiva que trasciende el texto plano, permitiendo una experiencia de usuario moderna, fluida y visualmente enriquecida.
 
 ---
 **Desarrollado y Protegido por Spincelaestream - 26 Agosto 2026**

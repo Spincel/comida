@@ -154,11 +154,30 @@ const resetForAnother = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
+const getDishEmoji = (name, mealType) => {
+    if (!name) return '🍽️';
+    const n = name.toLowerCase();
+    if (n.includes('huevo') || n.includes('chilaquil') || n.includes('omelet') || n.includes('hot cake') || n.includes('waffle')) return '🍳';
+    if (n.includes('cafe') || n.includes('café') || n.includes('jugo') || n.includes('leche') || n.includes('avena')) return '☕';
+    if (n.includes('carne') || n.includes('res') || n.includes('arrachera') || n.includes('bistec') || n.includes('milanesa') || n.includes('costilla')) return '🥩';
+    if (n.includes('pollo') || n.includes('pechuga') || n.includes('alita') || n.includes('fajita')) return '🍗';
+    if (n.includes('pescado') || n.includes('camaron') || n.includes('camarón') || n.includes('atun') || n.includes('marisco')) return '🐟';
+    if (n.includes('taco') || n.includes('quesadilla') || n.includes('burrito') || n.includes('flauta') || n.includes('gordita')) return '🌮';
+    if (n.includes('pasta') || n.includes('espagueti') || n.includes('lasaña')) return '🍝';
+    if (n.includes('ensalada') || n.includes('vegetal') || n.includes('verdura') || n.includes('fruta')) return '🥗';
+    if (n.includes('sopa') || n.includes('caldo') || n.includes('crema') || n.includes('pozole') || n.includes('menudo')) return '🍲';
+    if (n.includes('hamburguesa') || n.includes('sandwich') || n.includes('torta')) return '🥪';
+    if (n.includes('postre') || n.includes('pastel') || n.includes('gelatina') || n.includes('flan')) return '🍰';
+    if (mealType === 'Desayuno') return '🥞';
+    if (mealType === 'Cena') return '🥪';
+    return '🍽️';
+};
+
 const mealTypeTagColors = {
-    'Desayuno': 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800',
-    'Comida': 'bg-indigo-100 text-indigo-800 border-indigo-300 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800',
-    'Cena': 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800',
-    'Extra': 'bg-teal-100 text-teal-800 border-teal-300 dark:bg-teal-950/40 dark:text-teal-300 dark:border-teal-800'
+    'Desayuno': 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800',
+    'Comida': 'bg-tinto-100 dark:bg-tinto-950/80 text-tinto-800 dark:text-oro-300 border-tinto-300 dark:border-tinto-800',
+    'Cena': 'bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 border-purple-300 dark:border-purple-800',
+    'Extra': 'bg-teal-100 dark:bg-teal-950/80 text-teal-800 dark:text-teal-300 border-teal-300 dark:border-teal-800'
 };
 </script>
 
@@ -246,13 +265,13 @@ const mealTypeTagColors = {
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 dark:border-gray-800 pb-4">
                         <div class="flex items-center gap-3">
                             <div class="h-10 w-10 rounded-xl flex items-center justify-center font-black text-sm transition-all"
-                                 :class="form.user_id ? 'bg-emerald-500 text-white shadow-md' : 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600'">
+                                 :class="form.user_id ? 'bg-nayarit-700 text-white shadow-md' : 'bg-tinto-50 dark:bg-tinto-950/60 text-tinto-800 dark:text-oro-300 border border-tinto-200 dark:border-tinto-800'">
                                 <CheckIcon v-if="form.user_id" class="h-5 w-5 stroke-[3]" />
                                 <span v-else>1</span>
                             </div>
                             <div>
-                                <h3 class="text-lg font-black uppercase tracking-tight text-slate-800 dark:text-white">
-                                    1. ¿Quién eres?
+                                <h3 class="text-lg font-black uppercase tracking-tight text-slate-800 dark:text-white flex items-center gap-2">
+                                    <span>👤</span> 1. ¿Quién eres?
                                 </h3>
                                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                                     {{ selectedMember ? selectedMember.name : 'Toca tu nombre para comenzar tu pedido' }}
@@ -264,29 +283,34 @@ const mealTypeTagColors = {
                         <div class="relative w-full sm:w-64">
                             <MagnifyingGlassIcon class="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                             <input v-model="memberSearch" type="text" placeholder="Buscar mi nombre..."
-                                   class="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-gray-800 border-slate-200 dark:border-gray-700 rounded-xl text-[10px] font-bold uppercase focus:ring-indigo-500 shadow-inner" />
+                                   class="w-full pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-gray-800 border-slate-200 dark:border-gray-700 rounded-xl text-[10px] font-bold uppercase focus:ring-tinto-700 shadow-inner" />
                         </div>
                     </div>
 
                     <!-- GRID DE INTEGRANTES -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
                         <div v-for="m in filteredMembers" :key="m.id" @click="selectMember(m)"
-                             class="p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between group relative shadow-sm hover:scale-[1.01] active:scale-95"
-                             :class="form.user_id === m.id ? 'bg-indigo-50 dark:bg-indigo-950/30 border-indigo-500 shadow-indigo-500/10' : 'bg-slate-50 dark:bg-gray-800/60 border-transparent hover:border-slate-200 dark:hover:border-gray-700'">
+                             class="p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between group relative shadow-sm hover:scale-[1.02] active:scale-95"
+                             :class="form.user_id === m.id ? 'bg-tinto-50/80 dark:bg-tinto-950/40 border-tinto-700 dark:border-oro-500 selected-glow-tinto' : 'bg-slate-50 dark:bg-gray-800/60 border-transparent hover:border-slate-200 dark:hover:border-gray-700'">
                             
                             <div class="flex items-center gap-3 min-w-0">
-                                <img :src="m.avatar_url" class="h-9 w-9 rounded-full border-2 border-white dark:border-gray-700 shadow-sm object-cover shrink-0" />
+                                <div class="relative">
+                                    <img :src="m.avatar_url" class="h-9 w-9 rounded-full border-2 border-white dark:border-gray-700 shadow-sm object-cover shrink-0" />
+                                    <span v-if="existingOrders[m.id]" class="absolute -bottom-1 -right-1 text-xs">
+                                        {{ getDishEmoji(existingOrders[m.id].dish_name, session.meal_type) }}
+                                    </span>
+                                </div>
                                 <div class="min-w-0 flex-1">
                                     <p class="text-[10px] font-black uppercase truncate text-slate-800 dark:text-gray-200">
                                         {{ m.name }}
                                     </p>
-                                    <p v-if="existingOrders[m.id]" class="text-[8px] font-bold text-emerald-600 dark:text-emerald-400 uppercase truncate">
-                                        ✓ {{ existingOrders[m.id].dish_name }}
+                                    <p v-if="existingOrders[m.id]" class="text-[8px] font-bold text-nayarit-700 dark:text-emerald-400 uppercase truncate flex items-center gap-1 mt-0.5">
+                                        <span>✓</span> {{ existingOrders[m.id].dish_name }}
                                     </p>
                                 </div>
                             </div>
 
-                            <div v-if="form.user_id === m.id" class="h-6 w-6 rounded-full bg-indigo-600 text-white flex items-center justify-center shrink-0 ml-2 shadow-md">
+                            <div v-if="form.user_id === m.id" class="h-6 w-6 rounded-full bg-tinto-800 text-oro-300 flex items-center justify-center shrink-0 ml-2 shadow-md animate-pop">
                                 <CheckIcon class="h-3.5 w-3.5 stroke-[3]" />
                             </div>
                         </div>
@@ -299,26 +323,26 @@ const mealTypeTagColors = {
 
                 <!-- PASO 2: ELIGE TU PLATILLO Y ENVÍA EL PEDIDO (VISIBLE TRAS ELEGIR PERSONA) -->
                 <div v-if="form.user_id" id="step-2-section" 
-                     class="bg-white dark:bg-gray-900 rounded-[2.5rem] p-6 sm:p-8 border border-slate-200 dark:border-gray-800 shadow-xl space-y-6 animate-fade-in">
+                     class="bg-white dark:bg-gray-900 rounded-[2.5rem] p-6 sm:p-8 border border-slate-200 dark:border-gray-800 shadow-xl space-y-6 animate-pop">
                     
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 dark:border-gray-800 pb-4">
                         <div class="flex items-center gap-3">
                             <div class="h-10 w-10 rounded-xl flex items-center justify-center font-black text-sm transition-all"
-                                 :class="orderSavedSuccessfully ? 'bg-emerald-500 text-white shadow-md' : 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600'">
+                                 :class="orderSavedSuccessfully ? 'bg-nayarit-700 text-white shadow-md' : 'bg-tinto-50 dark:bg-tinto-950/60 text-tinto-800 dark:text-oro-300 border border-tinto-200 dark:border-tinto-800'">
                                 <CheckIcon v-if="orderSavedSuccessfully" class="h-5 w-5 stroke-[3]" />
                                 <span v-else>2</span>
                             </div>
                             <div>
-                                <h3 class="text-lg font-black uppercase tracking-tight text-slate-800 dark:text-white">
-                                    2. Elige tu Platillo
+                                <h3 class="text-lg font-black uppercase tracking-tight text-slate-800 dark:text-white flex items-center gap-2">
+                                    <span>🍽️</span> 2. Elige tu Platillo
                                 </h3>
                                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                    Para {{ selectedMember?.name }} • {{ session.provider?.name }}
+                                    Para <span class="text-tinto-800 dark:text-oro-300 font-black">{{ selectedMember?.name }}</span> • {{ session.provider?.name }}
                                 </p>
                             </div>
                         </div>
 
-                        <div v-if="orderSavedSuccessfully" class="px-3 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 text-[9px] font-black uppercase border border-emerald-200 dark:border-emerald-800 flex items-center gap-1.5 shadow-sm">
+                        <div v-if="orderSavedSuccessfully" class="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-nayarit-800 dark:text-emerald-400 text-[9px] font-black uppercase border border-emerald-200 dark:border-emerald-800 flex items-center gap-1.5 shadow-sm animate-pop">
                             <CheckCircleIcon class="h-4 w-4" />
                             <span>Pedido Visible para tu Gerente</span>
                         </div>
@@ -327,21 +351,26 @@ const mealTypeTagColors = {
                     <!-- GRID DE PLATILLOS -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div v-for="dish in dishes" :key="dish.id" @click="selectDish(dish)"
-                             class="p-5 rounded-3xl border-2 transition-all cursor-pointer flex flex-col justify-between group shadow-sm hover:scale-[1.01] active:scale-95"
-                             :class="form.daily_menu_id === dish.id ? 'bg-indigo-50 dark:bg-indigo-950/30 border-indigo-500 shadow-indigo-500/10' : 'bg-slate-50 dark:bg-gray-800/60 border-transparent hover:border-slate-200 dark:hover:border-gray-700'">
+                             class="p-5 rounded-3xl border-2 transition-all cursor-pointer flex flex-col justify-between group shadow-sm hover:scale-[1.02] active:scale-95"
+                             :class="form.daily_menu_id === dish.id 
+                                ? 'bg-tinto-50/80 dark:bg-tinto-950/40 border-tinto-700 dark:border-oro-500 ring-4 ring-oro-400/30 selected-glow-tinto scale-[1.02] animate-pop' 
+                                : 'bg-slate-50 dark:bg-gray-800/60 border-transparent hover:border-slate-200 dark:hover:border-gray-700'">
                             
-                            <div class="space-y-2">
+                            <div class="space-y-3">
                                 <div class="flex justify-between items-start gap-3">
-                                    <h4 class="text-xs font-black uppercase text-slate-900 dark:text-white leading-tight">
-                                        {{ dish.name }}
-                                    </h4>
-                                    <div class="h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all"
-                                         :class="form.daily_menu_id === dish.id ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-800'">
-                                        <CheckIcon v-if="form.daily_menu_id === dish.id" class="h-3 w-3 stroke-[3]" />
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-3xl group-hover:scale-125 transition-transform group-hover:rotate-6">{{ getDishEmoji(dish.name, session.meal_type) }}</span>
+                                        <h4 class="text-xs font-black uppercase text-slate-900 dark:text-white leading-tight">
+                                            {{ dish.name }}
+                                        </h4>
+                                    </div>
+                                    <div class="h-6 w-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all"
+                                         :class="form.daily_menu_id === dish.id ? 'border-tinto-800 bg-tinto-800 text-oro-300 shadow-md' : 'border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-800'">
+                                        <CheckIcon v-if="form.daily_menu_id === dish.id" class="h-3.5 w-3.5 stroke-[3]" />
                                     </div>
                                 </div>
 
-                                <p v-if="dish.description" class="text-[10px] text-slate-500 dark:text-gray-400 leading-relaxed line-clamp-3">
+                                <p v-if="dish.description" class="text-[10px] text-slate-500 dark:text-gray-400 leading-relaxed line-clamp-3 italic">
                                     {{ dish.description }}
                                 </p>
                             </div>
@@ -358,15 +387,15 @@ const mealTypeTagColors = {
                             Observaciones / Notas Especiales (Opcional):
                         </label>
                         <input v-model="form.preferences" type="text" placeholder="Ej. Sin cebolla / salsa aparte / término medio..."
-                               class="w-full px-5 py-3.5 bg-slate-50 dark:bg-gray-800 border-slate-200 dark:border-gray-700 rounded-2xl text-xs font-bold focus:ring-indigo-500 shadow-inner" />
+                               class="w-full px-5 py-3.5 bg-slate-50 dark:bg-gray-800 border-slate-200 dark:border-gray-700 rounded-2xl text-xs font-bold focus:ring-tinto-700 shadow-inner" />
                     </div>
 
                     <!-- BOTÓN ENVIAR PEDIDO -->
                     <div class="pt-2">
                         <button @click="submitDishOrder" :disabled="form.processing || !form.daily_menu_id"
-                                class="w-full py-5 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-600 bg-[length:200%_auto] animate-gradient text-white text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-indigo-500/30 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50">
-                            <ArrowPathIcon v-if="form.processing" class="h-4 w-4 animate-spin" />
-                            <PaperAirplaneIcon v-else class="h-4 w-4" />
+                                class="w-full py-5 rounded-2xl bg-gradient-to-r from-tinto-900 via-tinto-800 to-tinto-900 text-white text-xs font-black uppercase tracking-[0.2em] border border-oro-400/40 shadow-tinto-sm hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 cursor-pointer shine-effect">
+                            <ArrowPathIcon v-if="form.processing" class="h-4 w-4 animate-spin text-oro-300" />
+                            <PaperAirplaneIcon v-else class="h-4 w-4 text-oro-300" />
                             <span>{{ orderSavedSuccessfully ? 'Actualizar y Enviar Platillo' : 'Enviar Pedido al Gerente' }}</span>
                         </button>
                     </div>
@@ -374,23 +403,23 @@ const mealTypeTagColors = {
 
                 <!-- PASO 3: MOTIVO / JUSTIFICACIÓN (SE ACTIVA/DESTACA AL ENVIAR PLATILLO) -->
                 <div v-if="form.user_id && form.daily_menu_id" id="step-3-section" 
-                     class="bg-white dark:bg-gray-900 rounded-[2.5rem] p-6 sm:p-8 border border-slate-200 dark:border-gray-800 shadow-xl space-y-6 animate-fade-in"
-                     :class="{ 'ring-2 ring-indigo-500 shadow-indigo-500/10': orderSavedSuccessfully && !justificationSaved }">
+                     class="bg-white dark:bg-gray-900 rounded-[2.5rem] p-6 sm:p-8 border border-slate-200 dark:border-gray-800 shadow-xl space-y-6 animate-pop"
+                     :class="{ 'ring-2 ring-oro-400 shadow-oro-sm': orderSavedSuccessfully && !justificationSaved }">
                     
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 dark:border-gray-800 pb-4">
                         <div class="flex items-center gap-3">
                             <div class="h-10 w-10 rounded-xl flex items-center justify-center font-black text-sm transition-all"
-                                 :class="justificationSaved ? 'bg-emerald-500 text-white shadow-md' : 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600'">
+                                 :class="justificationSaved ? 'bg-nayarit-700 text-white shadow-md' : 'bg-tinto-50 dark:bg-tinto-950/60 text-tinto-800 dark:text-oro-300 border border-tinto-200 dark:border-tinto-800'">
                                 <CheckIcon v-if="justificationSaved" class="h-5 w-5 stroke-[3]" />
                                 <span v-else>3</span>
                             </div>
                             <div>
                                 <div class="flex items-center gap-2">
-                                    <h3 class="text-lg font-black uppercase tracking-tight text-slate-800 dark:text-white">
-                                        3. Motivo / Justificación
+                                    <h3 class="text-lg font-black uppercase tracking-tight text-slate-800 dark:text-white flex items-center gap-2">
+                                        <span>📋</span> 3. Motivo / Justificación
                                     </h3>
                                     <span class="text-[8px] font-black uppercase px-2 py-0.5 rounded"
-                                          :class="justificationSaved ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'">
+                                          :class="justificationSaved ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-oro-100 text-oro-900 dark:bg-oro-950 dark:text-oro-300'">
                                         {{ justificationSaved ? 'Guardada' : 'Agrega antes de cerrar' }}
                                     </span>
                                 </div>
@@ -400,7 +429,7 @@ const mealTypeTagColors = {
                             </div>
                         </div>
 
-                        <div v-if="orderSavedSuccessfully && !justificationSaved" class="text-[9px] font-black uppercase text-indigo-600 dark:text-indigo-400 animate-pulse">
+                        <div v-if="orderSavedSuccessfully && !justificationSaved" class="text-[9px] font-black uppercase text-oro-700 dark:text-oro-400 animate-pulse">
                             ⚡ Tu comida ya está enviada. Agrega tu motivo aquí:
                         </div>
                     </div>
@@ -412,7 +441,7 @@ const mealTypeTagColors = {
                         </p>
                         <div class="flex flex-wrap gap-2">
                             <button v-for="q in quickJustifications" :key="q" type="button" @click="applyQuickJustification(q)"
-                                    class="px-3 py-1.5 rounded-xl text-[9px] font-bold uppercase transition-all bg-slate-100 dark:bg-gray-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 dark:hover:text-indigo-400 border border-slate-200 dark:border-gray-700">
+                                    class="px-3 py-1.5 rounded-xl text-[9px] font-bold uppercase transition-all bg-slate-100 dark:bg-gray-800 hover:bg-tinto-50 dark:hover:bg-tinto-950/40 hover:text-tinto-800 dark:hover:text-oro-300 border border-slate-200 dark:border-gray-700 cursor-pointer">
                                 {{ q }}
                             </button>
                         </div>
@@ -421,7 +450,7 @@ const mealTypeTagColors = {
                     <div>
                         <textarea v-model="form.activity_performed" rows="3" 
                                   placeholder="Escribe aquí la actividad o motivo detallado..."
-                                  class="w-full p-4 bg-slate-50 dark:bg-gray-800 border-slate-200 dark:border-gray-700 rounded-2xl text-xs font-bold text-slate-700 dark:text-gray-200 focus:ring-indigo-500 shadow-inner resize-none"></textarea>
+                                  class="w-full p-4 bg-slate-50 dark:bg-gray-800 border-slate-200 dark:border-gray-700 rounded-2xl text-xs font-bold text-slate-700 dark:text-gray-200 focus:ring-tinto-700 shadow-inner resize-none"></textarea>
                         <div class="flex justify-between items-center mt-1 px-2">
                             <span v-if="form.errors.activity_performed" class="text-[10px] font-bold text-rose-500">
                                 {{ form.errors.activity_performed }}
@@ -436,7 +465,7 @@ const mealTypeTagColors = {
                     <!-- BOTÓN GUARDAR JUSTIFICACIÓN -->
                     <div class="pt-2 flex flex-col sm:flex-row items-center gap-3">
                         <button @click="submitJustification" :disabled="form.processing || !form.activity_performed"
-                                class="w-full sm:flex-1 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-[0.2em] shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-3 disabled:opacity-50 active:scale-95">
+                                class="w-full sm:flex-1 py-4 rounded-2xl bg-gradient-to-r from-nayarit-800 via-nayarit-700 to-nayarit-800 text-white text-xs font-black uppercase tracking-[0.2em] border border-emerald-400/30 shadow-lg hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 cursor-pointer">
                             <BookmarkSquareIcon class="h-4 w-4" />
                             <span>{{ justificationSaved ? 'Actualizar Justificación' : 'Guardar Justificación' }}</span>
                         </button>
@@ -444,13 +473,13 @@ const mealTypeTagColors = {
 
                     <!-- ESTADO FINAL / REGISTRAR OTRO COMPAÑERO -->
                     <div v-if="orderSavedSuccessfully" class="pt-6 border-t border-slate-100 dark:border-gray-800 flex flex-col sm:flex-row justify-between items-center gap-4">
-                        <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
-                            <CheckCircleIcon class="h-5 w-5" />
+                        <div class="flex items-center gap-2 text-nayarit-800 dark:text-emerald-400 text-xs font-bold">
+                            <CheckCircleIcon class="h-5 w-5 text-emerald-500" />
                             <span>¡Listo! Tu pedido está completo en el sistema.</span>
                         </div>
 
                         <button @click="resetForAnother" 
-                                class="px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-600 dark:text-gray-300 text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 active:scale-95">
+                                class="px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-gray-800 hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-600 dark:text-gray-300 text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 active:scale-95 cursor-pointer">
                             <ArrowUturnLeftIcon class="h-3.5 w-3.5" />
                             <span>Registrar a otro compañero</span>
                         </button>

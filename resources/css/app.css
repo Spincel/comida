@@ -29,11 +29,73 @@
     animation: gradient-move 4s ease infinite;
   }
 
-  .bg-congreso-gradient {
-    background: linear-gradient(135deg, #78182a 0%, #9a223a 50%, #78182a 100%);
+  @keyframes radar-ping {
+    0% { transform: scale(0.95); opacity: 0.8; }
+    50% { transform: scale(1.5); opacity: 0.3; }
+    100% { transform: scale(2.2); opacity: 0; }
+  }
+  .animate-radar {
+    animation: radar-ping 2.5s cubic-bezier(0, 0, 0.2, 1) infinite;
   }
 
-  .bg-oro-gradient {
-    background: linear-gradient(135deg, #c5a059 0%, #dfbf7a 50%, #c5a059 100%);
+  @keyframes steam-rise {
+    0% { transform: translateY(0) scaleX(1); opacity: 0; }
+    20% { opacity: 0.6; }
+    50% { transform: translateY(-8px) scaleX(1.1); opacity: 0.8; }
+    80% { opacity: 0.4; }
+    100% { transform: translateY(-16px) scaleX(1.2); opacity: 0; }
+  }
+  .animate-steam {
+    animation: steam-rise 2.5s ease-out infinite;
+  }
+
+  @keyframes float-subtle {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-4px); }
+  }
+  .animate-float {
+    animation: float-subtle 3s ease-in-out infinite;
+  }
+
+  @keyframes pop-elastic {
+    0% { transform: scale(0.92); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+  .animate-pop {
+    animation: pop-elastic 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  @keyframes shine-sweep {
+    0% { transform: translateX(-100%) rotate(25deg); }
+    100% { transform: translateX(250%) rotate(25deg); }
+  }
+  .shine-effect {
+    position: relative;
+    overflow: hidden;
+  }
+  .shine-effect::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 60%;
+    height: 200%;
+    background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.25) 50%, rgba(255,255,255,0) 100%);
+    transform: rotate(25deg);
+    animation: shine-sweep 4s infinite;
+    pointer-events: none;
+  }
+
+  .selected-glow-oro {
+    box-shadow: 0 0 25px -3px rgba(197, 160, 89, 0.5), 0 0 10px rgba(197, 160, 89, 0.3);
+  }
+
+  .selected-glow-tinto {
+    box-shadow: 0 0 25px -3px rgba(120, 24, 42, 0.4), 0 0 10px rgba(120, 24, 42, 0.2);
+  }
+
+  .selected-glow-verde {
+    box-shadow: 0 0 25px -3px rgba(22, 101, 52, 0.45), 0 0 10px rgba(22, 101, 52, 0.25);
   }
 }

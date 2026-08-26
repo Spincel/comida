@@ -65,17 +65,36 @@ watch(() => props.show, (isVisible) => {
 });
 
 const mealTypeCardStyles = {
-    'Desayuno': 'border-amber-100 bg-amber-50/20 hover:border-amber-300 hover:bg-amber-50/50',
-    'Comida': 'border-indigo-100 bg-indigo-50/20 hover:border-indigo-300 hover:bg-indigo-50/50',
-    'Cena': 'border-purple-100 bg-purple-50/20 hover:border-purple-300 hover:bg-purple-50/50',
-    'Extra': 'border-teal-100 bg-teal-50/20 hover:border-teal-300 hover:bg-teal-50/50',
+    'Desayuno': 'border-amber-200 dark:border-amber-900/60 bg-amber-50/30 dark:bg-amber-950/20 hover:border-oro-400 hover:bg-amber-50/60',
+    'Comida': 'border-tinto-200 dark:border-tinto-900/60 bg-tinto-50/30 dark:bg-tinto-950/20 hover:border-tinto-400 hover:bg-tinto-50/60',
+    'Cena': 'border-purple-200 dark:border-purple-900/60 bg-purple-50/30 dark:bg-purple-950/20 hover:border-purple-400 hover:bg-purple-50/60',
+    'Extra': 'border-teal-200 dark:border-teal-900/60 bg-teal-50/30 dark:bg-teal-950/20 hover:border-teal-400 hover:bg-teal-50/60',
 };
 
 const mealTypeTagStyles = {
-    'Desayuno': 'bg-amber-100 text-amber-700 border-amber-200',
-    'Comida': 'bg-indigo-100 text-indigo-700 border-indigo-200',
-    'Cena': 'bg-purple-100 text-purple-700 border-purple-200',
-    'Extra': 'bg-teal-100 text-teal-700 border-teal-200',
+    'Desayuno': 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800',
+    'Comida': 'bg-tinto-100 dark:bg-tinto-950/80 text-tinto-800 dark:text-oro-300 border-tinto-300 dark:border-tinto-800',
+    'Cena': 'bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 border-purple-300 dark:border-purple-800',
+    'Extra': 'bg-teal-100 dark:bg-teal-950/80 text-teal-800 dark:text-teal-300 border-teal-300 dark:border-teal-800',
+};
+
+const getDishEmoji = (name, mealType) => {
+    if (!name) return '🍽️';
+    const n = name.toLowerCase();
+    if (n.includes('huevo') || n.includes('chilaquil') || n.includes('omelet') || n.includes('hot cake') || n.includes('waffle')) return '🍳';
+    if (n.includes('cafe') || n.includes('café') || n.includes('jugo') || n.includes('leche') || n.includes('avena')) return '☕';
+    if (n.includes('carne') || n.includes('res') || n.includes('arrachera') || n.includes('bistec') || n.includes('milanesa') || n.includes('costilla')) return '🥩';
+    if (n.includes('pollo') || n.includes('pechuga') || n.includes('alita') || n.includes('fajita')) return '🍗';
+    if (n.includes('pescado') || n.includes('camaron') || n.includes('camarón') || n.includes('atun') || n.includes('marisco')) return '🐟';
+    if (n.includes('taco') || n.includes('quesadilla') || n.includes('burrito') || n.includes('flauta') || n.includes('gordita')) return '🌮';
+    if (n.includes('pasta') || n.includes('espagueti') || n.includes('lasaña')) return '🍝';
+    if (n.includes('ensalada') || n.includes('vegetal') || n.includes('verdura') || n.includes('fruta')) return '🥗';
+    if (n.includes('sopa') || n.includes('caldo') || n.includes('crema') || n.includes('pozole') || n.includes('menudo')) return '🍲';
+    if (n.includes('hamburguesa') || n.includes('sandwich') || n.includes('torta')) return '🥪';
+    if (n.includes('postre') || n.includes('pastel') || n.includes('gelatina') || n.includes('flan')) return '🍰';
+    if (mealType === 'Desayuno') return '🥞';
+    if (mealType === 'Cena') return '🥪';
+    return '🍽️';
 };
 
 const selectOption = (option) => {
@@ -111,122 +130,148 @@ const submit = () => {
 
 <template>
     <Modal :show="show" @close="emit('close')" max-width="6xl">
-        <div class="p-10">
+        <div class="p-8 md:p-10 bg-white dark:bg-gray-900 rounded-[2.5rem] relative overflow-hidden transition-all">
             <!-- ERROR DISPLAY -->
-            <div v-if="Object.keys(form.errors).length > 0" class="mb-10 p-6 bg-red-50 border-l-8 border-red-500 rounded-r-[2rem] shadow-lg shadow-red-100">
-                <p class="text-xs font-black text-red-700 uppercase tracking-[0.2em] mb-2">Hubo un problema:</p>
+            <div v-if="Object.keys(form.errors).length > 0" class="mb-8 p-6 bg-red-50 dark:bg-rose-950/40 border-l-8 border-red-500 rounded-r-[2rem] shadow-lg">
+                <p class="text-xs font-black text-red-700 dark:text-rose-300 uppercase tracking-[0.2em] mb-2">Hubo un problema:</p>
                 <ul class="space-y-1">
-                    <li v-for="(error, key) in form.errors" :key="key" class="text-[11px] text-red-600 font-bold uppercase tracking-tight">→ {{ error }}</li>
+                    <li v-for="(error, key) in form.errors" :key="key" class="text-[11px] text-red-600 dark:text-rose-400 font-bold uppercase tracking-tight">→ {{ error }}</li>
                 </ul>
             </div>
 
             <!-- CABECERA DINÁMICA -->
-            <div class="flex items-center mb-10">
+            <div class="flex items-center mb-8 pb-6 border-b border-slate-100 dark:border-gray-800">
                 <button v-if="step === 'details' && availableOptions.length > 1" 
                         @click="step = 'list'"
-                        class="mr-6 p-3 rounded-2xl hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 transition-all border border-transparent hover:border-gray-200">
-                    <ChevronLeftIcon class="h-8 w-8" />
+                        class="mr-4 p-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-gray-800 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-all border border-slate-200 dark:border-gray-700 cursor-pointer">
+                    <ChevronLeftIcon class="h-6 w-6" />
                 </button>
-                <div>
-                    <h2 class="text-3xl font-black text-gray-900 dark:text-gray-100 uppercase tracking-tighter leading-none">
-                        {{ step === 'list' ? (form.target_user_id ? 'Asignar Platillo' : 'Cambiar Platillo') : (existingOrder ? 'Personalizar Pedido' : 'Confirmar Pedido') }}
-                    </h2>
-                    <p class="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] mt-2">Selección de catálogo permanente</p>
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-gradient-to-tr from-tinto-900 to-tinto-800 rounded-2xl text-oro-300 border border-oro-500/40 shadow-sm">
+                        <span class="text-2xl">{{ step === 'list' ? '🍲' : '✨' }}</span>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl md:text-3xl font-black text-slate-800 dark:text-white uppercase tracking-tight leading-none">
+                            {{ step === 'list' ? (form.target_user_id ? 'Asignar Platillo' : 'Cambiar Platillo') : (existingOrder ? 'Personalizar Pedido' : 'Confirmar Pedido') }}
+                        </h2>
+                        <p class="text-[10px] font-black text-tinto-700 dark:text-oro-400 uppercase tracking-[0.3em] mt-1">Catálogo Gastronómico Institucional</p>
+                    </div>
                 </div>
             </div>
             
-            <div v-if="form.target_user_id" class="mb-10 p-6 bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-100 dark:border-amber-800 rounded-[2.5rem] flex items-center gap-6 shadow-xl shadow-amber-900/5">
-                <div class="h-14 w-14 bg-amber-500 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg">
-                    {{ existingOrder?.user_name?.charAt(0) || '?' }}
+            <div v-if="form.target_user_id" class="mb-8 p-5 bg-oro-50/60 dark:bg-oro-950/30 border-2 border-oro-200 dark:border-oro-800/60 rounded-[2rem] flex items-center gap-4 shadow-sm animate-pop">
+                <div class="h-12 w-12 bg-gradient-to-tr from-tinto-900 to-tinto-800 text-oro-300 rounded-2xl flex items-center justify-center font-black text-lg border border-oro-500/30 shadow-md">
+                    {{ existingOrder?.user_name?.charAt(0) || '👤' }}
                 </div>
                 <div>
-                    <p class="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-[0.2em] mb-1">Asignando platillo a:</p>
-                    <p class="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight">{{ existingOrder?.user_name || 'Personal' }}</p>
+                    <p class="text-[9px] font-black uppercase text-oro-700 dark:text-oro-300 tracking-[0.2em]">Asignando platillo a:</p>
+                    <p class="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tight">{{ existingOrder?.user_name || 'Personal' }}</p>
                 </div>
             </div>
             
             <!-- PASO 1: LISTA DE PLATILLOS (4 COLUMNAS) -->
             <div v-if="step === 'list'" class="space-y-6">
-                <p class="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 text-center">Elige una de las opciones disponibles:</p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-h-[60vh] overflow-y-auto pr-4 custom-scrollbar">
+                <p class="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 text-center flex items-center justify-center gap-2">
+                    <span>👇</span> Elige una de las opciones del menú:
+                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
                     <button v-for="opt in availableOptions" :key="opt.id"
                             @click="selectOption(opt)"
                             type="button"
                             :class="[
                                 form.daily_menu_id === opt.id 
-                                    ? 'border-indigo-600 bg-indigo-100 ring-4 ring-indigo-500/20 shadow-xl scale-[1.02]' 
-                                    : (mealTypeCardStyles[opt.meal_type] || 'border-gray-100 bg-white shadow-sm'),
-                                'w-full text-left p-4 border-2 rounded-[2rem] transition-all flex flex-col justify-between group h-full relative overflow-hidden'
+                                    ? 'border-tinto-700 dark:border-oro-500 bg-tinto-50/80 dark:bg-tinto-950/40 ring-4 ring-oro-400/30 selected-glow-tinto scale-[1.02] animate-pop' 
+                                    : (mealTypeCardStyles[opt.meal_type] || 'border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm'),
+                                'w-full text-left p-5 border-2 rounded-[2rem] transition-all flex flex-col justify-between group h-full relative overflow-hidden cursor-pointer hover:scale-[1.02] active:scale-95'
                             ]">
                         <div class="mb-4">
                             <div class="flex justify-between items-start mb-3">
-                                <span class="text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-widest shadow-sm"
-                                      :class="mealTypeTagStyles[opt.meal_type] || 'bg-gray-100 text-gray-500'">
+                                <span class="text-[8px] font-black px-2.5 py-1 rounded-lg uppercase tracking-widest border shadow-sm flex items-center gap-1"
+                                      :class="mealTypeTagStyles[opt.meal_type] || 'bg-slate-100 text-slate-500'">
+                                    <span>{{ opt.meal_type === 'Desayuno' ? '🍳' : (opt.meal_type === 'Comida' ? '🍲' : '🌙') }}</span>
                                     {{ opt.meal_type }}
                                 </span>
-                                <CheckCircleIcon v-if="form.daily_menu_id === opt.id" class="h-5 w-5 text-indigo-600" />
+                                <CheckCircleIcon v-if="form.daily_menu_id === opt.id" class="h-6 w-6 text-tinto-700 dark:text-oro-400 animate-pop" />
                             </div>
-                            <p class="font-black text-base uppercase tracking-tighter leading-tight" :class="form.daily_menu_id === opt.id ? 'text-indigo-900' : 'text-gray-800 dark:text-white'">
-                                {{ opt.name }}
-                            </p>
-                            <p class="text-[9px] text-gray-500 mt-2 line-clamp-2 font-medium leading-relaxed italic">{{ opt.description }}</p>
+
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="text-3xl group-hover:scale-125 transition-transform group-hover:rotate-6">{{ getDishEmoji(opt.name, opt.meal_type) }}</span>
+                                <p class="font-black text-base uppercase tracking-tight leading-tight" :class="form.daily_menu_id === opt.id ? 'text-tinto-900 dark:text-oro-200' : 'text-slate-800 dark:text-white'">
+                                    {{ opt.name }}
+                                </p>
+                            </div>
+                            <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-2 line-clamp-2 font-medium leading-relaxed italic">{{ opt.description }}</p>
                         </div>
-                        <div class="pt-3 border-t border-gray-200/50 dark:border-gray-700 flex justify-end">
-                            <span class="text-[9px] font-black uppercase tracking-widest text-indigo-600 group-hover:translate-x-1 transition-transform">Elegir →</span>
+                        <div class="pt-3 border-t border-slate-200/50 dark:border-gray-700/60 flex justify-end">
+                            <span class="text-[9px] font-black uppercase tracking-widest text-tinto-700 dark:text-oro-400 group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                                <span>Seleccionar</span> <span>→</span>
+                            </span>
                         </div>
                     </button>
                 </div>
                 
-                <div class="mt-10 flex justify-center">
-                    <SecondaryButton @click="emit('close')" class="!rounded-2xl !py-4 !px-12 !text-[11px] !font-black !uppercase !tracking-widest">Cerrar Catálogo</SecondaryButton>
+                <div class="mt-8 flex justify-center">
+                    <SecondaryButton @click="emit('close')" class="!rounded-2xl !py-3.5 !px-10 !text-[11px] !font-black !uppercase !tracking-widest cursor-pointer">Cerrar Menú</SecondaryButton>
                 </div>
             </div>
 
             <!-- PASO 2: DETALLES Y CONFIRMACIÓN -->
             <div v-if="step === 'details'" class="space-y-6">
                 <!-- Tarjeta del platillo seleccionado -->
-                <div v-if="currentMenu" class="bg-indigo-600 rounded-2xl p-5 text-white shadow-lg shadow-indigo-200 dark:shadow-none">
-                    <div class="flex justify-between items-start mb-2">
-                        <span class="text-[10px] font-black uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded">Seleccionado</span>
-                        <span class="text-[10px] font-bold opacity-80">{{ currentMenu.provider.name }}</span>
+                <div v-if="currentMenu" class="bg-gradient-to-r from-tinto-900 via-tinto-800 to-tinto-900 rounded-[2rem] p-6 text-white shadow-tinto-sm border border-oro-400/40 relative overflow-hidden animate-pop">
+                    <div class="absolute -right-8 -bottom-8 text-8xl opacity-10 pointer-events-none">{{ getDishEmoji(currentMenu.name, currentMenu.meal_type) }}</div>
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="text-[9px] font-black uppercase tracking-widest bg-white/20 text-oro-200 px-3 py-1 rounded-lg border border-white/20 flex items-center gap-1.5">
+                                <span>✓</span> <span>Platillo Seleccionado</span>
+                            </span>
+                            <span class="text-[10px] font-bold text-oro-200/90 flex items-center gap-1">
+                                <span>👨‍🍳</span> {{ currentMenu.provider?.name }}
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-4 mt-2">
+                            <span class="text-4xl">{{ getDishEmoji(currentMenu.name, currentMenu.meal_type) }}</span>
+                            <div>
+                                <p class="font-black text-2xl uppercase tracking-tight leading-none text-white">{{ currentMenu.name }}</p>
+                                <p class="text-xs text-oro-100/90 italic leading-snug mt-1.5">{{ currentMenu.description }}</p>
+                            </div>
+                        </div>
                     </div>
-                    <p class="font-black text-xl mb-1">{{ currentMenu.name }}</p>
-                    <p class="text-sm opacity-90 italic leading-snug">{{ currentMenu.description }}</p>
                 </div>
 
                 <div>
-                    <InputLabel for="preferences" value="¿Alguna instrucción especial?" class="text-gray-700 dark:text-gray-300 font-bold" />
+                    <InputLabel for="preferences" value="¿Alguna instrucción u observación especial?" class="text-slate-700 dark:text-gray-300 font-bold uppercase text-xs" />
                     <div class="mt-2">
                         <textarea
                             id="preferences"
                             rows="3"
-                            class="block w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            class="block w-full rounded-2xl border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-800 text-slate-800 dark:text-white shadow-sm focus:border-tinto-700 focus:ring-tinto-700 text-xs font-semibold"
                             v-model="form.preferences"
-                            placeholder="Ej: Sin cebolla, extra salsa, términos de cocción..."
+                            placeholder="Ej: Sin cebolla, aderezo aparte, bien cocido, sin picante..."
                         ></textarea>
                     </div>
-                    <p class="mt-2 text-xs text-gray-500 italic">
+                    <p class="mt-2 text-[10px] text-slate-400 italic">
                         {{ form.daily_menu_id === existingOrder?.daily_menu_id 
-                            ? 'Estas notas ayudan a la cocina a preparar tu platillo.' 
-                            : 'Has cambiado de platillo, por favor indica tus nuevas preferencias.' }}
+                            ? 'Estas notas serán recibidas por la cocina para preparar tu platillo.' 
+                            : 'Indica cualquier preferencia especial antes de confirmar tu orden.' }}
                     </p>
                     <InputError class="mt-2" :message="form.errors.preferences" />
                 </div>
 
-                <div class="flex flex-col gap-3">
+                <div class="flex flex-col gap-3 pt-2">
                     <PrimaryButton 
                         @click="submit" 
-                        class="w-full justify-center py-4 text-base font-black uppercase tracking-widest"
+                        class="w-full justify-center !py-4 !text-xs !font-black !uppercase !tracking-widest bg-gradient-to-r from-tinto-900 via-tinto-800 to-tinto-900 text-white border border-oro-400/40 shadow-tinto-sm hover:scale-[1.01] active:scale-95 transition-all shine-effect cursor-pointer"
                         :class="{ 'opacity-25': form.processing }" 
                         :disabled="form.processing || !form.daily_menu_id"
                     >
-                        <template v-if="form.processing">Procesando...</template>
+                        <template v-if="form.processing">Guardando en sistema...</template>
                         <template v-else>
-                            {{ (existingOrder && existingOrder.id) ? 'Actualizar Pedido' : 'Guardar Pedido' }}
+                            {{ (existingOrder && existingOrder.id) ? '✓ Actualizar Selección' : '✓ Confirmar y Guardar Platillo' }}
                         </template>
                     </PrimaryButton>
                     
-                    <SecondaryButton @click="emit('close')" class="w-full justify-center py-3 border-none shadow-none text-gray-400 hover:text-gray-600">
+                    <SecondaryButton @click="emit('close')" class="w-full justify-center !py-3 border-none shadow-none text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer">
                         Cancelar
                     </SecondaryButton>
                 </div>
