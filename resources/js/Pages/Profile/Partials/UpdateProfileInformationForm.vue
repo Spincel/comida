@@ -35,10 +35,10 @@ const form = useForm({
         </header>
 
         <div class="mt-6 flex items-center space-x-6">
-            <img :src="user.avatar_url" class="h-20 w-20 rounded-full border-4 border-indigo-100 shadow-md" :alt="user.name" />
+            <img :src="user.avatar_url" class="h-20 w-20 rounded-2xl border-4 border-tinto-200 dark:border-tinto-800 shadow-md object-cover" :alt="user.name" />
             <div>
-                <h3 class="text-sm font-bold text-gray-700 dark:text-gray-300">Foto de Perfil</h3>
-                <p class="text-xs text-gray-500">Actualmente usando imagen predeterminada por nombre.</p>
+                <h3 class="text-sm font-bold text-slate-800 dark:text-gray-200">Foto de Perfil Institucional</h3>
+                <p class="text-xs text-slate-400">Generada automáticamente a partir del nombre del funcionario.</p>
             </div>
         </div>
 

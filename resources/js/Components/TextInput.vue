@@ -42,7 +42,7 @@ defineExpose({ focus: () => input.value.focus() });
     <div class="relative w-full">
         <input
             :type="inputType"
-            class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-indigo-600 dark:focus:ring-indigo-600 w-full"
+            class="rounded-xl border-slate-300 shadow-xs focus:border-tinto-700 focus:ring-tinto-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:focus:border-oro-400 dark:focus:ring-oro-400 w-full transition-all"
             :class="{ 'pr-10': props.type === 'password' }"
             v-model="model"
             ref="input"
@@ -53,7 +53,7 @@ defineExpose({ focus: () => input.value.focus() });
             v-if="props.type === 'password'"
             type="button"
             @click="showPassword = !showPassword"
-            class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-indigo-500 transition-colors"
+            class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-tinto-700 dark:hover:text-oro-400 transition-colors cursor-pointer"
         >
             <EyeIcon v-if="!showPassword" class="h-5 w-5" />
             <EyeSlashIcon v-else class="h-5 w-5" />

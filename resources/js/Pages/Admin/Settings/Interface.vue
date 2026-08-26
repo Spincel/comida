@@ -48,41 +48,73 @@ const activeTab = ref('logos'); // 'logos', 'system'
 </script>
 
 <template>
-    <Head title="Interfaz V2.0" />
+    <Head title="Configuración de Interfaz SICOA" />
 
     <AuthenticatedLayout bento-tag="Configuración">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div class="lg:col-span-12 flex justify-between items-center mb-4">
-                <div class="flex items-center gap-3"><SwatchIcon class="h-6 w-6 text-indigo-600" /><h3 class="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tight">Identidad y Parámetros</h3></div>
-                <div class="flex bg-slate-100 dark:bg-gray-800 p-1.5 rounded-2xl border dark:border-gray-700">
-                    <button @click="activeTab = 'logos'" :class="activeTab === 'logos' ? 'bg-white dark:bg-gray-700 text-indigo-600 shadow-sm' : 'text-slate-400'" class="px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Logotipos</button>
-                    <button @click="activeTab = 'system'" :class="activeTab === 'system' ? 'bg-white dark:bg-gray-700 text-indigo-600 shadow-sm' : 'text-slate-400'" class="px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">Sistema</button>
+            <!-- HEADER BENTO -->
+            <div class="lg:col-span-12 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-gray-900 p-8 rounded-[2.5rem] shadow-[0_10px_35px_-5px_rgba(120,24,42,0.06)] dark:shadow-none border border-slate-200/80 dark:border-gray-800">
+                <div class="flex items-center gap-4">
+                    <div class="h-14 w-14 rounded-2xl bg-tinto-50 dark:bg-tinto-950/60 text-tinto-800 dark:text-oro-300 border border-tinto-200 dark:border-tinto-800 flex items-center justify-center text-2xl shadow-xs">
+                        🎨
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tight">Identidad & Parámetros</h3>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Personalización Institucional SICOA</p>
+                    </div>
+                </div>
+                <div class="flex bg-slate-100 dark:bg-gray-800 p-1.5 rounded-2xl border border-slate-200 dark:border-gray-700">
+                    <button @click="activeTab = 'logos'" :class="activeTab === 'logos' ? 'bg-gradient-to-r from-tinto-900 to-tinto-800 text-oro-300 shadow-tinto-sm border border-oro-400/40' : 'text-slate-400 hover:text-slate-600'" class="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer">Logotipos</button>
+                    <button @click="activeTab = 'system'" :class="activeTab === 'system' ? 'bg-gradient-to-r from-tinto-900 to-tinto-800 text-oro-300 shadow-tinto-sm border border-oro-400/40' : 'text-slate-400 hover:text-slate-600'" class="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer">Sistema</button>
                 </div>
             </div>
 
-            <div v-if="activeTab === 'logos'" class="lg:col-span-12 bg-white dark:bg-gray-900 rounded-[3rem] p-10 border border-slate-100 dark:border-gray-800 shadow-sm">
+            <!-- LOGOS TAB -->
+            <div v-if="activeTab === 'logos'" class="lg:col-span-12 bg-white dark:bg-gray-900 rounded-[3rem] p-10 border border-slate-200/80 dark:border-gray-800 shadow-[0_10px_35px_-5px_rgba(120,24,42,0.06)] dark:shadow-none">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                     <div v-for="key in ['logo_main', 'logo_small', 'logo_report', 'favicon']" :key="key" class="space-y-4">
                         <p class="text-[9px] font-black uppercase text-slate-400 text-center tracking-widest">{{ key.replace('_', ' ') }}</p>
-                        <div @click="$refs[key + 'Input'][0].click()" class="aspect-square rounded-[2rem] border-2 border-dashed border-slate-100 dark:border-gray-800 flex items-center justify-center cursor-pointer hover:border-indigo-400 transition-all overflow-hidden bg-slate-50 dark:bg-gray-800 relative group">
+                        <div @click="$refs[key + 'Input'][0].click()" class="aspect-square rounded-[2.5rem] border-2 border-dashed border-slate-200 dark:border-gray-700 flex items-center justify-center cursor-pointer hover:border-tinto-700 dark:hover:border-oro-400 transition-all overflow-hidden bg-slate-50 dark:bg-gray-800 relative group shadow-inner">
                             <img v-if="previews[key]" :src="previews[key].startsWith('data') ? previews[key] : '/storage/' + previews[key]" class="max-h-24 object-contain group-hover:scale-110 transition-transform" />
-                            <CloudArrowUpIcon v-else class="h-8 w-8 text-slate-200" />
-                            <div v-if="savingKey === key" class="absolute inset-0 bg-white/60 dark:bg-black/60 flex items-center justify-center"><ArrowPathIcon class="h-6 w-6 animate-spin text-indigo-600" /></div>
+                            <CloudArrowUpIcon v-else class="h-10 w-10 text-slate-300 dark:text-gray-600" />
+                            <div v-if="savingKey === key" class="absolute inset-0 bg-white/70 dark:bg-black/70 flex items-center justify-center">
+                                <ArrowPathIcon class="h-6 w-6 animate-spin text-tinto-800 dark:text-oro-300" />
+                            </div>
                             <input type="file" :ref="key + 'Input'" class="hidden" @change="e => handleFile(key, e)" accept="image/*" />
                         </div>
                     </div>
                 </div>
             </div>
 
+            <!-- SYSTEM TAB -->
             <div v-if="activeTab === 'system'" class="lg:col-span-12 space-y-8">
-                <div class="bg-white dark:bg-gray-900 rounded-[3rem] p-10 border border-slate-100 dark:border-gray-800 shadow-sm">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                        <div class="md:col-span-2"><label class="text-[10px] font-black uppercase text-slate-400 ml-2 mb-2 block">Nombre del Sistema</label><TextInput type="text" v-model="values.app_name" @input="debouncedSave('app_name')" class="w-full !rounded-2xl" /></div>
-                        <div class="md:col-span-2 space-y-4 pt-6 border-t dark:border-gray-800">
-                            <p class="text-[10px] font-black uppercase text-indigo-500">Modo de Operación</p>
+                <div class="bg-white dark:bg-gray-900 rounded-[3rem] p-10 border border-slate-200/80 dark:border-gray-800 shadow-[0_10px_35px_-5px_rgba(120,24,42,0.06)] dark:shadow-none">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="md:col-span-2">
+                            <label class="text-[10px] font-black uppercase text-slate-400 ml-2 mb-2 block tracking-widest">Nombre de la Aplicación</label>
+                            <TextInput type="text" v-model="values.app_name" @input="debouncedSave('app_name')" class="w-full !rounded-2xl !py-4 !px-6 text-xs font-bold" />
+                        </div>
+                        <div class="md:col-span-2 space-y-4 pt-6 border-t border-slate-100 dark:border-gray-800">
+                            <p class="text-[10px] font-black uppercase text-tinto-700 dark:text-oro-400 tracking-widest">Modalidad de Operación</p>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div @click="values.operation_mode = 'complete'; saveSetting('operation_mode', 'complete')" class="p-6 rounded-[2rem] border-2 cursor-pointer transition-all flex items-center gap-4" :class="values.operation_mode === 'complete' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'border-slate-50 dark:border-gray-800'"><UsersIcon class="h-6 w-6" /><p class="text-xs font-black uppercase">Modo Completo</p></div>
-                                <div @click="values.operation_mode = 'simple'; saveSetting('operation_mode', 'simple')" class="p-6 rounded-[2rem] border-2 cursor-pointer transition-all flex items-center gap-4" :class="values.operation_mode === 'simple' ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/20' : 'border-slate-50 dark:border-gray-800'"><UserGroupIcon class="h-6 w-6" /><p class="text-xs font-black uppercase">Modo Simple</p></div>
+                                <div @click="values.operation_mode = 'complete'; saveSetting('operation_mode', 'complete')" 
+                                     class="p-6 rounded-[2rem] border-2 cursor-pointer transition-all flex items-center gap-4" 
+                                     :class="values.operation_mode === 'complete' ? 'border-tinto-700 bg-tinto-50 dark:bg-tinto-950/40 text-tinto-900 dark:text-oro-300' : 'border-slate-100 dark:border-gray-800 text-slate-400'">
+                                    <UsersIcon class="h-6 w-6" />
+                                    <div>
+                                        <p class="text-xs font-black uppercase tracking-tight">Modo Completo</p>
+                                        <p class="text-[9px] font-medium opacity-70">Control por comensal y pedidos detallados</p>
+                                    </div>
+                                </div>
+                                <div @click="values.operation_mode = 'simple'; saveSetting('operation_mode', 'simple')" 
+                                     class="p-6 rounded-[2rem] border-2 cursor-pointer transition-all flex items-center gap-4" 
+                                     :class="values.operation_mode === 'simple' ? 'border-oro-600 bg-oro-50 dark:bg-oro-950/40 text-oro-900 dark:text-oro-300' : 'border-slate-100 dark:border-gray-800 text-slate-400'">
+                                    <UserGroupIcon class="h-6 w-6" />
+                                    <div>
+                                        <p class="text-xs font-black uppercase tracking-tight">Modo Simple</p>
+                                        <p class="text-[9px] font-medium opacity-70">Conteo rápido de comensales por área</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

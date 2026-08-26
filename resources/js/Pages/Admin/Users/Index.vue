@@ -219,51 +219,71 @@ const getAreaColor = (id) => id ? areaColors[id % areaColors.length] : 'bg-slate
 
         <!-- MODAL -->
         <Modal :show="showModal" @close="closeModal" max-width="2xl">
-            <div class="p-10 dark:bg-gray-900 relative">
-                <div class="flex justify-between items-center mb-10">
-                    <div class="flex items-center gap-6">
-                        <div class="h-16 w-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-xl"><UsersIcon class="h-8 w-8" /></div>
-                        <div><h3 class="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">{{ editingUser ? 'Actualizar Perfil' : 'Alta de Usuario' }}</h3><p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Gestión Maestra de Personal</p></div>
+            <div class="p-10 dark:bg-gray-900 relative rounded-[2.5rem]">
+                <div class="flex justify-between items-center mb-8">
+                    <div class="flex items-center gap-4">
+                        <div class="h-14 w-14 bg-gradient-to-tr from-tinto-900 to-tinto-800 rounded-2xl flex items-center justify-center text-oro-300 shadow-tinto-sm border border-oro-400/40">
+                            <UsersIcon class="h-7 w-7" />
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">{{ editingUser ? 'Actualizar Perfil' : 'Alta de Usuario' }}</h3>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Padrón de Servidores Públicos SICOA</p>
+                        </div>
                     </div>
                 </div>
 
                 <form @submit.prevent="submit" class="space-y-6">
-                    <div class="flex flex-col items-center mb-8">
-                        <div class="relative h-28 w-28 rounded-3xl overflow-hidden border-4 border-slate-50 dark:border-gray-800 shadow-2xl bg-slate-100 dark:bg-gray-800 flex items-center justify-center cursor-pointer group" @click="fileInput.click()">
+                    <div class="flex flex-col items-center mb-6">
+                        <div class="relative h-24 w-24 rounded-3xl overflow-hidden border-4 border-slate-100 dark:border-gray-800 shadow-md bg-slate-50 dark:bg-gray-800 flex items-center justify-center cursor-pointer group" @click="fileInput.click()">
                             <img v-if="previewAvatar" :src="previewAvatar" class="h-full w-full object-cover" />
-                            <UserIcon v-else class="h-12 w-12 text-slate-300" />
-                            <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><PhotoIcon class="h-8 w-8 text-white" /></div>
+                            <UserIcon v-else class="h-10 w-10 text-slate-300" />
+                            <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <PhotoIcon class="h-6 w-6 text-white" />
+                            </div>
                         </div>
                         <input type="file" ref="fileInput" @change="handleAvatarChange" class="hidden" accept="image/*" />
-                        <p class="text-[9px] font-black uppercase text-indigo-500 mt-4 tracking-[0.2em] cursor-pointer hover:underline" @click="fileInput.click()">Subir nueva fotografía</p>
+                        <p class="text-[9px] font-black uppercase text-tinto-800 dark:text-oro-400 mt-3 tracking-widest cursor-pointer hover:underline" @click="fileInput.click()">Subir nueva fotografía</p>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div><InputLabel value="Nombre(s)" class="text-[10px] font-black uppercase text-slate-400 ml-2 mb-2" /><TextInput type="text" class="w-full !rounded-2xl" v-model="form.first_name" required /></div>
                         <div><InputLabel value="A. Paterno" class="text-[10px] font-black uppercase text-slate-400 ml-2 mb-2" /><TextInput type="text" class="w-full !rounded-2xl" v-model="form.last_name" required /></div>
                         <div><InputLabel value="A. Materno" class="text-[10px] font-black uppercase text-slate-400 ml-2 mb-2" /><TextInput type="text" class="w-full !rounded-2xl" v-model="form.second_last_name" /></div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div><InputLabel value="No. Empleado" class="text-[10px] font-black uppercase text-slate-400 ml-2 mb-2" /><TextInput type="text" class="w-full !rounded-2xl" v-model="form.employee_number" /></div>
                         <div><InputLabel value="Nombre de Usuario" class="text-[10px] font-black uppercase text-slate-400 ml-2 mb-2" /><TextInput type="text" class="w-full !rounded-2xl" v-model="form.username" /></div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t dark:border-gray-800">
-                        <div><InputLabel value="Asignar Rol" class="text-[10px] font-black uppercase text-slate-400 ml-2 mb-2" /><select v-model="form.role" class="w-full rounded-2xl border-gray-300 dark:bg-gray-800 dark:text-gray-300 text-sm"><option v-for="(l, v) in roleLabels" :key="v" :value="v">{{ l }}</option></select></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-100 dark:border-gray-800">
+                        <div>
+                            <InputLabel value="Asignar Rol" class="text-[10px] font-black uppercase text-slate-400 ml-2 mb-2" />
+                            <select v-model="form.role" class="w-full rounded-2xl border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-800 text-xs font-bold uppercase text-slate-700 dark:text-gray-200 focus:ring-2 focus:ring-tinto-700 py-3.5 px-4 shadow-inner">
+                                <option v-for="(l, v) in roleLabels" :key="v" :value="v">{{ l }}</option>
+                            </select>
+                        </div>
                         <div class="relative">
                             <InputLabel value="Departamento / Área" class="text-[10px] font-black uppercase text-slate-400 ml-2 mb-2" />
                             <TextInput type="text" class="w-full !rounded-2xl" v-model="modalAreaSearch" @focus="showModalAreaResults = true" placeholder="Escribe para buscar..." />
-                            <div v-if="showModalAreaResults" class="absolute z-[70] w-full mt-2 bg-white dark:bg-gray-800 border rounded-2xl shadow-2xl max-h-48 overflow-y-auto"><div v-for="a in filteredModalAreaOptions" :key="a.id" @click="selectModalArea(a)" class="p-3 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer border-b last:border-0"><p class="text-[9px] font-bold uppercase">{{ a.full_path }}</p></div></div>
+                            <div v-if="showModalAreaResults" class="absolute z-[70] w-full mt-2 bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-2xl shadow-2xl max-h-48 overflow-y-auto">
+                                <div v-for="a in filteredModalAreaOptions" :key="a.id" @click="selectModalArea(a)" class="p-3 hover:bg-tinto-50 dark:hover:bg-tinto-950/40 cursor-pointer border-b last:border-0">
+                                    <p class="text-[9px] font-bold uppercase text-slate-700 dark:text-gray-200">{{ a.full_path }}</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div><InputLabel value="Contraseña" class="text-[10px] font-black uppercase text-slate-400 ml-2 mb-2" /><TextInput type="password" class="w-full !rounded-2xl" v-model="form.password" :required="!editingUser" /></div>
                         <div><InputLabel value="Confirmar" class="text-[10px] font-black uppercase text-slate-400 ml-2 mb-2" /><TextInput type="password" class="w-full !rounded-2xl" v-model="form.password_confirmation" :required="!editingUser" /></div>
                     </div>
 
-                    <PrimaryButton class="w-full !rounded-2xl !py-5 justify-center text-[11px] font-black uppercase tracking-widest shadow-2xl shadow-indigo-500/20 transition-all active:scale-95" :disabled="form.processing">{{ editingUser ? 'Actualizar Datos' : 'Registrar Usuario' }}</PrimaryButton>
+                    <button type="submit" 
+                            class="w-full py-4 rounded-2xl bg-gradient-to-r from-tinto-900 via-tinto-800 to-tinto-900 text-white text-[11px] font-black uppercase tracking-widest shadow-tinto-sm border border-oro-400/40 hover:scale-105 active:scale-95 transition-all cursor-pointer shine-effect" 
+                            :disabled="form.processing">
+                        {{ editingUser ? 'Guardar Modificaciones' : 'Registrar Usuario' }}
+                    </button>
                 </form>
             </div>
         </Modal>

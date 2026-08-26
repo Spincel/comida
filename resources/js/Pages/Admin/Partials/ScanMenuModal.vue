@@ -203,35 +203,41 @@ const selectedCount = computed(() => scannedMenuItems.value.filter(i => i.select
 <template>
     <Modal :show="show" @close="emit('close')" max-width="3xl">
         <!-- HEADER FIJO CON ACCIONES -->
-        <div class="p-6 border-b dark:border-gray-700 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50">
-            <div>
-                <h2 class="text-xl font-black text-gray-900 dark:text-gray-100 uppercase tracking-tight">
-                    {{ step === 'upload' ? 'Subir Menú' : (step === 'scanning' ? 'Analizando...' : 'Revisar Resultados') }}
-                </h2>
-                <p class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">{{ provider.name }}</p>
+        <div class="p-6 border-b border-slate-100 dark:border-gray-800 flex justify-between items-center bg-slate-50/50 dark:bg-gray-800/50 rounded-t-[2.5rem]">
+            <div class="flex items-center gap-3">
+                <div class="h-10 w-10 rounded-xl bg-tinto-50 dark:bg-tinto-950/60 text-tinto-800 dark:text-oro-300 flex items-center justify-center text-lg border border-tinto-200 dark:border-tinto-800 shadow-2xs">
+                    ✨
+                </div>
+                <div>
+                    <h2 class="text-lg font-black text-slate-800 dark:text-gray-100 uppercase tracking-tight">
+                        {{ step === 'upload' ? 'Escanear Menú con IA' : (step === 'scanning' ? 'Analizando Documento...' : 'Revisar Platillos Detectados') }}
+                    </h2>
+                    <p class="text-[10px] font-bold text-tinto-700 dark:text-oro-400 uppercase tracking-widest">{{ provider.name }}</p>
+                </div>
             </div>
             
-            <div class="flex gap-2">
-                <SecondaryButton @click="emit('close')" class="!rounded-xl border-none">
+            <div class="flex items-center gap-2">
+                <button @click="emit('close')" type="button" class="px-4 py-2 text-slate-400 hover:text-slate-600 dark:hover:text-gray-200 text-xs font-black uppercase tracking-widest cursor-pointer">
                     Cancelar
-                </SecondaryButton>
+                </button>
                 
-                <PrimaryButton v-if="step === 'upload'" @click="scanMenu" :disabled="!form.file" :class="{ 'opacity-25': !form.file }"
-                               class="!rounded-xl bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 dark:shadow-none">
-                    <SparklesIcon class="h-4 w-4 mr-2" /> Iniciar Escaneo
-                </PrimaryButton>
+                <button v-if="step === 'upload'" @click="scanMenu" :disabled="!form.file" 
+                        class="px-6 py-2.5 rounded-2xl bg-gradient-to-r from-tinto-900 via-tinto-800 to-tinto-900 text-white text-[10px] font-black uppercase tracking-widest shadow-tinto-sm border border-oro-400/40 hover:scale-105 active:scale-95 transition-all flex items-center cursor-pointer shine-effect"
+                        :class="{ 'opacity-25': !form.file }">
+                    <SparklesIcon class="h-4 w-4 mr-2 text-oro-300" /> Iniciar Escaneo
+                </button>
 
-                <PrimaryButton v-if="step === 'review'" @click="saveFinalMenu"
-                               class="!rounded-xl bg-green-600 hover:bg-green-700 shadow-lg shadow-green-100 dark:shadow-none uppercase font-black">
-                    <CheckCircleIcon class="h-4 w-4 mr-2" /> Guardar ({{ selectedCount }})
-                </PrimaryButton>
+                <button v-if="step === 'review'" @click="saveFinalMenu"
+                        class="px-6 py-2.5 rounded-2xl bg-gradient-to-r from-nayarit-800 to-emerald-700 text-white text-[10px] font-black uppercase tracking-widest shadow-sm hover:scale-105 active:scale-95 transition-all flex items-center cursor-pointer">
+                    <CheckCircleIcon class="h-4 w-4 mr-2" /> Guardar Platillos ({{ selectedCount }})
+                </button>
             </div>
         </div>
 
-        <div class="p-8">
+        <div class="p-8 dark:bg-gray-900 rounded-b-[2.5rem]">
             <!-- PASO 1: SUBIDA -->
             <div v-if="step === 'upload'" class="space-y-6">
-                <div v-if="scanError" class="p-4 bg-red-50 border-2 border-red-100 text-red-600 rounded-2xl flex items-start gap-3">
+                <div v-if="scanError" class="p-4 bg-rose-50 border-2 border-rose-100 text-rose-600 rounded-2xl flex items-start gap-3">
                     <ExclamationCircleIcon class="h-5 w-5 shrink-0" />
                     <p class="text-xs font-bold">{{ scanError }}</p>
                 </div>
@@ -241,33 +247,33 @@ const selectedCount = computed(() => scannedMenuItems.value.filter(i => i.select
                     
                     <div v-if="!currentFile" 
                          @click="selectFile"
-                         class="border-4 border-dashed border-gray-200 dark:border-gray-700 rounded-[2.5rem] p-12 text-center hover:border-indigo-400 hover:bg-indigo-50/30 transition-all cursor-pointer">
-                        <DocumentArrowUpIcon class="h-16 w-16 text-gray-300 mx-auto mb-4 group-hover:text-indigo-400 transition-colors" />
-                        <p class="text-gray-500 dark:text-gray-400 font-black uppercase tracking-widest text-sm">Selecciona o arrastra tu menú</p>
-                        <p class="text-[10px] text-gray-400 mt-2 font-bold uppercase">PNG, JPG o PDF hasta 10MB</p>
+                         class="border-4 border-dashed border-slate-200 dark:border-gray-700 rounded-[2.5rem] p-12 text-center hover:border-tinto-700 hover:bg-tinto-50/20 dark:hover:bg-tinto-950/20 transition-all cursor-pointer">
+                        <DocumentArrowUpIcon class="h-16 w-16 text-slate-300 dark:text-gray-600 mx-auto mb-4 group-hover:text-tinto-700 dark:group-hover:text-oro-400 transition-colors" />
+                        <p class="text-slate-600 dark:text-gray-300 font-black uppercase tracking-widest text-sm">Selecciona o arrastra tu menú</p>
+                        <p class="text-[10px] text-slate-400 mt-2 font-bold uppercase">PNG, JPG o PDF con lista de platillos</p>
                     </div>
                     
-                    <div v-else class="bg-gray-100 dark:bg-gray-900 rounded-[2.5rem] p-6 flex items-center justify-between border-2 border-indigo-100 dark:border-indigo-900/30">
+                    <div v-else class="bg-slate-50 dark:bg-gray-800 rounded-[2.5rem] p-6 flex items-center justify-between border-2 border-tinto-200 dark:border-tinto-900/40 shadow-xs">
                         <div class="flex items-center">
-                            <div class="h-12 w-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white mr-4 shadow-lg shadow-indigo-100 dark:shadow-none">
+                            <div class="h-12 w-12 bg-gradient-to-tr from-tinto-900 to-tinto-800 text-oro-300 rounded-2xl flex items-center justify-center mr-4 shadow-tinto-sm border border-oro-400/40">
                                 <PhotoIcon v-if="currentFile.type.startsWith('image')" class="h-6 w-6" />
                                 <DocumentArrowUpIcon v-else class="h-6 w-6" />
                             </div>
                             <div class="min-w-0">
-                                <p class="text-sm font-black text-gray-800 dark:text-white truncate uppercase">{{ currentFile.name }}</p>
-                                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">{{ (currentFile.size / 1024 / 1024).toFixed(2) }} MB</p>
+                                <p class="text-sm font-black text-slate-800 dark:text-white truncate uppercase">{{ currentFile.name }}</p>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{{ (currentFile.size / 1024 / 1024).toFixed(2) }} MB</p>
                             </div>
                         </div>
-                        <button @click="removeFile" class="p-2 bg-white dark:bg-gray-800 rounded-xl text-red-500 shadow-sm hover:bg-red-50 transition-all">
+                        <button @click="removeFile" class="p-2 bg-white dark:bg-gray-700 rounded-xl text-rose-500 shadow-xs hover:bg-rose-50 cursor-pointer">
                             <TrashIcon class="h-5 w-5" />
                         </button>
                     </div>
                 </div>
 
                 <div v-if="previewImage" class="mt-6">
-                    <p class="text-[10px] font-black uppercase text-gray-400 mb-2 tracking-[0.2em]">Vista previa del archivo:</p>
-                    <div class="rounded-3xl overflow-hidden border-4 border-white dark:border-gray-800 shadow-2xl">
-                        <img :src="previewImage" alt="Preview" class="w-full max-h-96 object-contain bg-gray-50 dark:bg-gray-900" />
+                    <p class="text-[10px] font-black uppercase text-slate-400 mb-2 tracking-widest">Vista previa del archivo cargado:</p>
+                    <div class="rounded-3xl overflow-hidden border-4 border-white dark:border-gray-800 shadow-md">
+                        <img :src="previewImage" alt="Preview" class="w-full max-h-96 object-contain bg-slate-50 dark:bg-gray-900" />
                     </div>
                 </div>
             </div>
@@ -275,63 +281,62 @@ const selectedCount = computed(() => scannedMenuItems.value.filter(i => i.select
             <!-- PASO 2: ESCANEANDO (ANIMACIÓN) -->
             <div v-if="step === 'scanning'" class="py-20 flex flex-col items-center justify-center space-y-10">
                 <div class="relative h-40 w-40 flex items-center justify-center">
-                    <!-- Animación circular -->
-                    <div class="absolute inset-0 border-8 border-indigo-100 dark:border-indigo-900/30 rounded-full"></div>
-                    <div class="absolute inset-0 border-8 border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
-                    <SparklesIcon class="h-16 w-16 text-indigo-600 animate-pulse" />
+                    <div class="absolute inset-0 border-8 border-tinto-100 dark:border-tinto-950/40 rounded-full"></div>
+                    <div class="absolute inset-0 border-8 border-tinto-800 rounded-full border-t-transparent animate-spin"></div>
+                    <SparklesIcon class="h-16 w-16 text-oro-400 animate-pulse" />
                 </div>
                 
                 <div class="text-center space-y-4 max-w-sm">
-                    <h3 class="text-2xl font-black text-gray-800 dark:text-white uppercase tracking-tighter">Procesando con Inteligencia Artificial</h3>
-                    <p class="text-sm text-gray-500 font-medium italic">Estamos extrayendo platillos, descripciones y precios automáticamente de tu imagen...</p>
+                    <h3 class="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tight">Procesando Menú con IA</h3>
+                    <p class="text-xs text-slate-500 font-medium italic">Extrayendo automáticamente platillos, descripciones e ingredientes del menú oficial...</p>
                 </div>
 
-                <div class="w-full max-w-md bg-gray-100 dark:bg-gray-800 h-4 rounded-full overflow-hidden border dark:border-gray-700 shadow-inner">
-                    <div class="h-full bg-indigo-600 transition-all duration-500 shadow-lg shadow-indigo-200" :style="{ width: `${scanProgress}%` }"></div>
+                <div class="w-full max-w-md bg-slate-100 dark:bg-gray-800 h-3 rounded-full overflow-hidden border border-slate-200 dark:border-gray-700 shadow-inner">
+                    <div class="h-full bg-gradient-to-r from-tinto-900 to-oro-500 transition-all duration-500 shadow-sm" :style="{ width: `${scanProgress}%` }"></div>
                 </div>
-                <p class="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em]">{{ Math.round(scanProgress) }}% completado</p>
+                <p class="text-[10px] font-black text-tinto-700 dark:text-oro-400 uppercase tracking-widest">{{ Math.round(scanProgress) }}% completado</p>
             </div>
 
             <!-- PASO 3: REVISIÓN -->
             <div v-if="step === 'review'" class="space-y-6">
                 <div class="flex justify-between items-center mb-4">
-                    <p class="text-sm text-gray-500 font-bold">Hemos encontrado <span class="text-indigo-600">{{ scannedMenuItems.length }}</span> platillos. Revisa y edita antes de guardar:</p>
+                    <p class="text-xs text-slate-500 font-bold">Se encontraron <span class="text-tinto-800 dark:text-oro-300 font-black">{{ scannedMenuItems.length }}</span> opciones de platillos. Modifica o desmarca las que desees:</p>
                 </div>
 
                 <div class="space-y-3 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
                     <div v-for="(item, index) in scannedMenuItems" :key="index" 
                          class="p-5 rounded-3xl border-2 transition-all relative overflow-hidden group"
                          :class="[
-                            item.selected ? 'bg-white dark:bg-gray-800 shadow-lg' : 'bg-gray-50 dark:bg-gray-900/50 opacity-60 grayscale scale-[0.98]',
-                            item.is_duplicate ? 'border-orange-500 dark:border-orange-600' : (item.selected ? 'border-indigo-100 dark:border-indigo-900/50' : 'border-transparent')
+                            item.selected ? 'bg-white dark:bg-gray-800 shadow-sm' : 'bg-slate-50 dark:bg-gray-900/50 opacity-60 grayscale scale-[0.98]',
+                            item.is_duplicate ? 'border-amber-500 dark:border-amber-600' : (item.selected ? 'border-tinto-200 dark:border-tinto-900/50' : 'border-transparent')
                          ]">
                         
-                        <!-- Etiqueta de Duplicado (Más llamativa) -->
-                        <div v-if="item.is_duplicate" class="absolute top-0 right-0 px-6 py-1.5 bg-orange-600 text-white text-[9px] font-black uppercase tracking-[0.2em] rounded-bl-2xl shadow-md z-10 flex items-center">
+                        <!-- Etiqueta de Duplicado -->
+                        <div v-if="item.is_duplicate" class="absolute top-0 right-0 px-5 py-1 bg-amber-600 text-white text-[9px] font-black uppercase tracking-widest rounded-bl-2xl shadow-xs z-10 flex items-center">
                             <ExclamationCircleIcon class="h-3 w-3 mr-1" /> Ya Existe en Menú
                         </div>
 
                         <div class="flex items-start gap-4">
                             <div class="pt-1">
-                                <Checkbox :checked="item.selected" @change="toggleItemSelection(index)" class="h-6 w-6 !rounded-lg" />
+                                <Checkbox :checked="item.selected" @change="toggleItemSelection(index)" class="h-6 w-6 !rounded-lg text-tinto-800 focus:ring-tinto-700" />
                             </div>
                             
                             <div class="flex-1 space-y-4">
                                 <div class="grid grid-cols-1 gap-4">
                                     <div class="relative">
-                                        <InputLabel value="Nombre del Platillo" class="text-[9px] font-black uppercase text-gray-400 mb-1" />
+                                        <InputLabel value="Nombre del Platillo" class="text-[9px] font-black uppercase text-slate-400 mb-1 tracking-widest" />
                                         <input v-model="item.name" type="text" 
-                                               class="w-full bg-transparent border-0 border-b-2 border-gray-100 dark:border-gray-700 focus:border-indigo-500 focus:ring-0 font-black text-lg p-0 dark:text-white" />
+                                               class="w-full bg-transparent border-0 border-b-2 border-slate-200 dark:border-gray-700 focus:border-tinto-700 focus:ring-0 font-black text-base p-0 text-slate-800 dark:text-white uppercase" />
                                     </div>
                                     <div>
-                                        <InputLabel value="Descripción / Guarniciones" class="text-[9px] font-black uppercase text-gray-400 mb-1" />
+                                        <InputLabel value="Descripción / Guarniciones" class="text-[9px] font-black uppercase text-slate-400 mb-1 tracking-widest" />
                                         <textarea v-model="item.description" rows="2" 
-                                                  class="w-full bg-transparent border-0 border-b border-gray-100 dark:border-gray-700 focus:border-indigo-500 focus:ring-0 text-xs p-0 dark:text-gray-300 italic"></textarea>
+                                                  class="w-full bg-transparent border-0 border-b border-slate-200 dark:border-gray-700 focus:border-tinto-700 focus:ring-0 text-xs p-0 text-slate-600 dark:text-gray-300 italic"></textarea>
                                     </div>
                                 </div>
                             </div>
 
-                            <button @click="removeItem(index)" class="p-2 text-gray-300 hover:text-red-500 self-start transition-colors">
+                            <button @click="removeItem(index)" class="p-2 text-slate-300 hover:text-rose-500 self-start transition-colors cursor-pointer">
                                 <XMarkIcon class="h-5 w-5" />
                             </button>
                         </div>
@@ -339,7 +344,7 @@ const selectedCount = computed(() => scannedMenuItems.value.filter(i => i.select
                 </div>
 
                 <div v-if="scannedMenuItems.length === 0" class="text-center py-12">
-                    <p class="text-gray-400 font-bold uppercase tracking-widest text-xs">No se detectaron platillos válidos</p>
+                    <p class="text-slate-400 font-bold uppercase tracking-widest text-xs">No se detectaron platillos válidos en el archivo</p>
                 </div>
             </div>
         </div>
@@ -354,7 +359,7 @@ const selectedCount = computed(() => scannedMenuItems.value.filter(i => i.select
     background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(99, 102, 241, 0.2);
+    background: rgba(120, 24, 42, 0.2);
     border-radius: 10px;
 }
 </style>

@@ -68,10 +68,10 @@ onUnmounted(() => {
                 <div class="flex items-center justify-between px-4 py-2 border-b border-gray-100 dark:border-gray-700">
                     <span class="text-xs text-gray-400">Notificaciones</span>
                     <div class="flex gap-2">
-                        <button v-if="notificationPermission === 'default'" @click.stop="requestPermission" class="text-xs text-indigo-500 hover:text-indigo-600 font-semibold" title="Activar alertas nativas">
+                        <button v-if="notificationPermission === 'default'" @click.stop="requestPermission" class="text-xs text-tinto-700 dark:text-oro-400 hover:underline font-black uppercase tracking-wider" title="Activar alertas nativas">
                             Activar Alertas
                         </button>
-                        <button v-if="unreadCount > 0" @click.stop="clearAll" class="text-gray-400 hover:text-red-500 transition-colors" title="Borrar todas">
+                        <button v-if="unreadCount > 0" @click.stop="clearAll" class="text-gray-400 hover:text-red-500 transition-colors cursor-pointer" title="Borrar todas">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                         </button>
                     </div>

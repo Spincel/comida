@@ -31,68 +31,64 @@ const submit = () => {
 
 <template>
     <GuestLayout>
-        <Head title="Iniciar Sesión" />
+        <Head title="Iniciar Sesión - SICOA" />
 
-        <div v-if="status" class="mb-4 text-sm font-medium text-green-600">
+        <div v-if="status" class="mb-4 text-xs font-bold text-nayarit-700 dark:text-emerald-400 p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200">
             {{ status }}
         </div>
 
-        <form @submit.prevent="submit">
+        <form @submit.prevent="submit" class="space-y-5">
             <div>
-            <InputLabel for="login" value="Correo, Usuario o No. Empleado" />
-
-            <TextInput
-                id="login"
-                type="text"
-                class="mt-1 block w-full"
-                v-model="form.login"
-                required
-                autofocus
-                autocomplete="username"
-            />
-
-                <InputError class="mt-2" :message="form.errors.login" />
+                <InputLabel for="login" value="Correo, Usuario o No. Empleado" class="text-[10px] font-black uppercase text-slate-400 mb-2 ml-2 tracking-widest" />
+                <TextInput
+                    id="login"
+                    type="text"
+                    class="w-full !rounded-2xl !py-3.5 !px-5 text-xs font-bold"
+                    v-model="form.login"
+                    required
+                    autofocus
+                    autocomplete="username"
+                    placeholder="ejemplo@congresonay.gob.mx"
+                />
+                <InputError class="mt-2 ml-2" :message="form.errors.login" />
             </div>
 
-            <div class="mt-4">
-                <InputLabel for="password" value="Contraseña" />
-
+            <div>
+                <InputLabel for="password" value="Contraseña" class="text-[10px] font-black uppercase text-slate-400 mb-2 ml-2 tracking-widest" />
                 <TextInput
                     id="password"
                     type="password"
-                    class="mt-1 block w-full"
+                    class="w-full !rounded-2xl !py-3.5 !px-5 text-xs font-bold"
                     v-model="form.password"
                     required
                     autocomplete="current-password"
+                    placeholder="••••••••"
                 />
-
-                <InputError class="mt-2" :message="form.errors.password" />
+                <InputError class="mt-2 ml-2" :message="form.errors.password" />
             </div>
 
-            <div class="mt-4 block">
-                <label class="flex items-center">
-                    <Checkbox name="remember" v-model:checked="form.remember" />
-                    <span class="ms-2 text-sm text-gray-600 dark:text-gray-400"
-                        >Recordarme</span
-                    >
+            <div class="flex items-center justify-between pt-1">
+                <label class="flex items-center cursor-pointer">
+                    <Checkbox name="remember" v-model:checked="form.remember" class="text-tinto-800 focus:ring-tinto-700 !rounded-lg" />
+                    <span class="ms-2 text-xs font-bold text-slate-600 dark:text-gray-400">Recordarme</span>
                 </label>
-            </div>
 
-            <div class="mt-4 flex items-center justify-end">
                 <Link
                     v-if="canResetPassword"
                     :href="route('password.request')"
-                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:text-gray-400 dark:hover:text-gray-100 dark:focus:ring-offset-gray-800"
+                    class="text-[11px] font-bold text-tinto-700 dark:text-oro-400 hover:underline"
                 >
                     ¿Olvidaste tu contraseña?
                 </Link>
+            </div>
 
+            <div class="pt-4">
                 <PrimaryButton
-                    class="ms-4"
+                    class="w-full justify-center !py-4"
                     :class="{ 'opacity-25': form.processing }"
                     :disabled="form.processing"
                 >
-                    Entrar
+                    Ingresar al Sistema
                 </PrimaryButton>
             </div>
         </form>

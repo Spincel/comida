@@ -41,49 +41,57 @@ const submit = () => {
 
 <template>
     <Modal :show="show" @close="emit('close')" max-width="2xl">
-        <div class="p-8">
-            <h2 class="text-2xl font-black text-gray-900 dark:text-gray-100 mb-2 uppercase tracking-tight">
-                Justificación de Actividades
-            </h2>
-            <p class="text-xs font-bold text-indigo-500 uppercase tracking-widest mb-6">
-                {{ session?.meal_type }} - {{ session?.date }} - {{ session?.provider_name }}
-            </p>
+        <div class="p-8 dark:bg-gray-900 rounded-[2.5rem]">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="h-12 w-12 rounded-2xl bg-tinto-50 dark:bg-tinto-950/60 text-tinto-800 dark:text-oro-300 flex items-center justify-center text-xl border border-tinto-200 dark:border-tinto-800 shadow-2xs">
+                    📝
+                </div>
+                <div>
+                    <h2 class="text-xl font-black text-slate-900 dark:text-gray-100 uppercase tracking-tight">
+                        Justificación de Actividades
+                    </h2>
+                    <p class="text-[10px] font-bold text-tinto-700 dark:text-oro-400 uppercase tracking-widest">
+                        {{ session?.meal_type }} — {{ session?.date }} — {{ session?.provider_name }}
+                    </p>
+                </div>
+            </div>
 
-            <div class="space-y-6 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar mb-8">
-                <div v-for="(item, index) in form.justifications" :key="item.id" class="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-700">
-                    <div class="flex justify-between items-start mb-3">
+            <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar mb-6">
+                <div v-for="(item, index) in form.justifications" :key="item.id" class="p-5 bg-slate-50 dark:bg-gray-800/60 rounded-2xl border border-slate-200/80 dark:border-gray-700">
+                    <div class="flex justify-between items-start mb-2">
                         <div>
-                            <p class="font-black text-sm text-gray-800 dark:text-gray-200">{{ item.user_name }}</p>
-                            <p class="text-[10px] font-bold text-gray-400 uppercase">{{ item.platillo }}</p>
+                            <p class="font-black text-xs text-slate-800 dark:text-gray-200 uppercase">{{ item.user_name }}</p>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">🍽️ {{ item.platillo }}</p>
                         </div>
                     </div>
                     
                     <div class="mt-2">
-                        <InputLabel :for="'act_' + item.id" value="Actividad Realizada / Justificación" class="text-[10px] uppercase font-black text-indigo-500 mb-1" />
+                        <InputLabel :for="'act_' + item.id" value="Actividad Institucional Justificada" class="text-[9px] uppercase font-black text-tinto-700 dark:text-oro-400 mb-1 tracking-wider" />
                         <textarea
                             :id="'act_' + item.id"
                             v-model="form.justifications[index].activity_performed"
                             rows="2"
-                            class="block w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
-                            placeholder="Escribe la actividad que justifica el alimento..."
+                            class="block w-full rounded-xl border-slate-200 dark:border-gray-700 dark:bg-gray-900 shadow-inner focus:border-tinto-700 focus:ring-tinto-700 text-xs font-medium text-slate-700 dark:text-gray-200"
+                            placeholder="Escribe la labor o sesión extraordinaria que justifica el consumo..."
                         ></textarea>
                     </div>
                 </div>
             </div>
 
             <div class="flex flex-col gap-3">
-                <PrimaryButton 
+                <button 
                     @click="submit" 
-                    class="w-full justify-center py-4 text-base font-black uppercase tracking-widest"
+                    type="button"
+                    class="w-full py-4 rounded-2xl bg-gradient-to-r from-tinto-900 via-tinto-800 to-tinto-900 text-white text-[11px] font-black uppercase tracking-widest shadow-tinto-sm border border-oro-400/40 hover:scale-105 active:scale-95 transition-all cursor-pointer shine-effect"
                     :class="{ 'opacity-25': form.processing }" 
                     :disabled="form.processing"
                 >
                     Guardar Todas las Justificaciones
-                </PrimaryButton>
+                </button>
                 
-                <SecondaryButton @click="emit('close')" class="w-full justify-center py-3 border-none shadow-none text-gray-400 hover:text-gray-600 font-bold uppercase text-[10px] tracking-widest">
+                <button @click="emit('close')" type="button" class="w-full justify-center py-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-gray-200 font-bold uppercase text-[10px] tracking-widest cursor-pointer">
                     Cerrar sin guardar
-                </SecondaryButton>
+                </button>
             </div>
         </div>
     </Modal>

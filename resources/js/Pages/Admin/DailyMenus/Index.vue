@@ -89,58 +89,140 @@ const formatDate = (dateString) => {
     if (!dateString) return '';
     return new Date(dateString).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
 };
+
+const getDishEmoji = (name) => {
+    if (!name) return '🍽️';
+    const n = name.toLowerCase();
+    if (n.includes('huevo') || n.includes('chilaquil') || n.includes('omelet') || n.includes('hot cake') || n.includes('waffle')) return '🍳';
+    if (n.includes('cafe') || n.includes('café') || n.includes('jugo') || n.includes('leche') || n.includes('avena')) return '☕';
+    if (n.includes('carne') || n.includes('res') || n.includes('arrachera') || n.includes('bistec') || n.includes('milanesa') || n.includes('costilla')) return '🥩';
+    if (n.includes('pollo') || n.includes('pechuga') || n.includes('alita') || n.includes('fajita')) return '🍗';
+    if (n.includes('pescado') || n.includes('camaron') || n.includes('camarón') || n.includes('atun') || n.includes('marisco')) return '🐟';
+    if (n.includes('taco') || n.includes('quesadilla') || n.includes('burrito') || n.includes('flauta') || n.includes('gordita')) return '🌮';
+    if (n.includes('pasta') || n.includes('espagueti') || n.includes('lasaña')) return '🍝';
+    if (n.includes('ensalada') || n.includes('vegetal') || n.includes('verdura') || n.includes('fruta')) return '🥗';
+    if (n.includes('sopa') || n.includes('caldo') || n.includes('crema') || n.includes('pozole') || n.includes('menudo')) return '🍲';
+    if (n.includes('hamburguesa') || n.includes('sandwich') || n.includes('torta')) return '🥪';
+    if (n.includes('postre') || n.includes('pastel') || n.includes('gelatina') || n.includes('flan')) return '🍰';
+    return '🍽️';
+};
 </script>
 
 <template>
-    <Head title="Catálogo V2.0" />
+    <Head title="Catálogo de Platillos SICOA" />
 
     <AuthenticatedLayout bento-tag="Catálogos">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             <div class="lg:col-span-9 space-y-8">
                 <!-- FILTERS -->
-                <div class="bg-white dark:bg-gray-900 rounded-[2.5rem] p-8 shadow-sm border border-slate-100 dark:border-gray-800 flex flex-col md:flex-row items-end gap-6">
+                <div class="bg-white dark:bg-gray-900 rounded-[2.5rem] p-8 shadow-[0_10px_35px_-5px_rgba(120,24,42,0.06)] dark:shadow-none border border-slate-200/80 dark:border-gray-800 flex flex-col md:flex-row items-end gap-6">
                     <div class="flex-1 w-full space-y-2">
-                        <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Establecimiento</label>
-                        <select v-model="filterProviderId" class="w-full bg-slate-50 dark:bg-gray-800 border-none rounded-2xl py-4 px-6 text-[11px] font-black uppercase text-slate-600 dark:text-gray-300 focus:ring-indigo-500 shadow-inner">
+                        <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Establecimiento / Proveedor</label>
+                        <select v-model="filterProviderId" class="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-2xl py-4 px-6 text-xs font-bold uppercase text-slate-700 dark:text-gray-200 focus:ring-2 focus:ring-tinto-700 shadow-inner">
                             <option value="">Selecciona Proveedor...</option>
                             <option v-for="p in providers" :key="p.id" :value="p.id">{{ p.name }}</option>
                         </select>
                     </div>
                     <div class="flex-1 w-full space-y-2">
-                        <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Fecha</label>
-                        <input type="date" v-model="filterDate" class="w-full bg-slate-50 dark:bg-gray-800 border-none rounded-2xl py-4 px-6 text-[11px] font-black text-slate-600 dark:text-gray-300 focus:ring-indigo-500 shadow-inner" />
+                        <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-4">Fecha de Menú</label>
+                        <input type="date" v-model="filterDate" class="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-2xl py-4 px-6 text-xs font-bold text-slate-700 dark:text-gray-200 focus:ring-2 focus:ring-tinto-700 shadow-inner" />
                     </div>
-                    <div class="flex gap-2">
-                        <button @click="openScanMenuModal" class="p-4 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl hover:bg-indigo-600 hover:text-white transition-all shadow-md group"><SparklesIcon class="h-6 w-6 group-hover:animate-pulse" /></button>
-                        <Link :href="route('daily-menus.create', { provider_id: filterProviderId, date: filterDate })" class="p-4 bg-slate-900 dark:bg-gray-700 text-white rounded-2xl hover:bg-indigo-600 transition-all shadow-md"><PlusIcon class="h-6 w-6" stroke-width="3" /></Link>
+                    <div class="flex gap-3 shrink-0">
+                        <button @click="openScanMenuModal" 
+                                type="button"
+                                class="bg-gradient-to-r from-tinto-900 via-tinto-800 to-tinto-900 text-white p-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-tinto-sm border border-oro-400/40 hover:scale-105 active:scale-95 transition-all cursor-pointer shine-effect"
+                                title="Importar con IA">
+                            <SparklesIcon class="h-6 w-6 text-oro-300 animate-pulse" />
+                            <span class="hidden sm:inline">IA Menú</span>
+                        </button>
+                        <Link :href="route('daily-menus.create', { provider_id: filterProviderId, date: filterDate })" 
+                              class="bg-gradient-to-r from-oro-600 to-oro-500 hover:from-oro-700 hover:to-oro-600 text-white p-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-oro-sm border border-oro-300/40 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                              title="Nuevo Platillo">
+                            <PlusIcon class="h-6 w-6" stroke-width="3" />
+                            <span class="hidden sm:inline">Agregar</span>
+                        </Link>
                     </div>
                 </div>
 
                 <!-- MENU LIST -->
                 <div v-if="menus.length > 0" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    <div v-for="menu in menus" :key="menu.id" class="bg-white dark:bg-gray-900 rounded-[2.5rem] p-6 border-2 transition-all group flex flex-col relative overflow-hidden" :class="menu.status === 'published' ? 'border-emerald-500/20 dark:border-emerald-500/10 shadow-lg' : 'border-slate-100 dark:border-gray-800 opacity-80'">
-                        <div class="flex justify-between items-start mb-6">
-                            <button @click="toggleMenuStatus(menu)" class="flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all" :class="menu.status === 'published' ? 'bg-emerald-50 border-emerald-100 text-emerald-600 dark:bg-emerald-950/20 dark:border-emerald-900' : 'bg-slate-50 border-slate-100 text-slate-400 dark:bg-gray-800'"><EyeIcon v-if="menu.status === 'published'" class="h-4 w-4" /><EyeSlashIcon v-else class="h-4 w-4" /><span class="text-[9px] font-black uppercase tracking-widest">{{ menu.status === 'published' ? 'Activo' : 'Borrador' }}</span></button>
-                            <div class="flex gap-2"><Link :href="route('daily-menus.edit', menu.id)" class="p-2 text-slate-300 hover:text-indigo-600 transition-colors"><PencilSquareIcon class="h-5 w-5" /></Link><button @click="deleteDailyMenu(menu.id)" class="p-2 text-slate-300 hover:text-rose-600 transition-colors"><TrashIcon class="h-5 w-5" /></button></div>
+                    <div v-for="menu in menus" :key="menu.id" 
+                         class="bg-white dark:bg-gray-900 rounded-[2.5rem] p-6 border transition-all group flex flex-col relative overflow-hidden shadow-[0_10px_35px_-5px_rgba(120,24,42,0.06)] dark:shadow-none hover:scale-[1.02]" 
+                         :class="menu.status === 'published' ? 'border-emerald-500/30 dark:border-emerald-500/20' : 'border-slate-200/80 dark:border-gray-800 opacity-85'">
+                        
+                        <div class="flex justify-between items-start mb-4">
+                            <button @click="toggleMenuStatus(menu)" 
+                                    class="flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all cursor-pointer shadow-xs" 
+                                    :class="menu.status === 'published' ? 'bg-emerald-50 border-emerald-200 text-nayarit-800 dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-300' : 'bg-slate-50 border-slate-200 text-slate-400 dark:bg-gray-800 dark:border-gray-700'">
+                                <EyeIcon v-if="menu.status === 'published'" class="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                                <EyeSlashIcon v-else class="h-4 w-4" />
+                                <span class="text-[9px] font-black uppercase tracking-widest">{{ menu.status === 'published' ? 'Activo' : 'Borrador' }}</span>
+                            </button>
+                            <div class="flex gap-1.5">
+                                <Link :href="route('daily-menus.edit', menu.id)" class="p-2 bg-slate-50 dark:bg-gray-800 text-slate-400 hover:text-tinto-700 dark:hover:text-oro-400 rounded-xl transition-all border border-transparent hover:border-tinto-200 cursor-pointer">
+                                    <PencilSquareIcon class="h-4 w-4" />
+                                </Link>
+                                <button @click="deleteDailyMenu(menu.id)" class="p-2 bg-rose-50 dark:bg-rose-950/20 text-rose-300 hover:text-rose-600 rounded-xl transition-all border border-transparent hover:border-rose-100 cursor-pointer">
+                                    <TrashIcon class="h-4 w-4" />
+                                </button>
+                            </div>
                         </div>
-                        <div class="flex-1"><h4 class="font-black text-xl text-slate-800 dark:text-white uppercase tracking-tighter leading-tight mb-3">{{ menu.name }}</h4><p class="text-xs text-slate-500 dark:text-gray-400 italic line-clamp-3 mb-6">{{ menu.description || 'Sin descripción.' }}</p></div>
-                        <div class="mt-4 pt-4 border-t border-slate-50 dark:border-gray-800"><div class="flex justify-between items-center"><div v-if="menu.popularity_label" class="px-2 py-0.5 rounded-lg border text-[8px] font-black uppercase tracking-widest shadow-sm" :class="menu.popularity_color">{{ menu.popularity_label }}</div><p class="text-[8px] font-black text-indigo-500 uppercase tracking-widest">{{ menu.provider.name }}</p></div></div>
+
+                        <!-- PLATILLO HERO CON EMOJI DINÁMICO -->
+                        <div class="flex items-start gap-3.5 mb-3 flex-1">
+                            <div class="h-12 w-12 rounded-2xl bg-tinto-50 dark:bg-tinto-950/60 border border-tinto-200 dark:border-tinto-800 flex items-center justify-center text-2xl shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-transform shadow-xs">
+                                {{ getDishEmoji(menu.name) }}
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <h4 class="font-black text-lg text-slate-800 dark:text-white uppercase tracking-tight leading-snug mb-1">
+                                    {{ menu.name }}
+                                </h4>
+                                <p class="text-xs text-slate-500 dark:text-gray-400 italic line-clamp-3 font-normal leading-relaxed">
+                                    {{ menu.description || 'Sin descripción detallada.' }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-4 border-t border-slate-100 dark:border-gray-800">
+                            <div class="flex justify-between items-center">
+                                <div v-if="menu.popularity_label" class="px-2.5 py-1 rounded-lg border text-[8px] font-black uppercase tracking-widest shadow-2xs" :class="menu.popularity_color">
+                                    {{ menu.popularity_label }}
+                                </div>
+                                <p class="text-[9px] font-bold text-tinto-700 dark:text-oro-400 uppercase tracking-widest flex items-center gap-1">
+                                    <span>👨‍🍳</span> {{ menu.provider?.name }}
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div v-else class="p-20 bg-white dark:bg-gray-900 rounded-[4rem] border-2 border-dashed border-slate-100 dark:border-gray-800 text-center shadow-inner"><MagnifyingGlassIcon class="h-16 w-16 text-slate-200 dark:text-gray-800 mx-auto mb-6" /><p class="text-slate-400 font-black uppercase tracking-[0.3em] text-sm">No se encontraron platillos</p></div>
+                <div v-else class="p-20 bg-white dark:bg-gray-900 rounded-[3rem] border border-dashed border-slate-200 dark:border-gray-800 text-center shadow-inner">
+                    <MagnifyingGlassIcon class="h-16 w-16 text-slate-300 dark:text-gray-700 mx-auto mb-4" />
+                    <p class="text-slate-400 font-black uppercase tracking-[0.2em] text-xs">No se encontraron platillos para esta fecha y proveedor</p>
+                </div>
             </div>
 
             <!-- SIDEBAR -->
             <div class="lg:col-span-3 space-y-8">
-                <div class="bg-white dark:bg-gray-900 rounded-[3rem] p-10 shadow-xl border border-slate-100 dark:border-gray-800">
-                    <h3 class="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tighter mb-6">Estado</h3>
+                <div class="bg-white dark:bg-gray-900 rounded-[3rem] p-8 shadow-[0_10px_35px_-5px_rgba(120,24,42,0.06)] dark:shadow-none border border-slate-200/80 dark:border-gray-800">
+                    <h3 class="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tight mb-6 flex items-center gap-2">
+                        <span>⚡</span> Estado Operativo
+                    </h3>
                     <div class="space-y-6">
-                        <div class="bg-slate-50 dark:bg-gray-800 p-6 rounded-3xl border border-slate-100 dark:border-gray-700">
+                        <div class="bg-slate-50/70 dark:bg-gray-800/50 p-6 rounded-3xl border border-slate-200/80 dark:border-gray-700">
                             <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">Recepción de Pedidos</p>
-                            <button @click="toggleProviderStatus" class="w-full py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 transition-all flex items-center justify-center gap-3" :class="currentProviderStatus === 'open' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600' : 'border-slate-200 text-slate-400'"><div class="h-2.5 w-2.5 rounded-full" :class="currentProviderStatus === 'open' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'"></div>{{ currentProviderStatus === 'open' ? 'Abierto' : 'Cerrado' }}</button>
+                            <button @click="toggleProviderStatus" 
+                                    class="w-full py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all flex items-center justify-center gap-3 cursor-pointer shadow-sm" 
+                                    :class="currentProviderStatus === 'open' ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 text-nayarit-800 dark:text-emerald-300' : 'border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-slate-400'">
+                                <div class="h-2.5 w-2.5 rounded-full" :class="currentProviderStatus === 'open' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'"></div>
+                                {{ currentProviderStatus === 'open' ? 'Abierto para Pedidos' : 'Cerrado' }}
+                            </button>
                         </div>
-                        <button v-if="hasDrafts" @click="publishAllDrafts" class="w-full py-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl transition-all flex items-center justify-center"><CloudArrowUpIcon class="h-5 w-5 mr-3" stroke-width="3" /> Publicar Todo</button>
+                        <button v-if="hasDrafts" 
+                                @click="publishAllDrafts" 
+                                class="w-full py-5 bg-gradient-to-r from-nayarit-800 to-nayarit-700 hover:from-nayarit-900 hover:to-nayarit-800 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-md transition-all flex items-center justify-center cursor-pointer">
+                            <CloudArrowUpIcon class="h-5 w-5 mr-2.5" stroke-width="2.5" /> Publicar Todo el Menú
+                        </button>
                     </div>
                 </div>
             </div>
@@ -150,12 +232,14 @@ const formatDate = (dateString) => {
 
         <Modal :show="showPublishAllModal" @close="showPublishAllModal = false" max-width="md">
             <div class="p-10 text-center dark:bg-gray-900 transition-colors">
-                <div class="mx-auto h-20 w-20 bg-emerald-50 dark:bg-emerald-950/30 rounded-full flex items-center justify-center mb-8 text-emerald-600 animate-bounce shadow-inner"><CloudArrowUpIcon class="h-10 w-10" /></div>
-                <h3 class="text-3xl font-black text-slate-800 dark:text-white uppercase tracking-tighter mb-4">Activar Catálogo</h3>
-                <p class="text-sm text-slate-500 dark:text-gray-400 mb-10 leading-relaxed">¿Estás seguro de que deseas publicar todos los platillos actualmente en borrador?</p>
-                <div class="flex flex-col gap-4">
-                    <button @click="confirmPublishAll" class="w-full py-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-2xl active:scale-95">Sí, Activar Todo</button>
-                    <button @click="showPublishAllModal = false" class="w-full py-4 text-[10px] font-black uppercase text-slate-400 hover:text-slate-600 tracking-widest transition-colors">No, Cancelar</button>
+                <div class="mx-auto h-20 w-20 bg-emerald-50 dark:bg-emerald-950/30 rounded-full flex items-center justify-center mb-8 text-emerald-600 animate-bounce shadow-inner">
+                    <CloudArrowUpIcon class="h-10 w-10" />
+                </div>
+                <h3 class="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tight mb-4">Activar Catálogo</h3>
+                <p class="text-xs text-slate-500 dark:text-gray-400 mb-8 leading-relaxed">¿Estás seguro de que deseas publicar todos los platillos actualmente en borrador para este día?</p>
+                <div class="flex flex-col gap-3">
+                    <button @click="confirmPublishAll" class="w-full py-4 bg-gradient-to-r from-nayarit-800 to-nayarit-700 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-md active:scale-95 cursor-pointer">Sí, Activar Todo</button>
+                    <button @click="showPublishAllModal = false" class="w-full py-3.5 text-[10px] font-black uppercase text-slate-400 hover:text-slate-600 tracking-widest transition-colors cursor-pointer">No, Cancelar</button>
                 </div>
             </div>
         </Modal>

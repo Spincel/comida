@@ -54,21 +54,20 @@ const mealOptions = ['Desayuno', 'Comida', 'Cena', 'Extra'];
 const areaSearch = ref('');
 
 const mealColors = {
-    'Desayuno': 'bg-amber-500 border-amber-600 shadow-amber-100',
-    'Comida': 'bg-indigo-600 border-indigo-700 shadow-indigo-100',
-    'Cena': 'bg-purple-700 border-purple-800 shadow-purple-100',
-    'Extra': 'bg-teal-600 border-teal-700 shadow-teal-100',
+    'Desayuno': 'bg-amber-600 border-amber-700 shadow-amber-950/20',
+    'Comida': 'bg-gradient-to-r from-tinto-900 to-tinto-800 border-oro-400/40 shadow-tinto-sm',
+    'Cena': 'bg-purple-800 border-purple-900 shadow-purple-950/20',
+    'Extra': 'bg-teal-700 border-teal-800 shadow-teal-950/20',
 };
 
 const areaColors = [
-    'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800',
-    'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800',
-    'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800',
-    'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800',
-    'bg-teal-100 text-teal-700 border-teal-200 dark:bg-teal-900/30 dark:text-teal-400 dark:border-teal-800',
-    'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800',
-    'bg-cyan-100 text-cyan-700 border-cyan-200 dark:bg-cyan-900/30 dark:text-cyan-400 dark:border-cyan-800',
-    'bg-pink-100 text-fuchsia-700 border-pink-200 dark:bg-pink-900/30 dark:text-pink-400 dark:border-pink-800',
+    'bg-tinto-50 text-tinto-800 border-tinto-200 dark:bg-tinto-950/40 dark:text-oro-300 dark:border-tinto-800',
+    'bg-emerald-50 text-nayarit-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800',
+    'bg-oro-50 text-oro-900 border-oro-200 dark:bg-oro-950/40 dark:text-oro-300 dark:border-oro-800',
+    'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800',
+    'bg-teal-50 text-teal-800 border-teal-200 dark:bg-teal-950/40 dark:text-teal-300 dark:border-teal-800',
+    'bg-purple-50 text-purple-800 border-purple-200 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800',
+    'bg-slate-100 text-slate-700 border-slate-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700',
 ];
 
 const getAreaColor = (areaId) => {
@@ -198,7 +197,7 @@ const activateMenu = () => {
                         <div class="relative group cursor-pointer" @click="triggerPicker">
                             <CalendarDaysIcon class="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-hover:text-indigo-500 transition-colors pointer-events-none" />
                             <input type="date" ref="dateInput" v-model="form.date" 
-                                   class="w-full pl-12 pr-4 py-3.5 rounded-2xl border-2 border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm font-black text-gray-700 dark:text-white uppercase focus:border-indigo-500 focus:ring-0 transition-all cursor-pointer [color-scheme:light] dark:[color-scheme:dark]" />
+                                   class="w-full pl-12 pr-4 py-3.5 rounded-2xl border-2 border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm font-black text-gray-700 dark:text-white uppercase focus:border-tinto-700 focus:ring-0 transition-all cursor-pointer [color-scheme:light] dark:[color-scheme:dark]" />
                         </div>
                     </div>
 
@@ -212,7 +211,7 @@ const activateMenu = () => {
                                 :class="[
                                     form.meal_type === opt 
                                         ? `${mealColors[opt]} text-white shadow-lg` 
-                                        : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-indigo-300',
+                                        : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-tinto-400',
                                     mode === 'edit' && form.meal_type !== opt ? 'opacity-50 cursor-not-allowed' : ''
                                 ]"
                                 class="px-3 py-3 border-2 rounded-2xl text-[9px] font-black uppercase transition-all tracking-widest flex items-center justify-center gap-2">
@@ -229,14 +228,14 @@ const activateMenu = () => {
                             <input type="text" 
                                    v-model="areaSearch"
                                    placeholder="Buscar área..." 
-                                   class="block w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-900 border-none rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white shadow-inner" />
+                                   class="block w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-900 border-none rounded-xl text-xs focus:ring-2 focus:ring-tinto-700 transition-all dark:text-white shadow-inner" />
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                             </div>
                         </div>
                         
                         <button type="button" @click="selectAll = !selectAll" 
-                                class="px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl text-[9px] font-black uppercase tracking-widest border border-indigo-100 dark:border-indigo-800 transition-all">
+                                class="px-4 py-2 bg-tinto-50 dark:bg-tinto-950/60 text-tinto-800 dark:text-oro-300 rounded-xl text-[9px] font-black uppercase tracking-widest border border-tinto-200 dark:border-tinto-800 transition-all cursor-pointer">
                             {{ selectAll ? 'Deseleccionar' : 'Todos' }}
                         </button>
                     </div>
@@ -299,25 +298,27 @@ const activateMenu = () => {
                         </div>
                     </div>
 
-                    <PrimaryButton 
+                    <button 
                         v-if="!hasConflicts"
                         @click="activateMenu"
-                        :class="{ 'opacity-25': form.processing }" 
+                        type="button"
                         :disabled="form.processing" 
-                        class="w-full justify-center py-4 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-indigo-100 dark:shadow-none"
+                        class="w-full justify-center py-4 rounded-2xl bg-gradient-to-r from-tinto-900 via-tinto-800 to-tinto-900 text-white text-[10px] font-black uppercase tracking-widest shadow-tinto-sm border border-oro-400/40 hover:scale-105 active:scale-95 transition-all cursor-pointer shine-effect"
+                        :class="{ 'opacity-25': form.processing }"
                     >
                         Activar Sesión de Alimentos
-                    </PrimaryButton>
+                    </button>
 
-                    <PrimaryButton 
+                    <button 
                         v-else
                         @click="activateMenu"
+                        type="button"
                         :disabled="!isConfirmed || form.processing" 
-                        class="w-full justify-center py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
-                        :class="!isConfirmed ? 'opacity-20 grayscale' : 'bg-orange-600 hover:bg-orange-700'"
+                        class="w-full justify-center py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer"
+                        :class="!isConfirmed ? 'opacity-20 grayscale bg-gray-400' : 'bg-orange-600 hover:bg-orange-700 text-white shadow-lg'"
                     >
                         Confirmar y Abrir
-                    </PrimaryButton>
+                    </button>
 
                     <button @click="emit('close')" type="button" 
                             class="w-full py-3 bg-red-50/50 dark:bg-red-900/10 text-red-400 hover:text-red-600 dark:text-red-500 dark:hover:text-red-400 uppercase font-black text-[9px] tracking-[0.2em] transition-all rounded-xl border border-red-100/50 dark:border-red-900/30 hover:bg-red-50 dark:hover:bg-red-900/20">
