@@ -154,7 +154,7 @@ watch(() => page.props.flash?.success, (newMsg) => {
                 <!-- USER PROFILE & THEME -->
                 <div class="flex items-center gap-4">
                     <!-- BOTÓN / MENÚ HERRAMIENTAS DEL SISTEMA -->
-                    <Dropdown v-if="user.role === 'admin' || user.role === 'acquisitions_manager' || user.role === 'area_manager'" align="right" width="64">
+                    <Dropdown v-if="user.role === 'admin' || user.role === 'acquisitions_manager' || user.role === 'area_manager'" align="right" width="72">
                         <template #trigger>
                             <button class="p-3 rounded-2xl bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-600 dark:text-gray-300 hover:text-tinto-800 dark:hover:text-oro-400 hover:border-tinto-300 dark:hover:border-oro-600 transition-all shadow-sm flex items-center gap-2 group cursor-pointer" title="Herramientas del Sistema">
                                 <Squares2X2Icon class="h-6 w-6 text-tinto-700 dark:text-oro-400 group-hover:scale-110 transition-transform" />
@@ -163,23 +163,67 @@ watch(() => page.props.flash?.success, (newMsg) => {
                             </button>
                         </template>
                         <template #content>
-                            <div class="block px-4 py-2 text-[10px] font-black text-tinto-700 dark:text-oro-400 uppercase tracking-widest border-b dark:border-gray-700">Operaciones y Reportes</div>
-                            <DropdownLink :href="route('admin.history')">📖 Historial Global</DropdownLink>
-                            <DropdownLink :href="user.role === 'area_manager' ? route('area.reports') : route('admin.reports')">📊 Reportes del Sistema</DropdownLink>
-                            <DropdownLink :href="route('daily.summary')">📈 Estadísticas Diarias</DropdownLink>
+                            <!-- CABECERA DEL MENÚ HERRAMIENTAS -->
+                            <div class="p-3.5 bg-gradient-to-r from-tinto-950 via-tinto-900 to-tinto-950 text-white rounded-2xl mx-1.5 mb-2 shadow-tinto-sm border border-oro-400/40 flex items-center gap-3">
+                                <div class="h-8 w-8 rounded-xl bg-white/10 flex items-center justify-center text-oro-300 border border-oro-400/30 shrink-0">
+                                    <Squares2X2Icon class="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <p class="text-xs font-black uppercase tracking-tight text-white">Herramientas</p>
+                                    <p class="text-[8px] text-oro-300 font-bold uppercase tracking-widest">SICOA • Módulos Operativos</p>
+                                </div>
+                            </div>
 
-                            <div class="block px-4 py-2 text-[10px] font-black text-tinto-700 dark:text-oro-400 uppercase tracking-widest border-t border-b dark:border-gray-700 mt-1">Gestión del Catálogo</div>
-                            <DropdownLink :href="route('providers.index')">🚚 Proveedores</DropdownLink>
-                            <DropdownLink :href="route('areas.index')">🏢 Áreas</DropdownLink>
-                            <DropdownLink :href="route('users.index')">👥 Usuarios</DropdownLink>
+                            <div class="px-3.5 py-1 text-[9px] font-black text-tinto-800 dark:text-oro-400 uppercase tracking-[0.2em]">Operaciones y Reportes</div>
+                            <DropdownLink :href="route('admin.history')">
+                                <div class="h-7 w-7 rounded-xl bg-tinto-50 dark:bg-tinto-950/80 text-tinto-800 dark:text-oro-300 border border-tinto-200 dark:border-tinto-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">📖</div>
+                                <span class="truncate">Historial Global</span>
+                            </DropdownLink>
+                            <DropdownLink :href="user.role === 'area_manager' ? route('area.reports') : route('admin.reports')">
+                                <div class="h-7 w-7 rounded-xl bg-oro-50 dark:bg-oro-950/80 text-oro-800 dark:text-oro-300 border border-oro-200 dark:border-oro-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">📊</div>
+                                <span class="truncate">Reportes del Sistema</span>
+                            </DropdownLink>
+                            <DropdownLink :href="route('daily.summary')">
+                                <div class="h-7 w-7 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">📈</div>
+                                <span class="truncate">Estadísticas Diarias</span>
+                            </DropdownLink>
+
+                            <div class="px-3.5 py-1 text-[9px] font-black text-tinto-800 dark:text-oro-400 uppercase tracking-[0.2em] mt-2 border-t border-slate-100 dark:border-gray-800/80 pt-2">Gestión del Catálogo</div>
+                            <DropdownLink :href="route('providers.index')">
+                                <div class="h-7 w-7 rounded-xl bg-tinto-50 dark:bg-tinto-950/80 text-tinto-800 dark:text-oro-300 border border-tinto-200 dark:border-tinto-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">🚚</div>
+                                <span class="truncate">Proveedores</span>
+                            </DropdownLink>
+                            <DropdownLink :href="route('areas.index')">
+                                <div class="h-7 w-7 rounded-xl bg-oro-50 dark:bg-oro-950/80 text-oro-800 dark:text-oro-300 border border-oro-200 dark:border-oro-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">🏢</div>
+                                <span class="truncate">Áreas</span>
+                            </DropdownLink>
+                            <DropdownLink :href="route('users.index')">
+                                <div class="h-7 w-7 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">👥</div>
+                                <span class="truncate">Usuarios</span>
+                            </DropdownLink>
 
                             <template v-if="user.role === 'admin'">
-                                <div class="block px-4 py-2 text-[10px] font-black text-tinto-700 dark:text-oro-400 uppercase tracking-widest border-t border-b dark:border-gray-700 mt-1">Configuración Institucional</div>
-                                <DropdownLink :href="route('admin.settings.interface')">🎨 Interfaz y Logo</DropdownLink>
-                                <DropdownLink :href="route('admin.settings.reports')">📄 Configurar Reportes</DropdownLink>
-                                <DropdownLink :href="route('admin.settings.roles')">🔐 Roles y Permisos</DropdownLink>
-                                <DropdownLink :href="route('admin.utilities.data')">🛠️ Mantenimiento BD</DropdownLink>
-                                <DropdownLink :href="route('admin.sessions.logs')">📜 Auditoría de Logs</DropdownLink>
+                                <div class="px-3.5 py-1 text-[9px] font-black text-tinto-800 dark:text-oro-400 uppercase tracking-[0.2em] mt-2 border-t border-slate-100 dark:border-gray-800/80 pt-2">Configuración Institucional</div>
+                                <DropdownLink :href="route('admin.settings.interface')">
+                                    <div class="h-7 w-7 rounded-xl bg-tinto-50 dark:bg-tinto-950/80 text-tinto-800 dark:text-oro-300 border border-tinto-200 dark:border-tinto-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">🎨</div>
+                                    <span class="truncate">Interfaz y Logo</span>
+                                </DropdownLink>
+                                <DropdownLink :href="route('admin.settings.reports')">
+                                    <div class="h-7 w-7 rounded-xl bg-oro-50 dark:bg-oro-950/80 text-oro-800 dark:text-oro-300 border border-oro-200 dark:border-oro-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">📄</div>
+                                    <span class="truncate">Configurar Reportes</span>
+                                </DropdownLink>
+                                <DropdownLink :href="route('admin.settings.roles')">
+                                    <div class="h-7 w-7 rounded-xl bg-purple-50 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">🔐</div>
+                                    <span class="truncate">Roles y Permisos</span>
+                                </DropdownLink>
+                                <DropdownLink :href="route('admin.utilities.data')">
+                                    <div class="h-7 w-7 rounded-xl bg-slate-100 dark:bg-gray-800 text-slate-700 dark:text-gray-300 border border-slate-200 dark:border-gray-700 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">🛠️</div>
+                                    <span class="truncate">Mantenimiento BD</span>
+                                </DropdownLink>
+                                <DropdownLink :href="route('admin.sessions.logs')">
+                                    <div class="h-7 w-7 rounded-xl bg-slate-100 dark:bg-gray-800 text-slate-700 dark:text-gray-300 border border-slate-200 dark:border-gray-700 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">📜</div>
+                                    <span class="truncate">Auditoría de Logs</span>
+                                </DropdownLink>
                             </template>
                         </template>
                     </Dropdown>
@@ -189,44 +233,75 @@ watch(() => page.props.flash?.success, (newMsg) => {
                         <SunIcon v-else class="h-6 w-6 text-oro-400" />
                     </button>
                     
-                    <Dropdown align="right" width="64">
+                    <!-- BOTÓN / MENÚ USUARIO -->
+                    <Dropdown align="right" width="72">
                         <template #trigger>
-                            <div class="flex items-center gap-4 bg-white dark:bg-gray-800 p-2 pr-6 rounded-[2rem] border border-slate-200 dark:border-gray-700 shadow-sm cursor-pointer hover:border-tinto-300 dark:hover:border-oro-600 transition-all">
-                                <img :src="user.avatar_url" class="h-12 w-12 rounded-2xl object-cover border-2 border-oro-400/40 dark:border-oro-600/50 shadow-md shrink-0" />
+                            <div class="flex items-center gap-3.5 bg-white dark:bg-gray-800 p-2 pr-5 rounded-[2rem] border border-slate-200 dark:border-gray-700 shadow-sm cursor-pointer hover:border-tinto-300 dark:hover:border-oro-600 transition-all group">
+                                <img :src="user.avatar_url" class="h-11 w-11 rounded-2xl object-cover border-2 border-oro-400/50 dark:border-oro-600/60 shadow-md shrink-0 group-hover:scale-105 transition-transform" />
                                 <div class="text-left">
-                                    <p class="text-sm font-black text-slate-800 dark:text-white leading-none whitespace-nowrap">{{ user.name }}</p>
-                                    <div class="flex items-center gap-2 mt-1">
+                                    <p class="text-xs font-black text-slate-800 dark:text-white leading-tight whitespace-nowrap">{{ user.name }}</p>
+                                    <div class="flex items-center gap-1.5 mt-0.5">
                                         <span class="bg-tinto-50 dark:bg-tinto-950/60 text-tinto-800 dark:text-oro-300 text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-widest border border-tinto-200/70 dark:border-tinto-800/70">{{ roleName }}</span>
                                     </div>
                                 </div>
-                                <ChevronDownIcon class="h-4 w-4 text-slate-300 ml-2" />
+                                <ChevronDownIcon class="h-4 w-4 text-slate-300 ml-1 group-hover:text-tinto-700 transition-colors" />
                             </div>
                         </template>
 
                         <template #content>
-                            <div class="block px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b dark:border-gray-700">Mi Panel</div>
-                            <DropdownLink :href="route('dashboard')">🏠 Inicio Dashboard</DropdownLink>
-                            
-                            <div class="block px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest border-t border-b dark:border-gray-700 mt-1">Configuración</div>
-                            <DropdownLink :href="route('profile.edit')">👤 Mi Perfil</DropdownLink>
+                            <!-- CABECERA DEL PERFIL DE USUARIO -->
+                            <div class="p-3.5 bg-gradient-to-r from-tinto-950 via-tinto-900 to-tinto-950 text-white rounded-2xl mx-1.5 mb-2 shadow-tinto-sm border border-oro-400/40 flex items-center gap-3">
+                                <img :src="user.avatar_url" class="h-10 w-10 rounded-xl object-cover border border-oro-400/40 shrink-0" />
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-xs font-black uppercase truncate text-white leading-tight">{{ user.name }}</p>
+                                    <p class="text-[9px] text-oro-300 font-bold uppercase truncate mt-0.5">@{{ user.username }} • {{ roleName }}</p>
+                                </div>
+                            </div>
+
+                            <div class="px-3.5 py-1 text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Mi Espacio</div>
+                            <DropdownLink :href="route('dashboard')">
+                                <div class="h-7 w-7 rounded-xl bg-tinto-50 dark:bg-tinto-950/80 text-tinto-800 dark:text-oro-300 border border-tinto-200 dark:border-tinto-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">🏠</div>
+                                <span class="truncate">Inicio Dashboard</span>
+                            </DropdownLink>
+                            <DropdownLink :href="route('profile.edit')">
+                                <div class="h-7 w-7 rounded-xl bg-oro-50 dark:bg-oro-950/80 text-oro-800 dark:text-oro-300 border border-oro-200 dark:border-oro-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">👤</div>
+                                <span class="truncate">Mi Perfil y Clave</span>
+                            </DropdownLink>
                             
                             <template v-if="can('users.manage')">
-                                <div class="block px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest border-t border-b dark:border-gray-700 mt-1">Administración</div>
-                                <DropdownLink :href="route('users.index')">👥 Usuarios</DropdownLink>
-                                <DropdownLink :href="route('areas.index')">🏢 Áreas</DropdownLink>
-                                <DropdownLink :href="route('providers.index')">🚚 Proveedores</DropdownLink>
+                                <div class="px-3.5 py-1 text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mt-2 border-t border-slate-100 dark:border-gray-800/80 pt-2">Administración</div>
+                                <DropdownLink :href="route('users.index')">
+                                    <div class="h-7 w-7 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">👥</div>
+                                    <span class="truncate">Usuarios y Personal</span>
+                                </DropdownLink>
+                                <DropdownLink :href="route('areas.index')">
+                                    <div class="h-7 w-7 rounded-xl bg-oro-50 dark:bg-oro-950/80 text-oro-800 dark:text-oro-300 border border-oro-200 dark:border-oro-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">🏢</div>
+                                    <span class="truncate">Estructura de Áreas</span>
+                                </DropdownLink>
+                                <DropdownLink :href="route('providers.index')">
+                                    <div class="h-7 w-7 rounded-xl bg-tinto-50 dark:bg-tinto-950/80 text-tinto-800 dark:text-oro-300 border border-tinto-200 dark:border-tinto-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">🚚</div>
+                                    <span class="truncate">Proveedores / Banqueteros</span>
+                                </DropdownLink>
                             </template>
 
                             <template v-if="user.role === 'admin'">
-                                <div class="block px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest border-t border-b dark:border-gray-700 mt-1">Sistema y Seguridad</div>
-                                <DropdownLink :href="route('admin.settings.interface')">🎨 Interfaz y Logo</DropdownLink>
-                                <DropdownLink :href="route('admin.settings.reports')">📄 Configurar Reportes</DropdownLink>
-                                <DropdownLink :href="route('admin.settings.roles')">🔐 Roles y Permisos</DropdownLink>
-                                <DropdownLink :href="route('admin.utilities.data')">🛠️ Mantenimiento BD</DropdownLink>
-                                <DropdownLink :href="route('admin.sessions.logs')">📜 Auditoría de Logs</DropdownLink>
+                                <div class="px-3.5 py-1 text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mt-2 border-t border-slate-100 dark:border-gray-800/80 pt-2">Sistema y Seguridad</div>
+                                <DropdownLink :href="route('admin.settings.interface')">
+                                    <div class="h-7 w-7 rounded-xl bg-tinto-50 dark:bg-tinto-950/80 text-tinto-800 dark:text-oro-300 border border-tinto-200 dark:border-tinto-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">🎨</div>
+                                    <span class="truncate">Interfaz y Logo</span>
+                                </DropdownLink>
+                                <DropdownLink :href="route('admin.settings.reports')">
+                                    <div class="h-7 w-7 rounded-xl bg-oro-50 dark:bg-oro-950/80 text-oro-800 dark:text-oro-300 border border-oro-200 dark:border-oro-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">📄</div>
+                                    <span class="truncate">Configurar Reportes</span>
+                                </DropdownLink>
                             </template>
 
-                            <DropdownLink :href="route('logout')" method="post" as="button" class="text-rose-500 font-bold border-t dark:border-gray-700">🚪 Cerrar Sesión</DropdownLink>
+                            <div class="mt-2 border-t border-slate-100 dark:border-gray-800/80 pt-1">
+                                <DropdownLink :href="route('logout')" method="post" as="button" class="text-rose-600 dark:text-rose-400 hover:bg-rose-50/90 dark:hover:bg-rose-950/50 hover:text-rose-700">
+                                    <div class="h-7 w-7 rounded-xl bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">🚪</div>
+                                    <span class="font-black">Cerrar Sesión</span>
+                                </DropdownLink>
+                            </div>
                         </template>
                     </Dropdown>
                 </div>

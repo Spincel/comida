@@ -8,7 +8,7 @@ import DeactivateMenuConfirmationModal from '@/Pages/Admin/Partials/DeactivateMe
 import { 
     ChevronLeftIcon, PrinterIcon, UsersIcon, ListBulletIcon, UserGroupIcon, 
     ViewColumnsIcon, ChatBubbleLeftRightIcon, ClipboardDocumentListIcon, BuildingStorefrontIcon,
-    InformationCircleIcon, CheckBadgeIcon, PowerIcon, CheckCircleIcon, ArrowLeftIcon
+    InformationCircleIcon, CheckBadgeIcon, PowerIcon, CheckCircleIcon, ArrowLeftIcon, ClockIcon
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({ 
@@ -275,7 +275,16 @@ const getDishEmoji = (name, mealType) => {
                                             <span>{{ o.platillo_name }}</span>
                                         </p>
                                     </div>
-                                    <CheckBadgeIcon v-if="o.activity_performed" class="h-4 w-4 text-nayarit-700 dark:text-emerald-400 shrink-0" title="Actividad justificada" />
+                                    <div class="shrink-0 flex items-center">
+                                        <span v-if="o.activity_performed" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[8px] font-black text-nayarit-800 dark:text-emerald-300 uppercase tracking-tighter shadow-2xs" title="Motivo/justificación registrado">
+                                            <CheckBadgeIcon class="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                                            <span>Justificado</span>
+                                        </span>
+                                        <span v-else class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-[8px] font-black text-amber-800 dark:text-amber-300 uppercase tracking-tighter shadow-2xs" title="Sin justificación de motivo aún">
+                                            <ClockIcon class="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                                            <span>Sin justificar</span>
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>

@@ -8,11 +8,11 @@ const props = defineProps({
     },
     width: {
         type: String,
-        default: '48',
+        default: '64',
     },
     contentClasses: {
         type: String,
-        default: 'py-1 bg-white dark:bg-gray-700',
+        default: 'py-2 bg-white/95 dark:bg-gray-900/95 backdrop-blur-2xl border border-slate-200/90 dark:border-gray-800 rounded-3xl shadow-[0_20px_50px_-10px_rgba(120,24,42,0.16)] dark:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.7)] overflow-hidden',
     },
     direction: {
         type: String,
@@ -31,8 +31,13 @@ onUnmounted(() => document.removeEventListener('keydown', closeOnEscape));
 
 const widthClass = computed(() => {
     return {
-        48: 'w-48',
-    }[props.width.toString()];
+        '48': 'w-48',
+        '56': 'w-56',
+        '64': 'w-64',
+        '72': 'w-72',
+        '80': 'w-80',
+        '96': 'w-96',
+    }[props.width.toString()] || 'w-64';
 });
 
 const alignmentClasses = computed(() => {
@@ -73,20 +78,19 @@ const open = ref(false);
 
         <Transition
             enter-active-class="transition ease-out duration-200"
-            enter-from-class="opacity-0 scale-95"
-            enter-to-class="opacity-100 scale-100"
-            leave-active-class="transition ease-in duration-75"
-            leave-from-class="opacity-100 scale-100"
-            leave-to-class="opacity-0 scale-95"
+            enter-from-class="opacity-0 scale-95 -translate-y-1"
+            enter-to-class="opacity-100 scale-100 translate-y-0"
+            leave-active-class="transition ease-in duration-100"
+            leave-from-class="opacity-100 scale-100 translate-y-0"
+            leave-to-class="opacity-0 scale-95 -translate-y-1"
         >
             <div
                 v-show="open"
-                class="absolute z-50 rounded-md shadow-lg"
+                class="absolute z-50 rounded-3xl"
                 :class="[widthClass, alignmentClasses]"
                 @click="open = false"
             >
                 <div
-                    class="rounded-md ring-1 ring-black ring-opacity-5"
                     :class="contentClasses"
                 >
                     <slot name="content" />

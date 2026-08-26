@@ -4,16 +4,27 @@ import { Link } from '@inertiajs/vue3';
 defineProps({
     href: {
         type: String,
-        required: true,
+        default: '#',
+    },
+    method: {
+        type: String,
+        default: 'get',
+    },
+    as: {
+        type: String,
+        default: 'a',
     },
 });
 </script>
 
 <template>
-    <Link
+    <component
+        :is="as === 'button' ? 'button' : Link"
         :href="href"
-        class="block w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 focus:bg-gray-100 focus:outline-none dark:text-gray-300 dark:hover:bg-gray-800 dark:focus:bg-gray-800"
+        :method="method"
+        :as="as"
+        class="flex items-center gap-3 w-full px-4 py-2.5 text-left text-xs font-bold text-slate-700 dark:text-gray-200 hover:text-tinto-900 dark:hover:text-oro-300 hover:bg-tinto-50/80 dark:hover:bg-tinto-950/50 transition-all group rounded-xl my-0.5 mx-auto max-w-[calc(100%-0.75rem)] cursor-pointer"
     >
         <slot />
-    </Link>
+    </component>
 </template>
