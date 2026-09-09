@@ -287,4 +287,22 @@ Pasos seguros para desplegar en 172.30.4.132:
 - **Resultado:** Autonomía total para el Administrador para activar, cambiar o desactivar la Inteligencia Artificial sin tocar archivos de servidor, manteniendo una interfaz limpia y libre de errores para todos los usuarios.
 
 ---
+
+### 14. Restricción de Catálogo y Enfoque Exclusivo en Estadísticas de Área para Gerentes (Miércoles 9 de Septiembre, 2026 - Sesión 2)
+- **Solicitud:** El Gerente de Área no debe tener acceso a las opciones de catálogo (Usuarios, Áreas y Proveedores) dentro del botón de "Herramientas", debiendo ver únicamente las estadísticas, reportes y métricas exclusivas de su dependencia.
+- **Cambios Realizados:**
+    - **Navegación en Frontend (`AuthenticatedLayout.vue`):**
+        - Se condicionó la sección **"Gestión del Catálogo"** (Proveedores, Áreas y Usuarios) para que quede **completamente oculta** para el rol `area_manager` (`user.role !== 'area_manager' && (can('providers.manage') || can('areas.manage') || can('users.manage'))`).
+        - Se adaptó el menú de Herramientas para que cuando ingrese un **Gerente de Área**, se desplieguen únicamente sus accesos pertinentes:
+            1. 📊 **Estadísticas de mi Área** (`route('area.history')` -> `AreaAnalytics.vue`): Total de pedidos, tasa de justificación, platillos más populares y comensales frecuentes de su área.
+            2. 📑 **Reportes de mi Área** (`route('area.reports')` -> `AreaReports.vue`).
+            3. 📈 **Resumen Diario** (`route('daily.summary')`).
+            4. 👥 **Mi Personal de Área** (`route('team.index')` -> `TeamManagement.vue`).
+        - Los roles de **Administrador** y **Adquisiciones** conservan la vista completa con *Historial Global*, *Reportes del Sistema*, *Estadísticas Diarias* y el bloque de *Gestión del Catálogo*.
+    - **Protección Backend en Rutas (`routes/web.php`):**
+        - Se añadió middleware `permission:providers.manage` al recurso `providers` para prevenir accesos directos por URL de gerentes de área (retorna `403 Forbidden`).
+        - Se restringieron las rutas globales `admin/history`, `admin/reports` y `admin/reports/export` con `role:admin|acquisitions_manager` para salvaguardar la privacidad de la información de otras áreas.
+- **Resultado:** Interfaz blindada, limpia y enfocada, donde cada Gerente de Área visualiza únicamente la información y analítica relevante para su equipo de trabajo, sin opciones irrelevantes ni riesgo de permisos indebidos.
+
+---
 **Desarrollado y Protegido por Spincelaestream - 9 Septiembre 2026**

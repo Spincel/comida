@@ -174,37 +174,68 @@ watch(() => page.props.flash?.success, (newMsg) => {
                                 </div>
                                 <div>
                                     <p class="text-xs font-black uppercase tracking-tight text-white">Herramientas</p>
-                                    <p class="text-[8px] text-oro-300 font-bold uppercase tracking-widest">SICOA • Módulos Operativos</p>
+                                    <p class="text-[8px] text-oro-300 font-bold uppercase tracking-widest">
+                                        {{ user.role === 'area_manager' ? 'Gestión de Área & Estadísticas' : 'SICOA • Módulos Operativos' }}
+                                    </p>
                                 </div>
                             </div>
 
-                            <div class="px-3.5 py-1 text-[9px] font-black text-tinto-800 dark:text-oro-400 uppercase tracking-[0.2em]">Operaciones y Reportes</div>
-                            <DropdownLink :href="route('admin.history')">
-                                <div class="h-7 w-7 rounded-xl bg-tinto-50 dark:bg-tinto-950/80 text-tinto-800 dark:text-oro-300 border border-tinto-200 dark:border-tinto-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">📖</div>
-                                <span class="truncate">Historial Global</span>
-                            </DropdownLink>
-                            <DropdownLink :href="user.role === 'area_manager' ? route('area.reports') : route('admin.reports')">
-                                <div class="h-7 w-7 rounded-xl bg-oro-50 dark:bg-oro-950/80 text-oro-800 dark:text-oro-300 border border-oro-200 dark:border-oro-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">📊</div>
-                                <span class="truncate">Reportes del Sistema</span>
-                            </DropdownLink>
-                            <DropdownLink :href="route('daily.summary')">
-                                <div class="h-7 w-7 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">📈</div>
-                                <span class="truncate">Estadísticas Diarias</span>
-                            </DropdownLink>
+                            <div class="px-3.5 py-1 text-[9px] font-black text-tinto-800 dark:text-oro-400 uppercase tracking-[0.2em]">
+                                {{ user.role === 'area_manager' ? 'Estadísticas y Reportes de Área' : 'Operaciones y Reportes' }}
+                            </div>
 
-                            <div class="px-3.5 py-1 text-[9px] font-black text-tinto-800 dark:text-oro-400 uppercase tracking-[0.2em] mt-2 border-t border-slate-100 dark:border-gray-800/80 pt-2">Gestión del Catálogo</div>
-                            <DropdownLink :href="route('providers.index')">
-                                <div class="h-7 w-7 rounded-xl bg-tinto-50 dark:bg-tinto-950/80 text-tinto-800 dark:text-oro-300 border border-tinto-200 dark:border-tinto-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">🚚</div>
-                                <span class="truncate">Proveedores</span>
-                            </DropdownLink>
-                            <DropdownLink :href="route('areas.index')">
-                                <div class="h-7 w-7 rounded-xl bg-oro-50 dark:bg-oro-950/80 text-oro-800 dark:text-oro-300 border border-oro-200 dark:border-oro-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">🏢</div>
-                                <span class="truncate">Áreas</span>
-                            </DropdownLink>
-                            <DropdownLink :href="route('users.index')">
-                                <div class="h-7 w-7 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">👥</div>
-                                <span class="truncate">Usuarios</span>
-                            </DropdownLink>
+                            <!-- VISTA EXCLUSIVA PARA GERENTE DE ÁREA -->
+                            <template v-if="user.role === 'area_manager'">
+                                <DropdownLink :href="route('area.history')">
+                                    <div class="h-7 w-7 rounded-xl bg-tinto-50 dark:bg-tinto-950/80 text-tinto-800 dark:text-oro-300 border border-tinto-200 dark:border-tinto-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">📊</div>
+                                    <span class="truncate">Estadísticas de mi Área</span>
+                                </DropdownLink>
+                                <DropdownLink :href="route('area.reports')">
+                                    <div class="h-7 w-7 rounded-xl bg-oro-50 dark:bg-oro-950/80 text-oro-800 dark:text-oro-300 border border-oro-200 dark:border-oro-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">📑</div>
+                                    <span class="truncate">Reportes de mi Área</span>
+                                </DropdownLink>
+                                <DropdownLink :href="route('daily.summary')">
+                                    <div class="h-7 w-7 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">📈</div>
+                                    <span class="truncate">Resumen Diario</span>
+                                </DropdownLink>
+                                <DropdownLink :href="route('team.index')">
+                                    <div class="h-7 w-7 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">👥</div>
+                                    <span class="truncate">Mi Personal de Área</span>
+                                </DropdownLink>
+                            </template>
+
+                            <!-- VISTA PARA ADMINISTRADOR Y ADQUISICIONES -->
+                            <template v-else>
+                                <DropdownLink :href="route('admin.history')">
+                                    <div class="h-7 w-7 rounded-xl bg-tinto-50 dark:bg-tinto-950/80 text-tinto-800 dark:text-oro-300 border border-tinto-200 dark:border-tinto-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">📖</div>
+                                    <span class="truncate">Historial Global</span>
+                                </DropdownLink>
+                                <DropdownLink :href="route('admin.reports')">
+                                    <div class="h-7 w-7 rounded-xl bg-oro-50 dark:bg-oro-950/80 text-oro-800 dark:text-oro-300 border border-oro-200 dark:border-oro-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">📊</div>
+                                    <span class="truncate">Reportes del Sistema</span>
+                                </DropdownLink>
+                                <DropdownLink :href="route('daily.summary')">
+                                    <div class="h-7 w-7 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">📈</div>
+                                    <span class="truncate">Estadísticas Diarias</span>
+                                </DropdownLink>
+                            </template>
+
+                            <!-- GESTIÓN DEL CATÁLOGO (Oculto para el gerente de área; visible solo para admin o adquisiciones autorizadas) -->
+                            <template v-if="user.role !== 'area_manager' && (can('providers.manage') || can('areas.manage') || can('users.manage'))">
+                                <div class="px-3.5 py-1 text-[9px] font-black text-tinto-800 dark:text-oro-400 uppercase tracking-[0.2em] mt-2 border-t border-slate-100 dark:border-gray-800/80 pt-2">Gestión del Catálogo</div>
+                                <DropdownLink v-if="can('providers.manage')" :href="route('providers.index')">
+                                    <div class="h-7 w-7 rounded-xl bg-tinto-50 dark:bg-tinto-950/80 text-tinto-800 dark:text-oro-300 border border-tinto-200 dark:border-tinto-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">🚚</div>
+                                    <span class="truncate">Proveedores</span>
+                                </DropdownLink>
+                                <DropdownLink v-if="can('areas.manage') || can('areas.view')" :href="route('areas.index')">
+                                    <div class="h-7 w-7 rounded-xl bg-oro-50 dark:bg-oro-950/80 text-oro-800 dark:text-oro-300 border border-oro-200 dark:border-oro-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">🏢</div>
+                                    <span class="truncate">Áreas</span>
+                                </DropdownLink>
+                                <DropdownLink v-if="can('users.manage') || can('users.view')" :href="route('users.index')">
+                                    <div class="h-7 w-7 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-xs shrink-0 group-hover:scale-110 transition-transform">👥</div>
+                                    <span class="truncate">Usuarios</span>
+                                </DropdownLink>
+                            </template>
 
                             <template v-if="user.role === 'admin'">
                                 <div class="px-3.5 py-1 text-[9px] font-black text-tinto-800 dark:text-oro-400 uppercase tracking-[0.2em] mt-2 border-t border-slate-100 dark:border-gray-800/80 pt-2">Configuración Institucional</div>

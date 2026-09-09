@@ -43,9 +43,15 @@ Route::middleware(['auth', 'admin'])->group(function () {
 });
 
 Route::middleware(['auth', 'role:acquisitions_manager|admin|area_manager'])->group(function () {
-    Route::get('admin/history', [DashboardController::class, 'showGlobalHistory'])->name('admin.history');
-    Route::get('admin/reports', [DashboardController::class, 'showGlobalReports'])->name('admin.reports');
-    Route::get('admin/reports/export', [DashboardController::class, 'exportGlobalReports'])->name('admin.reports.export');
+    Route::get('admin/history', [DashboardController::class, 'showGlobalHistory'])
+        ->name('admin.history')
+        ->middleware('role:admin|acquisitions_manager');
+    Route::get('admin/reports', [DashboardController::class, 'showGlobalReports'])
+        ->name('admin.reports')
+        ->middleware('role:admin|acquisitions_manager');
+    Route::get('admin/reports/export', [DashboardController::class, 'exportGlobalReports'])
+        ->name('admin.reports.export')
+        ->middleware('role:admin|acquisitions_manager');
 
     Route::post('users/scan-document', [UserController::class, 'scanDocument'])
         ->name('users.scanDocument')
@@ -103,7 +109,8 @@ Route::middleware(['auth', 'role:acquisitions_manager|admin|area_manager'])->gro
     Route::post('daily-menus/publish-all', [DailyMenuController::class, 'publishAll'])->name('daily-menus.publishAll');
     Route::patch('daily-menus/{dailyMenu}/status', [DailyMenuController::class, 'updateStatus'])->name('daily-menus.updateStatus');
     Route::patch('daily-menus/provider-status', [DailyMenuController::class, 'updateProviderDailyStatus'])->name('daily-menus.updateProviderDailyStatus');
-    Route::resource('providers', ProviderController::class);
+    Route::resource('providers', ProviderController::class)
+        ->middleware('permission:providers.manage');
 
     // New route for activating provider menu
     Route::post('dashboard/providers/{provider}/activate', [DashboardController::class, 'activateMenu'])->name('dashboard.providers.activate');
