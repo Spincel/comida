@@ -126,7 +126,8 @@ const isProfileComplete = (provider) => {
                                     class="w-full py-4 bg-gradient-to-r from-tinto-900 via-tinto-800 to-tinto-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-tinto-sm border border-oro-400/40 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center cursor-pointer shine-effect">
                                 <ClipboardDocumentListIcon class="h-4 w-4 mr-2.5 text-oro-300" /> Ver Menús y Platillos
                             </Link>
-                            <button @click="openScanModal(provider)"
+                            <button v-if="$page.props.system?.hasAi" 
+                                    @click="openScanModal(provider)"
                                     class="w-full py-4 bg-white dark:bg-gray-800 border border-oro-400/50 text-tinto-900 dark:text-oro-300 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-oro-50/60 dark:hover:bg-oro-950/30 transition-all flex items-center justify-center cursor-pointer">
                                 <PhotoIcon class="h-4 w-4 mr-2.5 text-oro-500" /> Escaneo IA de Menú
                             </button>

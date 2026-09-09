@@ -134,7 +134,8 @@ const getAreaColor = (id) => id ? areaColors[id % areaColors.length] : 'bg-slate
                                    class="w-full pl-14 pr-6 py-4 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-2xl text-sm focus:ring-2 focus:ring-tinto-700 transition-all dark:text-white shadow-inner font-medium" />
                         </div>
                         <div class="flex items-center gap-3 shrink-0">
-                            <button @click="showScanModal = true" 
+                            <button v-if="$page.props.system?.hasAi"
+                                    @click="showScanModal = true" 
                                     type="button"
                                     class="bg-gradient-to-r from-tinto-900 via-tinto-800 to-tinto-900 text-white px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2.5 shadow-tinto-sm border border-oro-400/40 hover:scale-105 active:scale-95 transition-all cursor-pointer shine-effect">
                                 <SparklesIcon class="h-4 w-4 text-oro-300 animate-pulse" />

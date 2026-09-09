@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Area;
+use App\Models\SystemSetting;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Hash;
@@ -336,12 +337,12 @@ class UserController extends Controller
         $mimeType = $file->getMimeType();
         $fileContentBase64 = base64_encode(file_get_contents($file->getRealPath()));
 
-        $geminiApiKey = config('services.gemini.api_key', env('GEMINI_API_KEY'));
+        $geminiApiKey = SystemSetting::getGeminiApiKey();
 
         if (!$geminiApiKey) {
             return response()->json([
-                'error' => 'Falta configurar la clave API de Gemini (GEMINI_API_KEY) en el archivo .env.'
-            ], 500);
+                'error' => 'La clave API de Gemini no está configurada o ha sido deshabilitada en el panel de administración.'
+            ], 400);
         }
 
         $client = new Client([
@@ -540,12 +541,12 @@ class UserController extends Controller
             ], 422);
         }
 
-        $geminiApiKey = config('services.gemini.api_key', env('GEMINI_API_KEY'));
+        $geminiApiKey = SystemSetting::getGeminiApiKey();
 
         if (!$geminiApiKey) {
             return response()->json([
-                'error' => 'Falta configurar la clave API de Gemini (GEMINI_API_KEY) en el archivo .env.'
-            ], 500);
+                'error' => 'La clave API de Gemini no está configurada o ha sido deshabilitada en el panel de administración.'
+            ], 400);
         }
 
         $candidateModels = [

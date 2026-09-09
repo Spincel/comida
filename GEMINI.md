@@ -265,12 +265,26 @@ Pasos seguros para desplegar en 172.30.4.132:
 ---
 **Desarrollado y Protegido por Spincelaestream - 26 Agosto 2026**
 
+---
 
+## Control Maestro de Inteligencia Artificial (Miércoles 9 de Septiembre, 2026)
 
+### 13. Configuración Dinámica de Clave API de Gemini y Visibilidad Condicional de Escaneo con IA
+- **Solicitud:** Permitir que el Administrador configure directamente la clave API de Google Gemini desde el panel de control del sistema, y que si dicha clave está configurada se habilite el uso de IA; en caso contrario (vacía o ausente), que se oculten automáticamente las funciones y botones de escaneo con IA en todo el sistema para evitar fallos.
+- **Cambios Realizados:**
+    - **Base de Datos:** Migración `2026_09_09_142000_add_gemini_api_key_to_system_settings_table.php` para almacenar y persistir `gemini_api_key` en la tabla `system_settings`.
+    - **Modelo `SystemSetting`:** Métodos estáticos `getGeminiApiKey()` y `hasGeminiApiKey()` con soporte de fallback y respeto a claves vaciadas voluntariamente.
+    - **Seguridad en Middleware (`HandleInertiaRequests`):** Comparte la variable booleana global `hasAi` y filtra la clave en texto plano para que únicamente usuarios con permisos de administración (`system.settings`) puedan visualizarla o editarla.
+    - **Panel de Configuración de Interfaz (`Admin/Settings/Interface.vue`):**
+        - Pestaña dedicada **"Inteligencia Artificial"** con selector Bento, iconos temáticos y banner de estado (`🟢 IA Activa y Operativa` vs `⚪ IA Deshabilitada / Oculta`).
+        - Campo con selector para ocultar/mostrar clave, botón para guardar, botón para deshabilitar/borrar y botón de prueba rápida **"⚡ Probar Conexión"**.
+        - Endpoint de verificación `/admin/settings/test-gemini` que valida la clave en vivo contra los servidores de Google Gemini.
+    - **Visibilidad Condicional en Frontend:**
+        - **Proveedores (`Admin/Providers/Index.vue`):** El botón "Escaneo IA de Menú" ahora se condiciona con `v-if="$page.props.system?.hasAi"`.
+        - **Menús Diarios (`Admin/DailyMenus/Index.vue`):** El botón "IA Menú" / Importar con IA se condiciona con `v-if="$page.props.system?.hasAi"`.
+        - **Usuarios (`Admin/Users/Index.vue`):** El botón "Importar con IA" se condiciona con `v-if="$page.props.system?.hasAi"`.
+    - **Controladores Backend:** `DailyMenuController` y `UserController` ahora leen la clave dinámicamente desde `SystemSetting::getGeminiApiKey()`.
+- **Resultado:** Autonomía total para el Administrador para activar, cambiar o desactivar la Inteligencia Artificial sin tocar archivos de servidor, manteniendo una interfaz limpia y libre de errores para todos los usuarios.
 
-
-
-
-
-
-
+---
+**Desarrollado y Protegido por Spincelaestream - 9 Septiembre 2026**

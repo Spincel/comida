@@ -74,20 +74,33 @@ class HandleInertiaRequests extends Middleware
             }
         }
 
+        $userPermissions = $user ? (
+            $user->role === 'admin' 
+                ? \App\Models\Permission::all()->pluck('slug')->toArray()
+                : ($user->role ? (\App\Models\Role::where('slug', $user->role)->first()?->load('permissions')->permissions->pluck('slug')->toArray() ?? []) : [])
+        ) : [];
+
+        $canManageSettings = $user && ($user->role === 'admin' || in_array('system.settings', $userPermissions));
+        $settings = \App\Models\SystemSetting::all()->pluck('value', 'key')->toArray();
+        $hasAi = \App\Models\SystemSetting::hasGeminiApiKey();
+
+        if (!$canManageSettings) {
+            unset($settings['gemini_api_key']);
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
                 'user' => $user ? array_merge($user->toArray(), [
-                    'permissions' => $user->role === 'admin' 
-                        ? \App\Models\Permission::all()->pluck('slug')->toArray()
-                        : ($user->role ? (\App\Models\Role::where('slug', $user->role)->first()?->load('permissions')->permissions->pluck('slug')->toArray() ?? []) : [])
+                    'permissions' => $userPermissions,
                 ]) : null,
                 'orderStatus' => $orderStatus,
                 'isAnySessionOpen' => isset($openSessions) ? $openSessions->isNotEmpty() : false,
                 'isAnySessionClosedToday' => $closedSessionsToday ?? false,
             ],
             'system' => [
-                'settings' => \App\Models\SystemSetting::all()->pluck('value', 'key'),
+                'settings' => $settings,
+                'hasAi' => $hasAi,
             ],
             'flash' => [
                 'success' => $request->session()->get('success'),

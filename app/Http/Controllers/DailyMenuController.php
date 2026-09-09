@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\DailyMenu;
 use App\Models\Provider;
 use App\Models\ProviderDailyStatus;
+use App\Models\SystemSetting;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use GuzzleHttp\Client; // For Gemini API HTTP calls
@@ -231,10 +232,10 @@ class DailyMenuController extends Controller
         // Increase execution time for AI processing
         set_time_limit(120);
 
-        $geminiApiKey = config('app.gemini_api_key') ?: env('GEMINI_API_KEY');
+        $geminiApiKey = SystemSetting::getGeminiApiKey();
         if (!$geminiApiKey) {
-            Log::error('GEMINI_API_KEY not found in config/app.php or .env');
-            return response()->json(['error' => 'La clave API de Gemini no está configurada.'], 500);
+            Log::error('GEMINI_API_KEY not found in SystemSetting, config/app.php or .env');
+            return response()->json(['error' => 'La clave API de Gemini no está configurada o ha sido deshabilitada en el panel de administración.'], 400);
         }
 
         $client = new Client([

@@ -49,7 +49,7 @@ class SystemSettingsController extends Controller
             // Encuentra el setting existente o prepara la creación si es una llave de branding válida.
             $setting = SystemSetting::where('key', $key)->first();
             
-            if ($setting || in_array($key, ['app_name', 'footer_title', 'footer_subtitle', 'footer_brand', 'footer_year', 'color_primary_light', 'color_primary_dark', 'operation_mode', 'favicon'])) {
+            if ($setting || in_array($key, ['app_name', 'footer_title', 'footer_subtitle', 'footer_brand', 'footer_year', 'color_primary_light', 'color_primary_dark', 'operation_mode', 'favicon', 'gemini_api_key'])) {
                 
                 if ($request->hasFile($key)) {
                     // Lógica de carga de archivos (Logos, Favicons).
@@ -60,15 +60,74 @@ class SystemSettingsController extends Controller
                     $path = $request->file($key)->store('branding', 'public');
                     SystemSetting::updateOrCreate(['key' => $key], ['value' => $path, 'type' => 'image']);
                 } else {
-                    // Actualización de cadenas de texto y colores.
-                    if ($value !== null) {
-                        SystemSetting::updateOrCreate(['key' => $key], ['value' => $value, 'type' => 'text']);
+                    if ($key === 'gemini_api_key') {
+                        $cleanValue = trim((string)$value);
+                        SystemSetting::updateOrCreate(
+                            ['key' => 'gemini_api_key'],
+                            [
+                                'value' => $cleanValue !== '' ? $cleanValue : null,
+                                'type' => 'string',
+                                'description' => 'Clave API de Google Gemini para reconocimiento óptico de menús y documentos'
+                            ]
+                        );
+                    } else {
+                        // Actualización de cadenas de texto y colores.
+                        if ($value !== null) {
+                            SystemSetting::updateOrCreate(['key' => $key], ['value' => $value, 'type' => 'text']);
+                        }
                     }
                 }
             }
         }
 
         return back()->with('success', 'Configuración actualizada.');
+    }
+
+    /**
+     * Prueba la conectividad y validez de una clave API de Gemini.
+     */
+    public function testGeminiConnection(Request $request)
+    {
+        $apiKey = trim((string)($request->input('api_key') ?: SystemSetting::getGeminiApiKey()));
+
+        if (empty($apiKey)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se ha proporcionado ninguna clave API para probar.'
+            ], 422);
+        }
+
+        try {
+            $client = new \GuzzleHttp\Client(['timeout' => 15.0]);
+            $response = $client->get('https://generativelanguage.googleapis.com/v1beta/models?key=' . urlencode($apiKey));
+            
+            if ($response->getStatusCode() === 200) {
+                return response()->json([
+                    'success' => true,
+                    'message' => '¡Conexión exitosa! La clave API de Google Gemini es válida y está lista para operar.'
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Respuesta inesperada de la API de Gemini (Código: ' . $response->getStatusCode() . ').'
+            ], 400);
+
+        } catch (\GuzzleHttp\Exception\ClientException $e) {
+            $responseBody = $e->getResponse() ? (string)$e->getResponse()->getBody() : '';
+            $json = json_decode($responseBody, true);
+            $errMsg = $json['error']['message'] ?? $e->getMessage();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de autenticación con Gemini: ' . $errMsg
+            ], 400);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al conectar con los servidores de Google: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

@@ -67,6 +67,9 @@ Route::middleware(['auth', 'role:acquisitions_manager|admin|area_manager'])->gro
         Route::get('admin/settings/interface', [SystemSettingsController::class, 'index'])
             ->name('admin.settings.interface')
             ->middleware('permission:system.settings');
+        Route::post('admin/settings/test-gemini', [SystemSettingsController::class, 'testGeminiConnection'])
+            ->name('admin.settings.gemini.test')
+            ->middleware('permission:system.settings');
         
         Route::get('admin/utilities/data', [ImportExportController::class, 'index'])
             ->name('admin.utilities.data')

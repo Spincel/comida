@@ -128,7 +128,8 @@ const getDishEmoji = (name) => {
                         <input type="date" v-model="filterDate" class="w-full bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-2xl py-4 px-6 text-xs font-bold text-slate-700 dark:text-gray-200 focus:ring-2 focus:ring-tinto-700 shadow-inner" />
                     </div>
                     <div class="flex gap-3 shrink-0">
-                        <button @click="openScanMenuModal" 
+                        <button v-if="$page.props.system?.hasAi"
+                                @click="openScanMenuModal" 
                                 type="button"
                                 class="bg-gradient-to-r from-tinto-900 via-tinto-800 to-tinto-900 text-white p-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-tinto-sm border border-oro-400/40 hover:scale-105 active:scale-95 transition-all cursor-pointer shine-effect"
                                 title="Importar con IA">
